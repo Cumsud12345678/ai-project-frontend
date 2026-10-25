@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Onest Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-amber: var(--amber);
+  --color-destructive: var(--destructive);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+:root {
+  --background: #f4f6f9;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --muted: #eef1f6;
+  --muted-foreground: #576274;
+  --border: #dbe1ea;
+  --primary: #1d4ed8;
+  --primary-foreground: #ffffff;
+  --amber: #b45309;
+  --destructive: #b91c1c;
+  --sidebar: #0f1b2d;
+  --sidebar-foreground: #e6ebf3;
+  --sidebar-muted: #9aa7bb;
+  --sidebar-accent: #1b2a42;
+  --chart-1: #2563eb;
+  --chart-2: #0f766e;
+  --chart-3: #d97706;
+  --chart-4: #7c3aed;
+  --chart-5: #be123c;
+}
+
+body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { letter-spacing: -0.01em; }
+
+/* Açılış səhifəsi (/): panelin yaşıl-narıncı kimliyi, öz şriftləri ilə */
+.landing {
+  --l-ink: #0c2a25;
+  --l-teal: #0b6b57;
+  --l-teal-d: #08493c;
+  --l-mist: #e6efe9;
+  --l-paper: #f8faf7;
+  --l-orange: #ea580c;
+  --l-orange-d: #c2410c;
+  --l-line: #d3ddd5;
+  background: var(--l-paper);
+  color: var(--l-ink);
+  font-family: "Onest Variable", system-ui, sans-serif;
+  scroll-behavior: smooth;
+  overflow-x: clip; /* animasiyadan əvvəlki yan yerdəyişmə telefonda üfüqi sürüşdürmə yaratmasın */
+}
+.landing .l-display { font-family: "Unbounded Variable", "Onest Variable", system-ui, sans-serif; letter-spacing: -0.02em; }
+.landing :focus-visible { outline: 2px solid var(--l-orange-d); outline-offset: 3px; border-radius: 6px; }
+@keyframes l-blink { 50% { opacity: 0; } }
+@keyframes l-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.landing .l-caret { animation: l-blink 1s steps(1) infinite; }
+.landing .l-in { animation: l-rise .45s ease both; }
+@media (prefers-reduced-motion: reduce) { .landing .l-caret, .landing .l-in { animation: none; } .landing { scroll-behavior: auto; } }
+
+/* Skroll zamanı görünmə effektləri (Reveal komponenti) */
+.landing .l-reveal { opacity: 0; transition: opacity .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms), transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms); will-change: opacity, transform; }
+.landing .l-up { transform: translateY(32px) scale(.98); }
+.landing .l-left { transform: translateX(-40px); }
+.landing .l-right { transform: translateX(40px); }
+.landing .l-scale { transform: scale(.9); }
+.landing .l-reveal.is-in { opacity: 1; transform: none; }
+/* Addımları birləşdirən nöqtəli xətt görünəndə "çəkilir" */
+.landing .l-draw { transform: scaleX(0); transform-origin: left; transition: transform .9s ease .5s; }
+.landing .l-draw-y { transform: scaleY(0); transform-origin: top; transition: transform .9s ease .5s; }
+.landing .is-in .l-draw, .landing .is-in .l-draw-y { transform: none; }
+/* Kartın üzərinə gələndə qalxır */
+.landing .l-lift { transition: transform .25s ease, box-shadow .25s ease; }
+.landing .l-lift:hover { transform: translateY(-5px); box-shadow: 0 18px 36px -18px rgba(12,42,37,.35); }
+/* Hero söhbət pəncərəsi yavaşca "nəfəs alır" */
+@keyframes l-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.landing .l-float { animation: l-float 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .landing .l-reveal { opacity: 1; transform: none; transition: none; }
+  .landing .l-draw, .landing .l-draw-y { transform: none; transition: none; }
+  .landing .l-lift, .landing .l-lift:hover { transition: none; transform: none; }
+  .landing .l-float { animation: none; }
+}
