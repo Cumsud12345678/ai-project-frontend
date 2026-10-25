@@ -2,14 +2,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Settings, LogOut, Menu, Shield, Wallet, X } from "lucide-react";
+import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Settings, LogOut, Menu, Shield, Rocket, Wallet, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getLiveCount } from "@/lib/api";
 import { SessionProvider, useSession } from "@/components/session";
 import { LangSwitch, useT } from "@/lib/i18n";
 
 // label: Azərbaycan açarı, render zamanı tərcümə olunur
 // only: göstərildiyi rejimlər (yoxdursa hamısında); listings = elan, support = dəstək botu
 const nav: { href: string; label: string; icon: typeof Gauge; only?: ("listings" | "support" | "both")[] }[] = [
+  { href: "/setup", label: "Quraşdırma", icon: Rocket },
   { href: "/dashboard", label: "İstifadə", icon: Gauge },
   { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
   { href: "/knowledge", label: "Bilik bazası", icon: BookOpen },
@@ -23,7 +25,7 @@ const nav: { href: string; label: string; icon: typeof Gauge; only?: ("listings"
 ];
 
 /** Menyunun məzmunu: kompüterdə sol panel, telefonda açılan yan menyu. */
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; waiting?: number }) {
   const pathname = usePathname();
   const { me, tenant, signOut } = useSession();
   const t = useT();
@@ -38,12 +40,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
       <nav aria-label={t("Panel")} className="flex flex-col gap-1">
-        {nav.filter((n) => !n.only || !tenant || n.only.includes(mode)).map(({ href, label, icon: Icon }) => {
+        {nav.filter((n) => (n.href === "/setup" ? !tenant : !n.only || !tenant || n.only.includes(mode))).map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link key={href} href={href} onClick={onNavigate} aria-current={active ? "page" : undefined}
               className={cn("flex items-center gap-3 whitespace-nowrap rounded-md border-l-2 px-3 py-2.5 text-sm transition-colors", active ? "border-white bg-sidebar-accent font-medium text-white" : "border-transparent text-sidebar-muted hover:bg-sidebar-accent hover:text-white")}>
               <Icon size={16} aria-hidden /> {t(label)}
+              {href === "/inbox" && waiting > 0 && <span aria-label={t("{n} cavab gözləyən canlı söhbət", { n: waiting })} className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-white">{waiting}</span>}
             </Link>
           );
         })}
@@ -67,10 +70,20 @@ function Shell({ children }: { children: React.ReactNode }) {
   const { tenant } = useSession();
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [waiting, setWaiting] = useState(0);
   const closeRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+  // Cavab gözləyən canlı söhbətlər menyuda qırmızı sayğacla görünür
+  useEffect(() => {
+    if (!tenant) return;
+    let on = true;
+    const f = () => getLiveCount().then((r) => { if (on) setWaiting(r.enabled ? r.waiting : 0); }).catch(() => {});
+    f();
+    const i = setInterval(f, 20000);
+    return () => { on = false; clearInterval(i); };
+  }, [tenant]);
   useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();
@@ -97,13 +110,13 @@ function Shell({ children }: { children: React.ReactNode }) {
           className={cn("absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-sidebar shadow-xl transition-transform duration-300 ease-out", open ? "translate-x-0" : "-translate-x-full")}>
           <button ref={closeRef} type="button" onClick={() => { setOpen(false); menuRef.current?.focus(); }} aria-label={t("Menyunu bağla")}
             className="absolute top-3 right-3 grid size-9 cursor-pointer place-items-center rounded-lg text-sidebar-foreground hover:bg-sidebar-accent"><X size={20} aria-hidden /></button>
-          <SidebarContent onNavigate={() => setOpen(false)} />
+          <SidebarContent onNavigate={() => setOpen(false)} waiting={waiting} />
         </aside>
       </div>
 
       {/* Kompüter: sabit sol panel */}
       <aside className="hidden bg-sidebar md:sticky md:top-0 md:block md:h-screen">
-        <SidebarContent />
+        <SidebarContent waiting={waiting} />
       </aside>
       <main className="mx-auto w-full max-w-5xl px-5 py-6 md:py-8">{children}</main>
     </div>

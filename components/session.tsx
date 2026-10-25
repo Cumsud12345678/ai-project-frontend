@@ -64,7 +64,7 @@ export function RequireTenant({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col items-start gap-3 rounded-lg border border-border bg-card p-6">
       <h1 className="text-xl font-semibold">{t("Hələ qurulum tamamlanmayıb")}</h1>
       <p className="text-sm text-muted-foreground">{t("Elan mənbəyi qoş və ya sənədlərdən cavab verən dəstək botu qur.")}</p>
-      <Button onClick={() => router.push("/connection")}>{t("Qurulumu başla")}</Button>
+      <Button onClick={() => router.push("/setup")}>{t("Qurulumu başla")}</Button>
     </div>
   );
 }

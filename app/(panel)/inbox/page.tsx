@@ -1,15 +1,16 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Mail, Phone, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
-import { deleteLead, deleteUnanswered, getLeads, getUnanswered, setLeadHandled, type LeadRow, type UnansweredRow } from "@/lib/api";
+import { deleteLead, deleteUnanswered, getLeads, getLiveCount, getUnanswered, setLeadHandled, type LeadRow, type UnansweredRow } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { RequireTenant } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
+import { LiveInbox } from "@/components/live-inbox";
 
 function Leads({ rows, reload }: { rows: LeadRow[]; reload: () => void }) {
   const { t, short } = useI18n();
@@ -77,14 +78,20 @@ function Unanswered({ rows, reload }: { rows: UnansweredRow[]; reload: () => voi
 
 function Inbox() {
   const { t } = useI18n();
-  const [tab, setTab] = useState<"leads" | "unanswered">("leads");
+  const [tab, setTab] = useState<"live" | "leads" | "unanswered">("leads");
+  const [live, setLive] = useState<{ enabled: boolean; open: number; waiting: number } | null>(null);
   const [leads, setLeads] = useState<Awaited<ReturnType<typeof getLeads>> | null>(null);
   const [un, setUn] = useState<Awaited<ReturnType<typeof getUnanswered>> | null>(null);
   const [error, setError] = useState("");
   const load = useCallback(() => {
     Promise.all([getLeads(), getUnanswered()]).then(([l, u]) => { setLeads(l); setUn(u); setError(""); }).catch((e: Error) => setError(e.message));
+    getLiveCount().then(setLive).catch(() => {});
   }, []);
   useEffect(() => { load(); }, [load]);
+  // Canlı söhbətlər gözləyirsə əvvəlcə onu göstər (yalnız ilk yüklənəndə)
+  const picked = useRef(false);
+  useEffect(() => { if (live && !picked.current) { picked.current = true; if (live.enabled && live.waiting > 0) setTab("live"); } }, [live]);
+  useEffect(() => { const i = setInterval(() => { getLiveCount().then(setLive).catch(() => {}); }, 8000); return () => clearInterval(i); }, []);
 
   if (!leads || !un) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <CardSkeleton rows={3} />;
   return (
@@ -94,10 +101,11 @@ function Inbox() {
         <p className="text-sm text-muted-foreground">{t("Çat cavab verə bilməyəndə istifadəçilər sənə yazır. Yeni müraciət e-poçtuna da gəlir.")}</p>
       </header>
       <Tabs value={tab} onChange={setTab} label={t("Bölmə")} items={[
+        { value: "live", label: t("Canlı söhbət"), badge: live?.waiting ?? 0 },
         { value: "leads", label: t("Müraciətlər"), badge: leads.open },
         { value: "unanswered", label: t("Cavabsız suallar"), badge: un.total },
       ]} />
-      {tab === "leads" ? <Leads rows={leads.items} reload={load} /> : <Unanswered rows={un.items} reload={load} />}
+      {tab === "live" ? <LiveInbox enabled={Boolean(live?.enabled)} onChange={load} /> : tab === "leads" ? <Leads rows={leads.items} reload={load} /> : <Unanswered rows={un.items} reload={load} />}
     </div>
   );
 }

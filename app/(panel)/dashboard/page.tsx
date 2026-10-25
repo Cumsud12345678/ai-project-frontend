@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Check, CircleHelp, Coins, Gauge, Hourglass, CircleCheck, PhoneCall, Wallet, Zap } from "lucide-react";
-import { getOverview, getUsage, type Overview, type Usage } from "@/lib/api";
+import { AlertTriangle, ArrowRight, Check, CircleHelp, Coins, Gauge, Hourglass, CircleCheck, PhoneCall, ThumbsUp, UserRound, Wallet, Zap } from "lucide-react";
+import { getFeedback, getOverview, getUsage, type FeedbackSummary, type Overview, type Usage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
@@ -18,14 +18,16 @@ export default function DashboardPage() {
   const { t, num } = useI18n();
   const [usage, setUsage] = useState<Usage | null>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [fb, setFb] = useState<FeedbackSummary | null>(null);
   const [error, setError] = useState("");
 
-  // Yeni istifadəçi: əvvəlcə elan mənbəyini qoşmalıdır.
-  useEffect(() => { if (!tenant) router.replace("/connection"); }, [tenant, router]);
+  // Yeni istifadəçi: quraşdırma sehrbazına
+  useEffect(() => { if (!tenant) router.replace("/setup"); }, [tenant, router]);
   useEffect(() => {
     if (!tenant) return;
     getUsage().then(setUsage).catch((e: Error) => setError(e.message));
     getOverview().then(setOverview).catch(() => {}); // əlavə bloklar yüklənməsə də səhifə işləyir
+    getFeedback(30).then(setFb).catch(() => {});
   }, [tenant]);
   if (!tenant) return null;
   if (!usage && !error) return <DashboardSkeleton />;
@@ -41,6 +43,7 @@ export default function DashboardPage() {
   const att = overview?.attention ?? [];
   const attText: Record<string, { text: string; href: string }> = {
     widgetOff: { text: t("Çat vidjeti söndürülüb: saytında görünmür."), href: "/embed" },
+    live: { text: t("{n} canlı söhbət cavab gözləyir.", { n: att.find((a) => a.kind === "live")?.count ?? 0 }), href: "/inbox" },
     leads: { text: t("{n} həll olunmamış müraciət var.", { n: att.find((a) => a.kind === "leads")?.count ?? 0 }), href: "/inbox" },
     unanswered: { text: t("Son 7 gündə {n} sual cavabsız qaldı: çatışan məlumatı əlavə et.", { n: att.find((a) => a.kind === "unanswered")?.count ?? 0 }), href: "/inbox" },
     sourceErrors: { text: t("{n} mənbə oxuna bilmədi.", { n: att.find((a) => a.kind === "sourceErrors")?.count ?? 0 }), href: "/knowledge" },
@@ -124,12 +127,32 @@ export default function DashboardPage() {
       {q && q.total > 0 && (
         <div>
           <h2 className="mb-2 text-sm font-medium text-muted-foreground">{t("Keyfiyyət (son 30 gün)")}</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile icon={CircleCheck} tone={1} label={supportMode ? t("Cavab verilən sorğular") : t("Nəticə tapılan sorğular")} value={q.answerRate === null ? "–" : `${q.answerRate}%`} hint={t("{n} sorğudan", { n: num(q.total) })} />
             <StatTile icon={CircleHelp} tone={3} label={supportMode ? t("Cavabsız qalanlar") : t("Nəticəsiz sorğular")} value={num(q.noResults)} />
             {supportMode && q.handoffs !== null && <StatTile icon={PhoneCall} tone={2} label={t("Operatora yönləndirilən")} value={num(q.handoffs)} hint={t("müraciət")} />}
+            {fb && fb.up + fb.down > 0 && <StatTile icon={ThumbsUp} tone={4} label={t("Faydalı cavab")} value={`${Math.round((fb.up / (fb.up + fb.down)) * 100)}%`} hint={t("{n} rəydən", { n: num(fb.up + fb.down) })} />}
+            {overview?.live?.enabled && <StatTile icon={UserRound} tone={5} label={t("Açıq canlı söhbət")} value={num(overview.live.open)} hint={overview.live.waiting ? t("{n} cavab gözləyir", { n: num(overview.live.waiting) }) : undefined} />}
           </div>
         </div>
+      )}
+
+      {fb && fb.bad.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("Faydalı olmayan cavablar")}</CardTitle>
+            <CardDescription>{t("Ziyarətçilər bu cavablara 👎 verib. Çatışan məlumatı Bilik bazasına əlavə et.")}</CardDescription>
+          </CardHeader>
+          <ul className="divide-y divide-border">
+            {fb.bad.slice(0, 5).map((b, i) => (
+              <li key={i} className="px-5 py-3 text-sm">
+                <p className="font-medium">{b.question}</p>
+                {b.answer && <p className="mt-0.5 line-clamp-2 text-muted-foreground">{b.answer}</p>}
+              </li>
+            ))}
+          </ul>
+          <CardContent className="border-t border-border"><Link href="/knowledge" className="text-sm text-primary underline">{t("Bilik bazasına əlavə et")}</Link></CardContent>
+        </Card>
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

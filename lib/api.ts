@@ -4,7 +4,7 @@ export type Mode = "listings" | "support" | "both";
 export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; mode?: Mode; fallbackMessage?: string };
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string };
 
-export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; label: string; limits?: { perVisitorDay: number; siteHour: number }; lastSeenAt?: string | null };
+export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string };
 
 export type Me = { email: string; role: "user" | "admin" };
@@ -150,13 +150,27 @@ export const deleteLead = (id: string) => call<{ ok: true }>(`/tenant/kb/leads/$
 export type Overview = {
   mode: Mode;
   setup: { dataReady: boolean; dataCount: number; widgetInstalled: boolean; widgetEnabled: boolean; firstQuestion: boolean; queriesLogged: boolean };
-  attention: { kind: "widgetOff" | "leads" | "unanswered" | "sourceErrors" | "noResults"; count: number }[];
+  attention: { kind: "widgetOff" | "live" | "leads" | "unanswered" | "sourceErrors" | "noResults"; count: number }[];
   quality: { total: number; noResults: number; errors: number; answerRate: number | null; handoffs: number | null };
   top: { message: string; count: number }[];
   limits?: { perVisitorDay: number; siteHour: number };
+  live?: { enabled: boolean; open: number; waiting: number };
+  feedback?: { up: number; down: number };
   billing?: { state: BillingState; balanceAzn: number; freeAzn: number; paidAzn: number; monthAzn: number; enforced: boolean } | null;
 };
 export const getOverview = () => call<Overview>("/tenant/overview");
+
+// Canlı operator söhbəti və cavablara rəy
+export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string };
+export type LiveItem = { id: string; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
+export type LiveChat = { id: string; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
+export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
+export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[] }>(`/tenant/live?status=${status}`);
+export const getLiveChat = (id: string) => call<{ chat: LiveChat }>(`/tenant/live/${id}`);
+export const sendLive = (id: string, text: string) => post<{ total: number }>(`/tenant/live/${id}/messages`, { text });
+export const closeLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/close`);
+export type FeedbackSummary = { days: number; up: number; down: number; bad: { at: string; question: string; answer: string }[] };
+export const getFeedback = (days = 30) => call<FeedbackSummary>(`/tenant/feedback?days=${days}`);
 
 // Balans
 export type BillingState = "ok" | "low" | "empty";

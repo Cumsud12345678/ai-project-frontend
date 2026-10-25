@@ -132,6 +132,7 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
   const { t } = useI18n();
   const w = data.widget;
   const [enabled, setEnabled] = useState(w.enabled);
+  const [liveOn, setLiveOn] = useState(Boolean(w.live?.enabled));
   const [title, setTitle] = useState(w.title);
   const [greeting, setGreeting] = useState(w.greeting);
   const [color, setColor] = useState(w.color);
@@ -156,8 +157,8 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
   const [rotating, setRotating] = useState<"idle" | "confirm" | "busy">("idle");
 
   // Hər kartın öz "Saxla" düyməsi var; yalnız həmin kartın sahələri göndərilir.
-  const look = { enabled, title, greeting, color, label };
-  const lookDirty = look.enabled !== w.enabled || look.title !== w.title || look.greeting !== w.greeting || look.color !== w.color || look.label !== (w.label ?? "");
+  const look = { enabled, title, greeting, color, label, live: { enabled: liveOn } };
+  const lookDirty = look.enabled !== w.enabled || look.title !== w.title || look.greeting !== w.greeting || look.color !== w.color || look.label !== (w.label ?? "") || look.live.enabled !== Boolean(w.live?.enabled);
   const parsedOrigins = () => origins.split("\n").map((s) => s.trim()).filter(Boolean);
   const originsDirty = JSON.stringify(parsedOrigins()) !== JSON.stringify(w.origins);
   const saveLook = async () => { onChange(await saveWidget(look)); };
@@ -235,6 +236,8 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <SwitchRow className="sm:col-span-2" checked={enabled} onChange={setEnabled} on={t("Açıq")} off={t("Bağlı")}
               title={t("Vidjet aktivdir")} description={t("Söndürsən çat düyməsi saytında göstərilmir (skripti silmək lazım deyil).")} />
+            <SwitchRow className="sm:col-span-2" checked={liveOn} onChange={setLiveOn} on={t("Açıq")} off={t("Bağlı")}
+              title={t("Canlı operator söhbəti")} description={t("Ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, sən isə Müraciətlər bölməsindən real vaxtda cavab verirsən. Yalnız panelə baxa bildiyin vaxtlarda aç: operator cavab verməsə ziyarətçiyə əlaqə forması təklif olunur.")} />
             <div className="flex flex-col gap-1"><Label htmlFor="title">{t("Başlıq")}</Label><Input id="title" required maxLength={60} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="color">{t("Rəng")}</Label>
