@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { clearQueries, getQueries, getQueryStats, type QueryRow, type QueryStats } from "@/lib/api";
+import { clearQueries, downloadExport, getFunnel, getQueries, getQueryStats, getReport, setReport, type ExportKind, type Funnel, type QueryRow, type QueryStats } from "@/lib/api";
+import { Conversations } from "@/components/conversations";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
 import { RequireTenant, useSession } from "@/components/session";
@@ -12,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-lg border border-border bg-card px-4 py-3"><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-semibold tabular-nums">{value}</p></div>;
+function Stat({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
+  return <div className="rounded-lg border border-border bg-card px-4 py-3"><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-semibold tabular-nums">{value}</p>{hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}</div>;
 }
 
 function TopList({ title, hint, rows }: { title: string; hint: string; rows: { message: string; count: number }[] }) {
@@ -45,6 +46,11 @@ function Queries() {
   const [rows, setRows] = useState<QueryRow[] | null>(null);
   const [meta, setMeta] = useState<{ enabled: boolean; retentionDays: number; hasMore: boolean; nextCursor: string | null }>({ enabled: true, retentionDays: 30, hasMore: false, nextCursor: null });
   const [error, setError] = useState("");
+  const [tab, setTab] = useState<"questions" | "conversations">("questions");
+  const [funnel, setFunnel] = useState<Funnel | null>(null);
+  const [report, setReportOn] = useState<boolean | null>(null);
+  const [exportKind, setExportKind] = useState<ExportKind>("queries");
+  const [exporting, setExporting] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const seq = useRef(0);
@@ -54,7 +60,21 @@ function Queries() {
     let live = true;
     getQueryStats(days).then((s) => live && setStats(s)).catch((e: Error) => live && setError(e.message));
     return () => { live = false; };
+    getFunnel(days).then((f) => live && setFunnel(f)).catch(() => live && setFunnel(null));
   }, [days]);
+  useEffect(() => { getReport().then((r) => setReportOn(r.monthly)).catch(() => setReportOn(null)); }, []);
+
+  async function doExport() {
+    setExporting(true);
+    try { const cut = await downloadExport(exportKind, days); toast.success(cut ? t("Fayl yükləndi (ilk 5000 sətir).") : t("Fayl yükləndi.")); }
+    catch (e) { toast.error((e as Error).message); }
+    finally { setExporting(false); }
+  }
+  async function toggleReport(v: boolean) {
+    setReportOn(v);
+    try { await setReport(v); toast.success(v ? t("Aylıq hesabat açıldı.") : t("Aylıq hesabat söndürüldü.")); }
+    catch (e) { setReportOn(!v); toast.error((e as Error).message); }
+  }
 
   const loadFirst = useCallback(() => {
     const id = ++seq.current;
@@ -104,11 +124,43 @@ function Queries() {
         <Stat label={t("Keşdən (pulsuz)")} value={stats.cached} />
       </div>
       
+      {funnel && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="font-medium">{t("Çat nə qədər müraciət gətirdi")}</h2>
+            <p className="text-xs text-muted-foreground">{t("Söhbət edənlərin neçəsi operatora yazdı və ya əlaqə qoydu. Satışın özü saytında baş verdiyi üçün burada görünmür, “emal olunub” işarəsi isə sənin qeydindir.")}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label={t("Söhbət")} value={funnel.conversations ?? "–"} />
+            <Stat label={t("Operatora yönəldi")} value={funnel.handoffs} hint={t("{live} canlı, {leads} əlaqə forması", { live: funnel.live, leads: funnel.leads })} />
+            <Stat label={t("Yönəlmə faizi")} value={funnel.handoffRate === null ? "–" : `${funnel.handoffRate}%`} />
+            <Stat label={t("Emal olunub")} value={funnel.handledRate === null ? "–" : `${funnel.handledRate}%`} hint={funnel.leads ? t("{a} / {b} müraciət", { a: funnel.leadsHandled, b: funnel.leads }) : undefined} />
+          </div>
+        </section>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         <TopList title={t("Ən çox verilən suallar")} hint={t("Eyni sual təkrar olunduqca yuxarı qalxır.")} rows={stats.top} />
         <TopList title={t("Ən çox nəticəsiz qalanlar")} hint={t("Bu sorğulara uyğun elan yox idi.")} rows={stats.topNoResults} />
       </div>
 
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div role="tablist" className="inline-flex rounded-md border border-border p-0.5 text-sm">
+          {(["questions", "conversations"] as const).map((k) => (
+            <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded px-3 py-1.5 ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{k === "questions" ? t("Suallar") : t("Söhbətlər")}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1"><Label htmlFor="exp">{t("CSV ixracı")}</Label>
+            <select id="exp" value={exportKind} onChange={(e) => setExportKind(e.target.value as ExportKind)} className="h-9 rounded-md border border-border bg-card px-3 text-sm">
+              <option value="queries">{t("Suallar")}</option><option value="conversations">{t("Söhbətlər")}</option><option value="leads">{t("Müraciətlər")}</option><option value="unanswered">{t("Cavabsız suallar")}</option><option value="live">{t("Canlı söhbətlər")}</option>
+            </select>
+          </div>
+          <Button type="button" variant="outline" onClick={doExport} disabled={exporting}>{exporting ? t("Hazırlanır…") : t("Yüklə")}</Button>
+        </div>
+      </div>
+
+      {tab === "conversations" ? <Conversations days={days} enabled={stats.enabled} /> : (<>
       <form onSubmit={(e) => { e.preventDefault(); if (q.trim() === applied) loadFirst(); else setApplied(q.trim()); }} className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1"><Label htmlFor="days">{t("Dövr")}</Label>
           <select id="days" value={days} onChange={(e) => setDays(Number(e.target.value))} className="h-9 rounded-md border border-border bg-card px-3 text-sm">
@@ -151,6 +203,14 @@ function Queries() {
         </div>
       )}
       <p className="text-xs text-muted-foreground">{t("Telefon və email avtomatik gizlədilir. Qeydlər {days} gündən sonra silinir.", { days: list.retentionDays })}</p>
+      </>)}
+
+      {report !== null && (
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm">
+          <Switch checked={report} onChange={toggleReport} id="monthly-report" />
+          <div><Label htmlFor="monthly-report">{t("Aylıq e-poçt hesabatı")}</Label><p className="text-xs text-muted-foreground">{t("Hər ayın 1-i son 30 günün qısa nəticəsi qeydiyyat e-poçtuna göndərilir.")}</p></div>
+        </div>
+      )}
 
       <DangerAction label="Bütün sorğuları sil" confirm={{ kind: "text", expected: t("sil"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("sil") }) }}
         warning={t("Saxlanmış bütün suallar həmişəlik silinəcək.")}

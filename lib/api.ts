@@ -99,9 +99,9 @@ export const adminSetRole = (id: string, role: "admin" | "user") => call<{ ok: t
 export const adminDeleteUser = (id: string) => call<{ ok: true }>(`/admin/users/${id}`, { method: "DELETE" });
 
 // Sayt istifadəçilərinin sualları
-export type QueryRow = { id: string; at: string; message: string; results: number; tokens: number; cached: boolean; error: boolean; costAzn?: number | null };
+export type QueryRow = { id: string; at: string; sid?: string; message: string; results: number; tokens: number; cached: boolean; error: boolean; costAzn?: number | null };
 export type QueryList = { enabled: boolean; retentionDays: number; hasMore: boolean; nextCursor: string | null; queries: QueryRow[] };
-export type QueryStats = { enabled: boolean; days: number; total: number; noResults: number; errors: number; cached: number; top: { message: string; count: number }[]; topNoResults: { message: string; count: number }[]; truncated?: boolean };
+export type QueryStats = { enabled: boolean; days: number; total: number; noResults: number; errors: number; cached: number; conversations?: number; top: { message: string; count: number }[]; topNoResults: { message: string; count: number }[]; truncated?: boolean };
 export const getQueries = (q: { days?: number; noResults?: boolean; q?: string; limit?: number; before?: string | null }) => {
   const p = new URLSearchParams();
   if (q.before) p.set("before", q.before);
@@ -112,6 +112,36 @@ export const getQueries = (q: { days?: number; noResults?: boolean; q?: string; 
   return call<QueryList>(`/tenant/queries${p.size ? `?${p}` : ""}`);
 };
 export const getQueryStats = (days: number) => call<QueryStats>(`/tenant/queries/stats?days=${days}`);
+// Söhbət tarixçəsi, konversiya, ixrac, aylıq hesabat
+export type ConversationRow = { sid: string; startedAt: string; lastAt: string; messages: number; first: string; unanswered: number; costAzn: number };
+export type ConversationList = { enabled: boolean; hasMore: boolean; nextCursor: string | null; conversations: ConversationRow[] };
+export type ConversationMsg = { id: string; at: string; message: string; answer: string | null; results: number; error: boolean; costAzn: number | null };
+export const getConversations = (q: { days?: number; limit?: number; before?: string | null }) => {
+  const p = new URLSearchParams();
+  if (q.before) p.set("before", q.before);
+  if (q.days) p.set("days", String(q.days));
+  if (q.limit) p.set("limit", String(q.limit));
+  return call<ConversationList>(`/tenant/conversations${p.size ? `?${p}` : ""}`);
+};
+export const getConversation = (sid: string) => call<{ sid: string; messages: ConversationMsg[] }>(`/tenant/conversations/${encodeURIComponent(sid)}`);
+export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null };
+export const getFunnel = (days: number) => call<Funnel>(`/tenant/funnel?days=${days}`);
+export const getReport = () => call<{ monthly: boolean }>("/tenant/report");
+export const setReport = (monthly: boolean) => call<{ monthly: boolean }>("/tenant/report", { method: "PUT", body: { monthly } });
+export type ExportKind = "queries" | "conversations" | "leads" | "unanswered" | "live";
+/** CSV faylı yükləyir (brauzer saxlama pəncərəsi açılır). Qaytarır: 5000 sətirdə kəsildimi. */
+export async function downloadExport(kind: ExportKind, days: number): Promise<boolean> {
+  let res: Response;
+  try { res = await fetch(`/api/portal/tenant/export/${kind}?days=${days}`); }
+  catch { throw new ApiError(0, "Serverə qoşulmaq olmur. İnternetini və ya serverin işlədiyini yoxla.", "NETWORK"); }
+  if (!res.ok) { const d = await res.json().catch(() => ({})); throw new ApiError(res.status, d.error ?? "Xəta baş verdi", d.code); }
+  const name = /filename="([^"]+)"/.exec(res.headers.get("content-disposition") ?? "")?.[1] ?? `${kind}.csv`;
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  return res.headers.get("x-truncated") === "1";
+}
 export const clearQueries = () => call<{ ok: true }>("/tenant/queries", { method: "DELETE" });
 
 // Bilik bazası (dəstək botu)
