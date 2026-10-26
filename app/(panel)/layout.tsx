@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getLiveCount } from "@/lib/api";
 import { SessionProvider, useSession } from "@/components/session";
 import { LangSwitch, useT } from "@/lib/i18n";
+import { useLiveEvents } from "@/lib/live-socket";
 
 // label: Azərbaycan açarı, render zamanı tərcümə olunur
 // only: göstərildiyi rejimlər (yoxdursa hamısında); listings = elan, support = dəstək botu
@@ -71,6 +72,8 @@ function Shell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [waiting, setWaiting] = useState(0);
+  const [liveOn, setLiveOn] = useState(false);
+  const refreshWaiting = useRef<() => void>(() => {});
   const closeRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
 
@@ -79,11 +82,14 @@ function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!tenant) return;
     let on = true;
-    const f = () => getLiveCount().then((r) => { if (on) setWaiting(r.enabled ? r.waiting : 0); }).catch(() => {});
+    const f = () => getLiveCount().then((r) => { if (on) { setLiveOn(r.enabled); setWaiting(r.enabled ? r.waiting : 0); } }).catch(() => {});
     f();
     const i = setInterval(f, 20000);
+    refreshWaiting.current = f;
     return () => { on = false; clearInterval(i); };
   }, [tenant]);
+  // Canlı söhbət açıqdırsa: yeni mesaj siqnalı ilə sayğac dərhal yenilənir
+  useLiveEvents((e) => { if (e.t === "live") refreshWaiting.current(); }, liveOn);
   useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();

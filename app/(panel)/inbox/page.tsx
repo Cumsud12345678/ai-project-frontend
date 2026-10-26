@@ -105,7 +105,7 @@ function Inbox() {
         { value: "leads", label: t("Müraciətlər"), badge: leads.open },
         { value: "unanswered", label: t("Cavabsız suallar"), badge: un.total },
       ]} />
-      {tab === "live" ? <LiveInbox enabled={Boolean(live?.enabled)} onChange={load} /> : tab === "leads" ? <Leads rows={leads.items} reload={load} /> : <Unanswered rows={un.items} reload={load} />}
+      {tab === "live" ? <LiveInbox enabled={Boolean(live?.enabled)} onChange={() => { getLiveCount().then(setLive).catch(() => {}); }} /> : tab === "leads" ? <Leads rows={leads.items} reload={load} /> : <Unanswered rows={un.items} reload={load} />}
     </div>
   );
 }

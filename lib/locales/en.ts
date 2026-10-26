@@ -925,6 +925,7 @@ export const en: Record<string, string> = {
   "Çatla əvvəlki yazışma ({n} mesaj)": "Earlier conversation with the chat ({n} messages)",
   "Söhbət bitdi.": "Chat ended.",
   "Ziyarətçi hələ mesaj yazmayıb.": "The visitor hasn't written yet.",
+  "Ziyarətçi yazır…": "Visitor is typing…",
   "Cavabın": "Your reply",
   "Cavabını yaz…": "Write your reply…",
   "Bu söhbət bağlanıb.": "This chat is closed.",

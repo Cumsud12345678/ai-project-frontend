@@ -165,6 +165,7 @@ export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; a
 export type LiveItem = { id: string; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
 export type LiveChat = { id: string; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
 export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
+export const getLiveTicket = () => post<{ ticket: string; url: string }>("/tenant/live/ws-ticket");
 export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[] }>(`/tenant/live?status=${status}`);
 export const getLiveChat = (id: string) => call<{ chat: LiveChat }>(`/tenant/live/${id}`);
 export const sendLive = (id: string, text: string) => post<{ total: number }>(`/tenant/live/${id}/messages`, { text });

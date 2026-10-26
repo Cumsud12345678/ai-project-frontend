@@ -5,12 +5,13 @@ import { ArrowLeft, Mail, Phone, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { closeLive, getLiveChat, getLiveList, sendLive, type LiveChat, type LiveItem } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { sendTyping, useLiveEvents } from "@/lib/live-socket";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 
-/** Canlı operator söhbəti: solda söhbətlər, sağda yazışma. Siyahı 5, açıq söhbət 3 saniyədən bir yenilənir. */
+/** Canlı operator söhbəti: solda söhbətlər, sağda yazışma. Yeni mesaj WebSocket siqnalı ilə dərhal gəlir; bağlantı yoxdursa siyahı 5, açıq söhbət 3 saniyədən bir yenilənir. */
 export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: () => void }) {
   const { t, short } = useI18n();
   const [status, setStatus] = useState<"open" | "closed">("open");
@@ -21,15 +22,30 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   const [busy, setBusy] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
+  const [typing, setTyping] = useState(false);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const selRef = useRef("");
+  selRef.current = sel;
 
   const loadList = useCallback(() => { getLiveList(status).then((r) => setItems(r.items)).catch(() => {}); }, [status]);
-  useEffect(() => { setItems(null); loadList(); const i = setInterval(loadList, 5000); return () => clearInterval(i); }, [loadList]);
-
   const loadChat = useCallback(() => {
     if (!sel) return;
     getLiveChat(sel).then((r) => setChat(r.chat)).catch(() => setChat(null));
   }, [sel]);
-  useEffect(() => { setChat(null); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, 3000); return () => clearInterval(i); }, [sel, loadChat]);
+  // Real vaxt siqnalı: yeni mesaj/söhbət/bağlanma və "ziyarətçi yazır"
+  const live = useLiveEvents((e) => {
+    if (e.t === "typing") {
+      if (e.id !== selRef.current) return;
+      setTyping(true); clearTimeout(typingTimer.current); typingTimer.current = setTimeout(() => setTyping(false), 4000);
+      return;
+    }
+    loadList(); onChange?.();
+    if (e.id === selRef.current) { setTyping(false); loadChat(); }
+  }, enabled);
+  // Soket qoşuludursa polling yalnız ehtiyatdır
+  useEffect(() => { setItems(null); loadList(); const i = setInterval(loadList, live ? 30000 : 5000); return () => clearInterval(i); }, [loadList, live]);
+
+  useEffect(() => { setChat(null); setTyping(false); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, live ? 20000 : 3000); return () => clearInterval(i); }, [sel, loadChat, live]);
   useEffect(() => { const el = logRef.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [chat?.messages.length]);
 
   async function send(e: React.FormEvent) {
@@ -119,10 +135,11 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
             <div key={i} className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "self-end bg-primary text-primary-foreground" : "self-start border border-border bg-card")}>{m.text}</div>
           ))}
         {!chat.messages.length && <p className="text-sm text-muted-foreground">{t("Ziyarətçi hələ mesaj yazmayıb.")}</p>}
+        {typing && <p className="self-start text-xs italic text-muted-foreground" aria-live="polite">{t("Ziyarətçi yazır…")}</p>}
       </div>
       {chat.status === "open" ? (
         <form onSubmit={send} className="flex items-end gap-2 border-t border-border p-3">
-          <Textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} rows={2} className="min-h-0 flex-1" aria-label={t("Cavabın")} placeholder={t("Cavabını yaz…")}
+          <Textarea value={text} onChange={(e) => { setText(e.target.value); if (chat) sendTyping(chat.id); }} maxLength={1000} rows={2} className="min-h-0 flex-1" aria-label={t("Cavabın")} placeholder={t("Cavabını yaz…")}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} />
           <Button disabled={busy || !text.trim()}><Send size={16} aria-hidden />{t("Göndər")}</Button>
         </form>
