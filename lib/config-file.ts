@@ -99,6 +99,7 @@ export function makeExampleText(t: T = AZ, language = "az"): string {
     "source.vocabulary": t("Siyahıların açarı filtrin adı ilə eyni olmalıdır (make, color). Dəyərlər API-dən oxunur, əl ilə yazılmır"),
     "source.response": t("Cavabın oxunması: elanların cavabdakı yolu və sahələrin uyğunluğu"),
     "source.response.itemsPath": t("Elan massivinin cavabdakı yolu. Cavab birbaşa massivdirsə boş burax"),
+    "source.localText": t("true: API açar söz axtarışını bilmirsə, sistem nəticələri özü süzür"),
     "source.response.defaults": t("Cavabda olmayan sahələr üçün sabit dəyərlər"),
     "source.response.fields": t("ELAN SAHƏLƏRİ: cavabda nə göstərilsin. Sağ tərəf sənin API cavabındakı yoldur (nöqtə ilə), {…} isə şablondur"),
     "source.response.fields.url": t("Elan səhifəsinin ünvanı (şablon)"),

@@ -2,13 +2,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Check, CircleHelp, Coins, Gauge, Hourglass, CircleCheck, PhoneCall, ThumbsUp, UserRound, Wallet, Zap } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, CircleHelp, Coins, Gauge, CircleCheck, PhoneCall, ThumbsUp, UserRound, Wallet, Zap } from "lucide-react";
 import { getFeedback, getOverview, getUsage, type FeedbackSummary, type Overview, type Usage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
 import { DashboardSkeleton } from "@/components/skeletons";
-import { Ring, TrendChart, compact } from "@/components/charts";
+import { TrendChart, compact } from "@/components/charts";
 import { StatTile } from "@/components/stat-tile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -36,7 +36,10 @@ export default function DashboardPage() {
   const limit = usage?.limits.monthlyRequests ?? 0;
   const left = limit ? Math.max(0, limit - used) : null;
   const pct = limit ? (used / limit) * 100 : 0;
-  const ringColor = pct >= 100 ? "var(--destructive)" : pct >= 80 ? "var(--chart-3)" : "var(--chart-1)";
+  // Əsas məhdudiyyət balansdır (AZN, hər sorğunun real xərcinə görə). Sorğu sayı yalnız məlumat üçündür.
+  const bill = overview?.billing ?? null;
+  const avgCost = bill && used >= 20 && bill.monthAzn > 0 ? bill.monthAzn / used : 0;
+  const approxLeft = bill && avgCost > 0 ? Math.floor(bill.balanceAzn / avgCost) : null;
   const data = (usage?.daily ?? []).map((d) => ({ label: `${d.date.slice(8, 10)}.${d.date.slice(5, 7)}`, title: d.date, value: d.requests }));
 
   const supportMode = overview ? overview.mode !== "listings" : false;
@@ -156,24 +159,24 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile icon={Zap} tone={1} label={t("Sorğu")} value={usage ? num(used) : "–"} hint={limit ? `/ ${num(limit)} ${t("sorğu")}` : undefined} />
-        {left !== null
-          ? <StatTile icon={Hourglass} tone={3} label={t("Qalan sorğu")} value={num(left)} />
-          : <StatTile icon={Wallet} tone={3} label={t("Balans")} value={overview?.billing ? `${overview.billing.balanceAzn.toFixed(2)} AZN` : "–"} />}
-        <StatTile icon={Coins} tone={2} label={t("Bu ay xərc")} value={overview?.billing ? `${overview.billing.monthAzn.toFixed(2)} AZN` : "–"} hint={t("Ətraflı: Balans bölməsi")} />
+        <StatTile icon={Wallet} tone={3} label={t("Balans")} value={bill ? `${bill.balanceAzn.toFixed(2)} AZN` : "–"} hint={bill ? `${t("Pulsuz hissə")}: ${bill.freeAzn.toFixed(2)} · ${t("Yüklənmiş hissə")}: ${bill.paidAzn.toFixed(2)}` : undefined} />
+        <StatTile icon={Coins} tone={2} label={t("Bu ay xərc")} value={bill ? `${bill.monthAzn.toFixed(2)} AZN` : "–"} hint={t("Ətraflı: Balans bölməsi")} />
+        <StatTile icon={Zap} tone={1} label={t("Sorğu")} value={usage ? num(used) : "–"} hint={limit ? t("Admin limiti: {n}", { n: num(limit) }) : undefined} />
         <StatTile icon={Gauge} tone={4} label={t("Ziyarətçi limiti")} value={overview?.limits ? (overview.limits.perVisitorDay > 0 ? num(overview.limits.perVisitorDay) : t("limitsiz")) : "–"} hint={overview?.limits && overview.limits.perVisitorDay > 0 ? t("mesaj / gün") : undefined} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {limit > 0 && usage && (
+        {bill && (
           <Card>
-            <CardHeader><CardTitle>{t("Aylıq limit")}</CardTitle><CardDescription>{t("{limit} sorğudan {used} istifadə olunub", { limit, used })}</CardDescription></CardHeader>
-            <CardContent className="py-6">
-              <Ring pct={pct} color={ringColor} label={t("{limit} sorğudan {used} istifadə olunub", { limit, used })} />
+            <CardHeader><CardTitle>{t("Balans")}</CardTitle><CardDescription>{t("Hər sorğunun real xərcinə görə çıxılır")}</CardDescription></CardHeader>
+            <CardContent className="flex flex-col gap-3 py-6">
+              <p className="text-3xl font-semibold tabular-nums">{bill.balanceAzn.toFixed(2)} <span className="text-base font-normal text-muted-foreground">AZN</span></p>
+              {approxLeft !== null && <p className="text-sm text-muted-foreground">{t("Bu ayın orta xərcinə görə təxminən {n} sorğuya çatır.", { n: num(approxLeft) })}</p>}
+              {bill.enforced && <Link href="/billing" className="text-sm text-primary underline">{t("Balansı yüklə")}</Link>}
             </CardContent>
           </Card>
         )}
-        <Card className={limit > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
+        <Card className={bill ? "lg:col-span-2" : "lg:col-span-3"}>
           <CardHeader>
             <CardTitle>{t("Son 14 gün")}</CardTitle>
             <CardDescription>{t("Günlər UTC ilə sayılır. Test söhbəti və çat vidjeti də sorğu kimi sayılır.")}</CardDescription>
