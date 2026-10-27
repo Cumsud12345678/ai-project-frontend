@@ -42,6 +42,12 @@ const EXTRA = [
   "Token düzgün formatda deyil. @BotFather-in verdiyi tokeni olduğu kimi yapışdır.", "Token yanlışdır. @BotFather-dən tokeni yenidən kopyala.", "Bu bot artıq başqa hesaba qoşulub",
   "Telegram yalnız https ünvana göndərir: serverdə PUBLIC_PORTAL_URL https olmalıdır", "Serverdə CHANNEL_SECRET_KEY təyin edilməyib: Telegram tokenini şifrələmək mümkün deyil",
   "Əvvəlcə qurulumu tamamla", "Telegram botu qoşulmayıb",
+  // WhatsApp kanalı: portalın statik və vəziyyət mesajları
+  "Serverdə CHANNEL_SECRET_KEY təyin edilməyib: WhatsApp sessiyasını şifrələmək mümkün deyil", "Davam etmək üçün riskləri qəbul etməlisən", "Çox tez-tez cəhd edirsən, bir az gözlə",
+  "WhatsApp qoşulmaları hazırda doludur, sonra yenidən yoxla", "WhatsApp qoşulmayıb",
+  // Vidjet dizaynı: portalın xəta mesajları
+  "Loqo faylı çox böyükdür (maksimum 100 KB)", "Loqo PNG, JPG və ya WebP olmalıdır", "Mövzu light, dark və ya auto olmalıdır",
+  "Bu nömrə artıq başqa hesaba qoşulub", "Bu nömrə başqa yerdə açılıb (ikinci server və ya cihaz). Yenidən qoş.", "WhatsApp ilə bağlantı bərpa olunmadı", "Qoşulmaq alınmadı",
   "Serverə qoşulmaq olmur. İnternetini və ya serverin işlədiyini yoxla.",
   "Xəta baş verdi",
   "Admin hesabı buradan silinmir",

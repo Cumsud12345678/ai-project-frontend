@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FileText, Globe, Loader2, Plug, RefreshCw, Trash2, Type, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
-import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProfile, type KbInfo, type KbSource, type Mode } from "@/lib/api";
+import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProfile, type AutoRefresh, type KbInfo, type KbSource, type Mode } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { RequireTenant, useSession } from "@/components/session";
@@ -55,7 +55,7 @@ function AddSection({ info, onAdded }: { info: KbInfo; onAdded: () => void }) {
   const [drag, setDrag] = useState(false);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
-  const [crawl, setCrawl] = useState(false);
+  const [crawl, setCrawl] = useState(true);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -165,6 +165,7 @@ function SourceRow({ s, onChange }: { s: KbSource; onChange: () => void }) {
             {[s.type === "file" ? t("Fayl") : s.type === "text" ? t("Mətn") : s.type === "site" ? t("Bütün sayt") : t("Səhifə"), size, s.status === "ready" ? t("{n} hissə", { n: num(s.chunks) }) : "", s.lastIndexedAt ? short(s.lastIndexedAt) : ""].filter(Boolean).join(" · ")}
           </p>
           {s.status === "failed" && s.error && <p role="alert" className="mt-1 text-xs text-destructive">{t(s.error)}</p>}
+          {s.status === "ready" && s.refreshError && <p className="mt-1 text-xs text-amber">{t("Son avtomatik yenilənmə alınmadı, köhnə məlumat işləyir")}: {t(s.refreshError)}</p>}
         </div>
       </div>
       <div className="flex items-center gap-2 pl-8 sm:pl-0">
@@ -184,6 +185,29 @@ function SourceRow({ s, onChange }: { s: KbSource; onChange: () => void }) {
         )}
       </div>
     </li>
+  );
+}
+
+function AutoRefreshCard({ info }: { info: KbInfo }) {
+  const { t } = useI18n();
+  const [value, setValue] = useState<AutoRefresh>(info.autoRefresh ?? "weekly");
+  const [busy, setBusy] = useState(false);
+  const hasSites = info.sources.some((s) => s.type === "url" || s.type === "site");
+  async function change(v: AutoRefresh) {
+    const prev = value;
+    setValue(v); setBusy(true);
+    try { await saveProfile({ kbAutoRefresh: v }); toast.success(t("Saxlandı.")); }
+    catch (e) { setValue(prev); toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+  return (
+    <Card>
+      <CardHeader><CardTitle>{t("Saytın avtomatik yenilənməsi")}</CardTitle><CardDescription>{t("Əlavə etdiyin saytlar seçdiyin vaxtda özü yenidən oxunur. Məzmun dəyişməyibsə heç nə edilmir və xərc çıxmır.")}</CardDescription></CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <Segmented value={value} onChange={(v) => { if (!busy) void change(v); }} label={t("Yenilənmə tezliyi")} options={[{ value: "off", label: t("Söndürülüb") }, { value: "daily", label: t("Hər gün") }, { value: "weekly", label: t("Hər həftə") }]} />
+        <p className="text-sm text-muted-foreground">{hasSites ? t("Yalnız sayt linkləri yenilənir. Fayl və mətnlər dəyişmir. İstəsən istənilən vaxt “Yenilə” düyməsi ilə dərhal yeniləyə bilərsən.") : t("Hələ sayt linki əlavə etməmisən. Əlavə edəndə burada seçdiyin tezliklə yenilənəcək.")}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -268,6 +292,7 @@ function Knowledge() {
         </div>
       </Card>
 
+      {usesKb && <AutoRefreshCard info={info} />}
       {usesKb && <FallbackCard info={info} />}
     </div>
   );

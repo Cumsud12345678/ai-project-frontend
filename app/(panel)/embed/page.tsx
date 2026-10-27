@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, MessageCircle, X } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 import { toast } from "sonner";
 import { getWidget, rotateWidgetKey, saveWidget, type WidgetResponse } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
+import { AppearanceCard } from "./appearance-card";
 
 // Ekran 3 pilləyə bölünür: lg (kompüter), md (planşet), sm (telefon). Boş xana yuxarı pillədən miras alır.
 type Placement = {
@@ -131,12 +132,6 @@ function SaveCard({ dirty, onSave, children }: { dirty: boolean; onSave: () => P
 function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: WidgetResponse) => void }) {
   const { t } = useI18n();
   const w = data.widget;
-  const [enabled, setEnabled] = useState(w.enabled);
-  const [liveOn, setLiveOn] = useState(Boolean(w.live?.enabled));
-  const [title, setTitle] = useState(w.title);
-  const [greeting, setGreeting] = useState(w.greeting);
-  const [color, setColor] = useState(w.color);
-  const [label, setLabel] = useState(w.label ?? "");
   const [origins, setOrigins] = useState(w.origins.join("\n"));
   const [place, setPlace] = useState<Placement>(EMPTY);
   // Limitlər: 0 = limitsiz. Xana boşdursa/səhvdirsə "limitsiz" sayılmır, dəyər yoxlanır.
@@ -157,11 +152,9 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
   const [rotating, setRotating] = useState<"idle" | "confirm" | "busy">("idle");
 
   // Hər kartın öz "Saxla" düyməsi var; yalnız həmin kartın sahələri göndərilir.
-  const look = { enabled, title, greeting, color, label, live: { enabled: liveOn } };
-  const lookDirty = look.enabled !== w.enabled || look.title !== w.title || look.greeting !== w.greeting || look.color !== w.color || look.label !== (w.label ?? "") || look.live.enabled !== Boolean(w.live?.enabled);
+  // Hər kartın öz "Saxla" düyməsi var; yalnız həmin kartın sahələri göndərilir.
   const parsedOrigins = () => origins.split("\n").map((s) => s.trim()).filter(Boolean);
   const originsDirty = JSON.stringify(parsedOrigins()) !== JSON.stringify(w.origins);
-  const saveLook = async () => { onChange(await saveWidget(look)); };
   const saveOrigins = async () => { const next = await saveWidget({ origins: parsedOrigins() }); onChange(next); setOrigins(next.widget.origins.join("\n")); };
 
   async function rotate() {
@@ -231,37 +224,7 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
       </Card>
 
       <div className="flex flex-col gap-6">
-        <SaveCard dirty={lookDirty} onSave={saveLook}>
-          <CardHeader><CardTitle>{t("Görünüş və davranış")}</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <SwitchRow className="sm:col-span-2" checked={enabled} onChange={setEnabled} on={t("Açıq")} off={t("Bağlı")}
-              title={t("Vidjet aktivdir")} description={t("Söndürsən çat düyməsi saytında göstərilmir (skripti silmək lazım deyil).")} />
-            <SwitchRow className="sm:col-span-2" checked={liveOn} onChange={setLiveOn} on={t("Açıq")} off={t("Bağlı")}
-              title={t("Canlı operator söhbəti")} description={t("Ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, sən isə Müraciətlər bölməsindən real vaxtda cavab verirsən. Yalnız panelə baxa bildiyin vaxtlarda aç: operator cavab verməsə ziyarətçiyə əlaqə forması təklif olunur.")} />
-            <div className="flex flex-col gap-1"><Label htmlFor="title">{t("Başlıq")}</Label><Input id="title" required maxLength={60} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="color">{t("Rəng")}</Label>
-              <div className="flex gap-2">
-                <input aria-label={t("Rəng seçici")} type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded-md border border-border bg-card p-1" />
-                <Input id="color" pattern="#[0-9a-fA-F]{6}" maxLength={7} value={color} onChange={(e) => setColor(e.target.value)} className="font-mono" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1 sm:col-span-2">
-              <Label htmlFor="label">{t("Loqonun yanındakı yazı")}</Label>
-              <div className="flex items-center gap-3">
-                <Input id="label" maxLength={40} placeholder={t("məs. AI-dan soruş")} value={label} onChange={(e) => setLabel(e.target.value)} className="max-w-xs" />
-                {label.trim() && (
-                  <span className="hidden items-center gap-2 sm:flex" aria-hidden>
-                    <span className="rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] shadow-md">{label.trim()}</span>
-                    <span className="grid size-10 place-items-center rounded-full text-white shadow-md" style={{ background: color }}><MessageCircle size={18} /></span>
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{t("Çat düyməsinin yanında göstərilir (düymənin tərəfinə görə solunda və ya sağında). Boş buraxsan, yazı göstərilməz.")}</p>
-            </div>
-            <div className="flex flex-col gap-1 sm:col-span-2"><Label htmlFor="greeting">{t("Salamlama mesajı")}</Label><Textarea id="greeting" required maxLength={300} value={greeting} onChange={(e) => setGreeting(e.target.value)} /></div>
-          </CardContent>
-        </SaveCard>
+        <AppearanceCard data={data} onChange={onChange} />
         <SaveCard dirty={limitsDirty} onSave={saveLimits}>
           <CardHeader>
             <CardTitle>{t("İstifadə limitləri")}</CardTitle>

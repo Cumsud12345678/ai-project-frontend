@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input, Label } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 import { useI18n } from "@/lib/i18n";
+import { WhatsApp } from "./whatsapp";
 
 function Telegram() {
   const { t, date } = useI18n();
@@ -106,6 +107,7 @@ export default function ChannelsPage() {
           <h1 className="text-2xl font-semibold">{t("Kanallar")}</h1>
           <p className="text-sm text-muted-foreground">{t("Köməkçini saytdan başqa harada işlətmək istədiyini seç.")}</p>
         </header>
+        <WhatsApp />
         <Telegram />
       </div>
     </RequireTenant>

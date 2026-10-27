@@ -1,10 +1,11 @@
 import { isLocale, translate } from "./i18n";
 
 export type Mode = "listings" | "support" | "both";
-export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; mode?: Mode; fallbackMessage?: string };
+export type AutoRefresh = "off" | "daily" | "weekly";
+export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string };
 
-export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
+export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string };
 
 export type Me = { email: string; role: "user" | "admin" };
@@ -64,6 +65,14 @@ export const connectTelegram = (token: string) => call<TelegramStatus>("/tenant/
 export const setTelegramEnabled = (enabled: boolean) => call<TelegramStatus>("/tenant/channels/telegram", { method: "PATCH", body: { enabled } });
 export const disconnectTelegram = () => call<{ ok: true }>("/tenant/channels/telegram", { method: "DELETE" });
 
+// Kanallar (WhatsApp, QR ilə)
+export type WhatsAppState = "off" | "connecting" | "qr" | "open" | "error" | "replaced";
+export type WhatsAppStatus = { connected: boolean; enabled: boolean; phone: string | null; connectedAt: string | null; state: WhatsAppState; qr: string | null; error: string | null; pauseOnOwnReply: boolean; keyReady: boolean };
+export const getWhatsApp = () => call<WhatsAppStatus>("/tenant/channels/whatsapp");
+export const connectWhatsApp = () => call<WhatsAppStatus>("/tenant/channels/whatsapp/connect", { method: "POST", body: { ack: true } });
+export const patchWhatsApp = (patch: { enabled?: boolean; pauseOnOwnReply?: boolean }) => call<WhatsAppStatus>("/tenant/channels/whatsapp", { method: "PATCH", body: patch });
+export const disconnectWhatsApp = () => call<{ ok: true }>("/tenant/channels/whatsapp", { method: "DELETE" });
+
 // Hesab
 export const register = (email: string, password: string) => post<{ ok: true }>("/auth/register", { email, password });
 export const verify = (email: string, code: string) => post<Me>("/auth/verify", { email, code });
@@ -83,6 +92,8 @@ export const updateConfig = (config: ConfigJson) => call<{ tenant: TenantInfo; s
 export const saveProfile = (profile: Profile) => call<{ profile: Profile }>("/tenant/profile", { method: "PATCH", body: profile });
 export const rotateMyKey = () => post<{ apiKey: string }>("/tenant/key/rotate");
 export const getWidget = () => call<WidgetResponse>("/tenant/widget");
+export const uploadWidgetLogo = (data: string) => call<WidgetResponse>("/tenant/widget/logo", { method: "PUT", body: { data } });
+export const deleteWidgetLogo = () => call<WidgetResponse>("/tenant/widget/logo", { method: "DELETE" });
 export const saveWidget = (patch: Partial<Omit<WidgetSettings, "key">>) => call<WidgetResponse>("/tenant/widget", { method: "PUT", body: patch });
 export const rotateWidgetKey = () => post<WidgetResponse>("/tenant/widget/rotate");
 export const getUsage = () => call<Usage>("/tenant/usage");
@@ -210,10 +221,10 @@ export const testPrivateData = (kind: string, userId: string) => post<{ ok: bool
 // Bilik bazası (dəstək botu)
 export type KbSource = {
   id: string; type: "file" | "url" | "site" | "text"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
-  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null;
+  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null;
 };
 export type KbInfo = {
-  mode: Mode; fallbackMessage: string; defaultFallback: string; sources: KbSource[];
+  mode: Mode; autoRefresh?: AutoRefresh; fallbackMessage: string; defaultFallback: string; sources: KbSource[];
   limits: { sources: number; chunks: number; fileBytes: number }; totals: { sources: number; chunks: number };
 };
 export const getKb = () => call<KbInfo>("/tenant/kb");
