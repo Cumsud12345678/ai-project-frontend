@@ -144,6 +144,25 @@ export async function downloadExport(kind: ExportKind, days: number): Promise<bo
 }
 export const clearQueries = () => call<{ ok: true }>("/tenant/queries", { method: "DELETE" });
 
+// Müştəriyə məxsus məlumat: istənilən növ (sifariş, ödəniş, şikayət, sorğu, abunə...)
+export type FieldSpec = string | { path?: string; template?: string; type?: "text" | "number" | "date" | "url"; divide?: number; max?: number };
+export type PrivateSource = {
+  key: string; title: string; description: string; path: string; userParam?: string; itemsPath: string;
+  idField?: string; ownerField?: string; fields: Record<string, FieldSpec>; lines?: { path: string; title: string; qty?: string };
+};
+export type PrivateData = {
+  configured: boolean; ready?: boolean; baseUrl?: string;
+  auth?: { type: "header" | "bearer" | "query"; name?: string; hasSecret: boolean };
+  sources: PrivateSource[];
+  identity: { configured: boolean; createdAt?: string | null };
+};
+export type PrivateInput = { baseUrl: string; apiSecret?: string; auth?: { type: string; name?: string }; sources: PrivateSource[] };
+export const getPrivateData = () => call<PrivateData>("/tenant/private-data");
+export const savePrivateData = (b: PrivateInput) => call<PrivateData>("/tenant/private-data", { method: "PUT", body: b });
+export const deletePrivateData = () => call<{ ok: true }>("/tenant/private-data", { method: "DELETE" });
+export const newIdentitySecret = () => post<{ identitySecret: string }>("/tenant/private-data/identity-secret");
+export const testPrivateData = (kind: string, userId: string) => post<{ ok: boolean; kind: string; records?: Record<string, unknown>[]; error?: string }>("/tenant/private-data/test", { kind, userId });
+
 // Bilik bazası (dəstək botu)
 export type KbSource = {
   id: string; type: "file" | "url" | "site" | "text"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;

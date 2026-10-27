@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Settings, LogOut, Menu, Shield, Rocket, Wallet, X } from "lucide-react";
+import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLiveCount } from "@/lib/api";
 import { SessionProvider, useSession } from "@/components/session";
@@ -20,6 +20,7 @@ const nav: { href: string; label: string; icon: typeof Gauge; only?: ("listings"
   { href: "/queries", label: "Sorğular", icon: MessagesSquare },
   { href: "/listings", label: "Kataloq", icon: List, only: ["listings", "both"] },
   { href: "/connection", label: "Elan mənbəyi", icon: Plug, only: ["listings", "both"] },
+  { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck },
   { href: "/billing", label: "Balans", icon: Wallet },
   { href: "/embed", label: "Saytına qoş", icon: Code },
   { href: "/settings", label: "Ayarlar", icon: Settings },

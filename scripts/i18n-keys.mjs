@@ -21,6 +21,8 @@ const EXTRA = [
   "Rəng", "Zəmanət", "Vəziyyət", "İşlənmiş", "Kredit", "Barter", "Ötürücü", "Oturacaq sayı", "Qapı sayı", "Ölçü", "Stok", "Material", "Çəki",
   "Mühərrik", "Sürətlər qutusu", "Yanacaq", "Sahib sayı", "VIN", "Marka", "Növ", "Sənəd", "Mövcudluq", "Endirim", "Reytinq", "Say", "Kod",
   "(silinib)", "marka", "model",
+  // Müştəri məlumatı: hazır şablon adları
+  "Sifarişlər", "Ödənişlər", "Şikayətlər", "Sorğular / müraciətlər", "Abunələr", "Digər (özün təyin et)",
   // config-file.ts köhnə yazılış təsvirləri
   "Marka (dəqiq ad)", "Model, məs. X5, Camry", "Kateqoriya / kuzov tipi (dəqiq ad)", "Şəhər / region (dəqiq ad)", "Yanacaq növü (dəqiq ad)", "Sürətlər qutusu (dəqiq ad)", "Ən aşağı buraxılış ili", "Ən yüksək buraxılış ili", "Maksimum yürüş (km)",
   // serverin statik xəta mesajları (lib/api.ts tərcümə edir)
