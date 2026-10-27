@@ -8,6 +8,7 @@ import { UserListSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { Segmented } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
@@ -101,14 +102,17 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "tenants" | "unverified" | "admins" | "lowbal">("all");
   const reload = () => adminUsers().then((r) => setUsers(r.users)).catch((e: Error) => setError(e.message));
   useEffect(() => { void reload(); }, []);
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!users || !needle) return users;
-    return users.filter((u) => [u.email, u.tenant?.businessName, u.tenant?.domain, u.tenant?.tenantId].some((v) => v?.toLowerCase().includes(needle)));
-  }, [users, q]);
+    if (!users) return users;
+    const byFilter = users.filter((u) => filter === "all" || (filter === "tenants" && u.tenant) || (filter === "unverified" && !u.verified) || (filter === "admins" && u.isAdmin) || (filter === "lowbal" && u.tenant?.balance && u.tenant.balance.totalAzn <= 0));
+    if (!needle) return byFilter;
+    return byFilter.filter((u) => [u.email, u.tenant?.businessName, u.tenant?.domain, u.tenant?.tenantId].some((v) => v?.toLowerCase().includes(needle)));
+  }, [users, q, filter]);
 
   async function remove(u: AdminUser) {
     await adminDeleteUser(u.id);
@@ -146,9 +150,13 @@ export default function AdminPage() {
 
       <TopupRequests onResolved={reload} />
 
-      <div className="flex flex-col gap-1">
-        <Label htmlFor="q">{t("Axtar")}</Label>
-        <Input id="q" type="search" placeholder={t("Email, sayt adı, domen və ya müştəri ID")} value={q} onChange={(e) => setQ(e.target.value)} className="max-w-md" disabled={!users} />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="q">{t("Axtar")}</Label>
+          <Input id="q" type="search" placeholder={t("Email, sayt adı, domen və ya müştəri ID")} value={q} onChange={(e) => setQ(e.target.value)} className="w-80 max-w-full" disabled={!users} />
+        </div>
+        <Segmented value={filter} onChange={setFilter} label={t("Süzgəc")} options={[{ value: "all", label: t("Hamısı") }, { value: "tenants", label: t("Saytı olanlar") }, { value: "unverified", label: t("Təsdiqlənməyən") }, { value: "lowbal", label: t("Balansı bitən") }, { value: "admins", label: t("Adminlər") }]} />
+        <a href="/api/portal/admin/users.csv" download className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium hover:bg-muted">{t("CSV yüklə")}</a>
       </div>
 
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

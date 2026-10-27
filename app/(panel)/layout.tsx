@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLiveCount } from "@/lib/api";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { SessionProvider, useSession } from "@/components/session";
 import { LangSwitch, useT } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
@@ -125,7 +126,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <aside className="hidden bg-sidebar md:sticky md:top-0 md:block md:h-screen">
         <SidebarContent waiting={waiting} />
       </aside>
-      <main className="mx-auto w-full max-w-5xl px-5 py-6 md:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl px-5 py-6 md:py-8"><AnnouncementBanner />{children}</main>
     </div>
   );
 }

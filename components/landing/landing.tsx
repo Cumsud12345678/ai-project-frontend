@@ -5,6 +5,7 @@ import { BarChart3, BookOpen, Check, ChevronDown, Headset, MessagesSquare, Plug,
 import { LOCALES, useI18n } from "@/lib/i18n";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { Reveal } from "@/components/landing/reveal";
+import { Everything, Showcase } from "@/components/landing/showcase";
 import { LangDropdown } from "@/components/lang-dropdown";
 
 const wrap = "mx-auto w-full max-w-6xl px-5";
@@ -43,7 +44,7 @@ function Header({ signedIn }: { signedIn: boolean }) {
     on(); window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
-  const links = [["#problem", t("Problem")], ["#nece", t("Necə işləyir")], ["#imkanlar", t("İmkanlar")], ["#qiymet", t("Qiymətlər")], ["#sual", t("Sual-cavab")]];
+  const links = [["#problem", t("Problem")], ["#nece", t("Necə işləyir")], ["#imkanlar", t("İmkanlar")], ["#canli", t("Yeniliklər")], ["#qiymet", t("Qiymətlər")], ["#sual", t("Sual-cavab")]];
   return (
     <header className={`sticky top-0 z-30 border-b border-[var(--l-line)] bg-[var(--l-paper)]/85 backdrop-blur transition-shadow ${scrolled ? "shadow-[0_8px_24px_-16px_rgba(12,42,37,.35)]" : ""}`}>
       <div className={`${wrap} flex h-16 items-center gap-2 sm:gap-4`}>
@@ -265,6 +266,8 @@ function Faq() {
     [t("Hansı saytlarla işləyir?"), t("Elan, e-ticarət və ya xidmət saytı fərqi yoxdur. Kataloqu API ilə qaytaran istənilən sayt qoşula bilər. Kataloqun yoxdursa, yalnız dəstək botu kimi (sənədlər və sayt məzmunu ilə) qurmaq olar. İkisi birlikdə də işləyir.")],
     [t("Bilik bazasına nə əlavə edə bilərəm?"), t("PDF, Word, TXT, MD, CSV və HTML faylları (6 MB-a qədər), tək səhifənin linki, bütün saytın skanı və ya yapışdırılmış mətn. Şəkil kimi skan olunmuş PDF oxunmur, mətni seçilə bilən olmalıdır.")],
     [t("Cavabı bilmədikdə nə edir?"), t("Uydurmur. Bilmədiyini deyir və ziyarətçiyə əlaqə formasını təklif edir. Müraciət panelindəki gələn qutusuna düşür, cavabsız suallar isə ayrıca siyahıda görünür ki, çatışan məzmunu əlavə edəsən.")],
+    [t("Müştəri çatdan öz sifarişini soruşa bilərmi?"), t("Bəli, sən sifariş, ödəniş və ya şikayət kimi məlumatı öz API-nlə qoşursan. Müştəri saytda daxil olubsa, köməkçi yalnız onun öz qeydlərini göstərir. Başqasının məlumatına baxmaq mümkün deyil.")],
+    [t("Operator necə cavab verir?"), t("Ziyarətçi operator istəyəndə panelin gələn qutusundakı “Canlı söhbət” bölməsinə düşür. Orada cavab yazırsan və ziyarətçi onu dərhal görür. Çatda olmasa, cavab onun e-poçtuna gedir.")],
     [t("Ziyarətçilərin yazdıqları saxlanırmı?"), t("Yalnız sən “Sorğu jurnalı”nı aktiv saxlasan. Telefon və email avtomatik gizlədilir, qeydlər 90 gündən sonra silinir. İstəsən bunu ayarlardan söndürürsən.")],
     [t("Gözlənilmədən çox pul tutula bilərmi?"), t("Xeyr. Əvvəlcədən yüklədiyin balansdan xərclənir, bitəndə çat dayanır. Balans azalanda email gəlir, panelin Balans səhifəsində orta sorğu qiyməti və ay sonuna proqnoz göstərilir.")],
     [t("Köməkçi səhv cavab verə bilərmi?"), t("Kataloq sualında yalnız sənin API-nin qaytardığını, digər suallarda yalnız bilik bazandakı məlumatı istifadə edir və cavabın altında mənbəni göstərir. Yenə də sınaq söhbətində yoxlamağı məsləhət görürük.")],
@@ -331,6 +334,8 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
         <Problem />
         <Steps />
         <Features />
+        <Showcase />
+        <Everything />
         <Pricing signedIn={signedIn} />
         <Faq />
         <Cta signedIn={signedIn} />

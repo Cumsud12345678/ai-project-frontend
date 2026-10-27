@@ -5,7 +5,7 @@ type Variant = "up" | "left" | "right" | "scale";
 
 /** Ekrana girəndə yumşaq görünür (opacity + yerdəyişmə + ölçü). Bir dəfə işləyir; hərəkəti azaldanlarda dərhal görünür. */
 export function Reveal({ children, as = "div", variant = "up", delay = 0, className = "" }: {
-  children: React.ReactNode; as?: "div" | "li" | "h1" | "h2" | "p" | "ul"; variant?: Variant; delay?: number; className?: string;
+  children: React.ReactNode; as?: "div" | "li" | "h1" | "h2" | "h3" | "p" | "ul"; variant?: Variant; delay?: number; className?: string;
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const [shown, setShown] = useState(false);

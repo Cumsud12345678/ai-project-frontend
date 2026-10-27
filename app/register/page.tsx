@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n";
 import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput, PasswordStrength } from "@/components/password-input";
 
 export default function RegisterPage() {
   const t = useT();
@@ -32,14 +33,18 @@ export default function RegisterPage() {
   return (
     <AuthShell title={t("Hesab aç")} subtitle={t("Emailinə təsdiq kodu göndəriləcək.")}
       footer={<>{t("Artıq hesabın var?")} <Link href="/login" className="text-primary underline">{t("Daxil ol")}</Link></>}>
-      <form onSubmit={submit} className="flex flex-col gap-3">
-        <Label htmlFor="email">{t("Email")}</Label>
-        <Input id="email" type="email" autoComplete="email" required value={email} className="py-6 bg-[#f7faf8] rounded-xl text-[16px]" placeholder="example@gmail.com" onChange={(e) => setEmail(e.target.value)} />
-        <Label htmlFor="password">{t("Parol")}</Label>
-        <Input id="password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={password} className="py-6 bg-[#f7faf8] rounded-xl text-[16px]" onChange={(e) => setPassword(e.target.value)} aria-describedby="pw-hint" />
-        <p id="pw-hint" className="text-xs text-muted-foreground">{t("Ən azı 8 simvol.")}</p>
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button disabled={busy} className="p-6 rounded-xl text-md">{busy ? t("Göndərilir…") : t("Davam et")}</Button>
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">{t("Email")}</Label>
+          <Input id="email" type="email" autoComplete="email" required autoFocus className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">{t("Parol")}</Label>
+          <PasswordInput id="password" autoComplete="new-password" required minLength={8} maxLength={128} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <PasswordStrength value={password} />
+        </div>
+        {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+        <Button disabled={busy} className="h-11 w-full text-[15px]">{busy ? t("Göndərilir…") : t("Davam et")}</Button>
       </form>
     </AuthShell>
   );

@@ -116,7 +116,7 @@ function StepSource({ kb, reload, onNext }: { kb: KbInfo | null; reload: () => v
   const { t } = useI18n();
   const { tenant } = useSession();
   const [url, setUrl] = useState(tenant?.domain ?? "");
-  const [crawl, setCrawl] = useState(true);
+  const [crawl, setCrawl] = useState(false);
   const [busy, setBusy] = useState(false);
   const sources = kb?.sources ?? [];
   const processing = sources.some((s) => s.status === "processing");

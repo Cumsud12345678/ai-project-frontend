@@ -98,6 +98,43 @@ export const adminRotateKey = (tenantId: string) => post<{ apiKey: string }>(`/a
 export const adminSetRole = (id: string, role: "admin" | "user") => call<{ ok: true; isAdmin: boolean }>(`/admin/users/${id}/role`, { method: "PATCH", body: { role } });
 export const adminDeleteUser = (id: string) => call<{ ok: true }>(`/admin/users/${id}`, { method: "DELETE" });
 
+export type AdminOverview = {
+  users: { total: number; verified: number; admins: number; last7d: number; last30d: number };
+  tenants: { total: number; modes: Record<string, number>; widgetActive7d: number; emptyBalance: number };
+  usage: { today: UsagePoint & { date: string }; thisMonth: UsagePoint & { month: string }; lastMonth: UsagePoint & { month: string } } | null;
+  pendingTopups: number; revenueAzn: number;
+  errors: { last24h: number; last7d: number };
+  signups: { date: string; users: number }[];
+  topTenants: { tenantId: string; businessName: string; requests: number; tokens: number }[];
+};
+export const adminOverview = () => call<AdminOverview>("/admin/overview");
+export type AdminHealth = {
+  database: { ok: boolean; ms: number; error?: string }; ai: { ok: boolean; ms: number; error?: string };
+  mail: { configured: boolean; from: string }; server: { uptimeSec: number; node: string; memoryMb: number; production: boolean };
+};
+export const adminHealth = () => call<AdminHealth>("/admin/health");
+export type ErrorSource = "api" | "ai" | "mail" | "widget" | "process" | "client" | "job";
+export type ErrorGroup = { fingerprint: string; source: ErrorSource; message: string; code?: string; status?: number; path?: string; count: number; firstAt: string; lastAt: string; sample: { id: string; stack?: string; method?: string; userId?: string; tenantId?: string } };
+export type AdminErrors = { days: number; total: number; last24h: number; bySource: Record<string, number>; groups: ErrorGroup[] };
+export const adminErrors = (q: { range: string; source?: string; q?: string }) => {
+  const p = new URLSearchParams({ range: q.range });
+  if (q.source) p.set("source", q.source);
+  if (q.q?.trim()) p.set("q", q.q.trim());
+  return call<AdminErrors>(`/admin/errors?${p}`);
+};
+export const adminDeleteErrors = (fingerprint?: string) => call<{ ok: true; deleted: number }>(`/admin/errors${fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : ""}`, { method: "DELETE" });
+export type AuditItem = { id: string; at: string; actor: string; action: string; target?: string; detail?: string };
+export const adminAudit = () => call<{ items: AuditItem[] }>("/admin/audit");
+export type Announcement = { text: string; level: "info" | "warn" | "critical"; active: boolean; updatedAt: string; by: string };
+export const adminAnnouncement = () => call<{ announcement: Announcement | null }>("/admin/announcement");
+export const adminSetAnnouncement = (a: { text: string; level: Announcement["level"]; active: boolean }) => call<{ announcement: Announcement }>("/admin/announcement", { method: "PUT", body: a });
+export const adminDeleteAnnouncement = () => call<{ ok: true }>("/admin/announcement", { method: "DELETE" });
+export const getAnnouncement = () => call<{ announcement: { text: string; level: Announcement["level"] } | null }>("/announcement");
+/** Brauzer xətasını jurnala göndərir. Heç vaxt xəta atmır və cavab gözlənilmir. */
+export const reportClientError = (e: { message: string; stack?: string; page?: string }) => {
+  try { void fetch("/api/portal/client-errors", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(e), keepalive: true }).catch(() => {}); } catch { /* jurnal sistemi səhifəni yıxmasın */ }
+};
+
 // Sayt istifadəçilərinin sualları
 export type QueryRow = { id: string; at: string; sid?: string; message: string; results: number; tokens: number; cached: boolean; error: boolean; costAzn?: number | null };
 export type QueryList = { enabled: boolean; retentionDays: number; hasMore: boolean; nextCursor: string | null; queries: QueryRow[] };
