@@ -13,15 +13,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const SOURCES: ErrorSource[] = ["api", "ai", "mail", "widget", "client", "job", "process"];
+const SOURCES: ErrorSource[] = ["api", "ai", "mail", "widget", "channel", "client", "job", "process"];
 const tone: Record<ErrorSource, string> = {
   api: "bg-destructive/10 text-destructive", ai: "bg-chart-4/10 text-chart-4", mail: "bg-amber/15 text-amber", widget: "bg-chart-1/10 text-chart-1",
-  client: "bg-chart-2/10 text-chart-2", job: "bg-muted text-muted-foreground", process: "bg-destructive/15 text-destructive",
+  client: "bg-chart-2/10 text-chart-2", channel: "bg-chart-3/15 text-chart-3", job: "bg-muted text-muted-foreground", process: "bg-destructive/15 text-destructive",
 };
 
 function Group({ g, onDelete }: { g: ErrorGroup; onDelete: () => void }) {
   const { t, num, date } = useI18n();
-  const label: Record<ErrorSource, string> = { api: t("Server"), ai: t("AI servisi"), mail: t("E-poçt"), widget: t("Vidjet"), client: t("Brauzer"), job: t("Planlı iş"), process: t("Proses") };
+  const label: Record<ErrorSource, string> = { api: t("Server"), ai: t("AI servisi"), mail: t("E-poçt"), widget: t("Vidjet"), channel: t("Kanal"), client: t("Brauzer"), job: t("Planlı iş"), process: t("Proses") };
   return (
     <li className="px-4 py-3">
       <details className="group">
@@ -62,7 +62,7 @@ export default function AdminErrorsPage() {
   useEffect(() => { const id = setTimeout(() => void load(), q ? 250 : 0); return () => clearTimeout(id); }, [load, q]);
   useEffect(() => { const i = setInterval(() => void load(), 30_000); return () => clearInterval(i); }, [load]);
 
-  const label: Record<ErrorSource, string> = { api: t("Server"), ai: t("AI servisi"), mail: t("E-poçt"), widget: t("Vidjet"), client: t("Brauzer"), job: t("Planlı iş"), process: t("Proses") };
+  const label: Record<ErrorSource, string> = { api: t("Server"), ai: t("AI servisi"), mail: t("E-poçt"), widget: t("Vidjet"), channel: t("Kanal"), client: t("Brauzer"), job: t("Planlı iş"), process: t("Proses") };
   const remove = async (fingerprint?: string) => {
     const r = await adminDeleteErrors(fingerprint);
     toast.success(t("{n} qeyd silindi.", { n: r.deleted }));

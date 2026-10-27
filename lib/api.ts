@@ -57,6 +57,13 @@ async function call<T>(path: string, init: { method?: string; body?: unknown } =
 }
 const post = <T,>(path: string, body?: unknown) => call<T>(path, { method: "POST", body });
 
+// Kanallar (Telegram)
+export type TelegramStatus = { connected: boolean; enabled: boolean; botUsername: string | null; connectedAt: string | null; httpsReady: boolean; keyReady: boolean };
+export const getTelegram = () => call<TelegramStatus>("/tenant/channels/telegram");
+export const connectTelegram = (token: string) => call<TelegramStatus>("/tenant/channels/telegram", { method: "PUT", body: { token } });
+export const setTelegramEnabled = (enabled: boolean) => call<TelegramStatus>("/tenant/channels/telegram", { method: "PATCH", body: { enabled } });
+export const disconnectTelegram = () => call<{ ok: true }>("/tenant/channels/telegram", { method: "DELETE" });
+
 // Hesab
 export const register = (email: string, password: string) => post<{ ok: true }>("/auth/register", { email, password });
 export const verify = (email: string, code: string) => post<Me>("/auth/verify", { email, code });
@@ -113,7 +120,7 @@ export type AdminHealth = {
   mail: { configured: boolean; from: string }; server: { uptimeSec: number; node: string; memoryMb: number; production: boolean };
 };
 export const adminHealth = () => call<AdminHealth>("/admin/health");
-export type ErrorSource = "api" | "ai" | "mail" | "widget" | "process" | "client" | "job";
+export type ErrorSource = "api" | "ai" | "mail" | "widget" | "process" | "client" | "job" | "channel";
 export type ErrorGroup = { fingerprint: string; source: ErrorSource; message: string; code?: string; status?: number; path?: string; count: number; firstAt: string; lastAt: string; sample: { id: string; stack?: string; method?: string; userId?: string; tenantId?: string } };
 export type AdminErrors = { days: number; total: number; last24h: number; bySource: Record<string, number>; groups: ErrorGroup[] };
 export const adminErrors = (q: { range: string; source?: string; q?: string }) => {

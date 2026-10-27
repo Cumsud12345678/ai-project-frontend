@@ -38,6 +38,10 @@ const EXTRA = [
   "Bilik bazası həcm limitini aşır. Köhnə mənbələri silin və ya daha kiçik sənəd yükləyin.", "Bu çatda əlaqə forması yoxdur",
   "Saytdan mətn oxuna bilmədi (səhifələr JavaScript ilə yüklənə və ya robots.txt ilə bağlı ola bilər)",
   "(başlıq yoxdur)",
+  // Telegram kanalı: portalın statik xəta mesajları
+  "Token düzgün formatda deyil. @BotFather-in verdiyi tokeni olduğu kimi yapışdır.", "Token yanlışdır. @BotFather-dən tokeni yenidən kopyala.", "Bu bot artıq başqa hesaba qoşulub",
+  "Telegram yalnız https ünvana göndərir: serverdə PUBLIC_PORTAL_URL https olmalıdır", "Serverdə CHANNEL_SECRET_KEY təyin edilməyib: Telegram tokenini şifrələmək mümkün deyil",
+  "Əvvəlcə qurulumu tamamla", "Telegram botu qoşulmayıb",
   "Serverə qoşulmaq olmur. İnternetini və ya serverin işlədiyini yoxla.",
   "Xəta baş verdi",
   "Admin hesabı buradan silinmir",
