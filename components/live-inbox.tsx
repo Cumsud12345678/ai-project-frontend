@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Hand, Mail, MessageSquarePlus, Phone, Send, Undo2, XCircle } from "lucide-react";
+import { ArrowLeft, BookPlus, Hand, Mail, MessageSquarePlus, Phone, Send, Undo2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { claimLive, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
+import { claimLive, kbAddQa, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { useI18n } from "@/lib/i18n";
 import { sendTyping, useLiveEvents } from "@/lib/live-socket";
@@ -15,7 +15,9 @@ import { Textarea } from "@/components/ui/input";
 /** Canlı operator söhbəti: solda söhbətlər, sağda yazışma. Yeni mesaj WebSocket siqnalı ilə dərhal gəlir; bağlantı yoxdursa siyahı 5, açıq söhbət 3 saniyədən bir yenilənir. */
 export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: () => void }) {
   const { t, short } = useI18n();
-  const { me, isOperator } = useSession();
+  const { me, isOperator, tenant } = useSession();
+  const canKb = !isOperator && (tenant?.config.profile?.mode ?? "listings") !== "listings";
+  const [kb, setKb] = useState<{ q: string; a: string } | null>(null);
   const myName = (me?.email || "").split("@")[0].slice(0, 40);
   const [who, setWho] = useState<"all" | "mine" | "free">("all");
   const [starting, setStarting] = useState(false);
@@ -53,7 +55,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   // Soket qoşuludursa polling yalnız ehtiyatdır
   useEffect(() => { setItems(null); loadList(); const i = setInterval(loadList, live ? 30000 : 5000); return () => clearInterval(i); }, [loadList, live]);
 
-  useEffect(() => { setChat(null); setTyping(false); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, live ? 20000 : 3000); return () => clearInterval(i); }, [sel, loadChat, live]);
+  useEffect(() => { setChat(null); setTyping(false); setKb(null); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, live ? 20000 : 3000); return () => clearInterval(i); }, [sel, loadChat, live]);
   useEffect(() => { const el = logRef.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [chat?.messages.length]);
 
   async function send(e: React.FormEvent) {
@@ -65,6 +67,19 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); }
   }
+  async function saveKb(e: React.FormEvent) {
+    e.preventDefault();
+    if (!kb || !kb.q.trim() || !kb.a.trim() || busy) return;
+    setBusy(true);
+    try { await kbAddQa([kb.q.trim()], kb.a.trim()); toast.success(t("Biliyə əlavə olundu. Eyni sual gələndə bu cavab veriləcək.")); setKb(null); }
+    catch (err) { toast.error((err as Error).message); }
+    finally { setBusy(false); }
+  }
+  /** Operatorun mesajına ən yaxın əvvəlki ziyarətçi sualı */
+  const questionBefore = (idx: number) => {
+    for (let j = idx - 1; j >= 0; j--) { const m = chat?.messages[j]; if (m?.from === "visitor" && m.text.trim()) return m.text.trim(); }
+    return "";
+  };
   async function claim(release: boolean) {
     if (!chat) return;
     try { await (release ? releaseLive(chat.id) : claimLive(chat.id)); loadChat(); loadList(); }
@@ -198,11 +213,27 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
         {chat.messages.map((m, i) => m.from === "system"
           ? <p key={i} className="self-center text-xs text-muted-foreground">{t("Söhbət bitdi.")}</p>
           : (
-            <div key={i} className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "self-end bg-primary text-primary-foreground" : "self-start border border-border bg-card")}>{m.from === "operator" && m.by && <span className="mb-0.5 block text-[10px] opacity-70">{m.by}</span>}{m.text}</div>
+            <div key={i} className={cn("flex max-w-[85%] flex-col gap-1", m.from === "operator" ? "self-end items-end" : "self-start")}>
+              <div className={cn("whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "bg-primary text-primary-foreground" : "border border-border bg-card")}>{m.from === "operator" && m.by && <span className="mb-0.5 block text-[10px] opacity-70">{m.by}</span>}{m.text}</div>
+              {canKb && m.from === "operator" && (
+                <button type="button" onClick={() => setKb({ q: questionBefore(i).slice(0, 300), a: m.text.slice(0, 3000) })} className="inline-flex cursor-pointer items-center gap-1 text-xs text-primary underline"><BookPlus size={12} aria-hidden />{t("Biliyə əlavə et")}</button>
+              )}
+            </div>
           ))}
         {!chat.messages.length && <p className="text-sm text-muted-foreground">{t("Ziyarətçi hələ mesaj yazmayıb.")}</p>}
         {typing && <p className="self-start text-xs italic text-muted-foreground" aria-live="polite">{t("Ziyarətçi yazır…")}</p>}
       </div>
+      {kb && (
+        <form onSubmit={saveKb} className="flex flex-col gap-2 border-t border-border bg-muted/40 p-3">
+          <p className="text-sm font-medium">{t("Bu cavabı biliyə əlavə et")}</p>
+          <Textarea value={kb.q} onChange={(e) => setKb({ ...kb, q: e.target.value })} maxLength={300} rows={2} aria-label={t("Müştərinin sualı")} placeholder={t("Müştəri belə soruşanda…")} />
+          <Textarea value={kb.a} onChange={(e) => setKb({ ...kb, a: e.target.value })} maxLength={3000} rows={3} aria-label={t("Veriləcək cavab")} placeholder={t("…bu cavab verilsin")} />
+          <div className="flex gap-2">
+            <Button size="sm" disabled={busy || !kb.q.trim() || !kb.a.trim()}>{t("Əlavə et")}</Button>
+            <Button size="sm" type="button" variant="ghost" onClick={() => setKb(null)}>{t("Ləğv et")}</Button>
+          </div>
+        </form>
+      )}
       {chat.status === "open" ? (
         <form onSubmit={send} className="flex items-end gap-2 border-t border-border p-3">
           <Textarea value={text} onChange={(e) => { setText(e.target.value); if (chat) sendTyping(chat.id); }} maxLength={1000} rows={2} className="min-h-0 flex-1" aria-label={t("Cavabın")} placeholder={t("Cavabını yaz…")}
