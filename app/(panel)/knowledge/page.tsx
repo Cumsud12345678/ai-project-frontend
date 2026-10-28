@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProfile, type AutoRefresh, type KbInfo, type KbSource, type Mode } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { QaCard } from "./qa-card";
 import { RequireTenant, useSession } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -142,7 +143,7 @@ function AddSection({ info, onAdded }: { info: KbInfo; onAdded: () => void }) {
   );
 }
 
-const ICON = { file: FileText, url: Globe, site: Globe, text: Type } as const;
+const ICON = { file: FileText, url: Globe, site: Globe, text: Type, qa: Type } as const;
 
 function SourceRow({ s, onChange }: { s: KbSource; onChange: () => void }) {
   const { t, num, short } = useI18n();
@@ -255,7 +256,8 @@ function Knowledge() {
   }, [processing, load]);
 
   if (!info || !mode) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <CardSkeleton rows={4} />;
-  const ready = info.sources.filter((s) => s.status === "ready").length;
+  const plain = info.sources.filter((s) => s.type !== "qa"); // sual-cavab cütləri ayrıca kartdadır
+  const ready = plain.filter((s) => s.status === "ready").length;
   const dirty = mode !== info.mode;
   const usesKb = mode !== "listings";
 
@@ -283,7 +285,7 @@ function Knowledge() {
               <h3 className="text-sm font-semibold">{t("Mənbələr")} <span className="font-normal text-muted-foreground">({info.totals.sources}/{info.limits.sources})</span></h3>
               <p className="text-sm text-muted-foreground">{ready > 0 ? t("{n} mənbə hazırdır, cəmi {chunks} hissə. Çatı “Sınaq söhbəti”ndə yoxlaya bilərsən.", { n: ready, chunks: num(info.totals.chunks) }) : t("Hələ mənbə yoxdur. Yuxarıdan fayl, sayt linki və ya mətn əlavə et.")}</p>
             </div>
-            {info.sources.length > 0 && <ul className="mt-3 divide-y divide-border border-t border-border">{info.sources.map((s) => <SourceRow key={s.id} s={s} onChange={load} />)}</ul>}
+            {plain.length > 0 && <ul className="mt-3 divide-y divide-border border-t border-border">{plain.map((s) => <SourceRow key={s.id} s={s} onChange={load} />)}</ul>}
           </div>
         )}
         <div className="flex items-center justify-end gap-3 border-t border-border px-5 py-3">
@@ -292,6 +294,7 @@ function Knowledge() {
         </div>
       </Card>
 
+      {usesKb && <QaCard info={info} onChange={load} />}
       {usesKb && <AutoRefreshCard info={info} />}
       {usesKb && <FallbackCard info={info} />}
     </div>

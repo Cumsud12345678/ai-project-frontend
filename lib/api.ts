@@ -2,7 +2,7 @@ import { isLocale, translate } from "./i18n";
 
 export type Mode = "listings" | "support" | "both";
 export type AutoRefresh = "off" | "daily" | "weekly";
-export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
+export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; imageSearch?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string };
 
 export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
@@ -220,12 +220,12 @@ export const testPrivateData = (kind: string, userId: string) => post<{ ok: bool
 
 // Bilik bazası (dəstək botu)
 export type KbSource = {
-  id: string; type: "file" | "url" | "site" | "text"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
-  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null;
+  id: string; type: "file" | "url" | "site" | "text" | "qa"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
+  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string;
 };
 export type KbInfo = {
   mode: Mode; autoRefresh?: AutoRefresh; fallbackMessage: string; defaultFallback: string; sources: KbSource[];
-  limits: { sources: number; chunks: number; fileBytes: number }; totals: { sources: number; chunks: number };
+  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number }; totals: { sources: number; chunks: number; qa?: number };
 };
 export const getKb = () => call<KbInfo>("/tenant/kb");
 
@@ -239,6 +239,8 @@ export const kbUploadFile = async (file: File) =>
   post<{ source: KbSource }>("/tenant/kb/files", { name: file.name, mime: file.type, data: await toBase64(file) });
 export const kbAddUrl = (url: string, crawl: boolean) => post<{ source: KbSource }>("/tenant/kb/urls", { url, crawl });
 export const kbAddText = (title: string, text: string) => post<{ source: KbSource }>("/tenant/kb/texts", { title, text });
+export const kbAddQa = (questions: string[], answer: string) => post<{ source: KbSource }>("/tenant/kb/qa", { questions, answer });
+export const kbUpdateQa = (id: string, questions: string[], answer: string) => call<{ source: KbSource }>(`/tenant/kb/qa/${id}`, { method: "PUT", body: { questions, answer } });
 export const kbRefresh = (id: string) => post<{ source: KbSource }>(`/tenant/kb/sources/${id}/refresh`);
 export const kbDelete = (id: string) => call<{ ok: true }>(`/tenant/kb/sources/${id}`, { method: "DELETE" });
 
@@ -266,8 +268,8 @@ export const getOverview = () => call<Overview>("/tenant/overview");
 
 // Canlı operator söhbəti və cavablara rəy
 export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string };
-export type LiveItem = { id: string; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
-export type LiveChat = { id: string; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
+export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
 export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
 export const getLiveTicket = () => post<{ ticket: string; url: string }>("/tenant/live/ws-ticket");
 export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[] }>(`/tenant/live?status=${status}`);

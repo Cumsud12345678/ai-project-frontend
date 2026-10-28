@@ -96,17 +96,25 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
   const [prev, setPrev] = useState<"light" | "dark">(w.theme === "dark" ? "dark" : "light");
   const [busy, setBusy] = useState(false);
   const [logoBusy, setLogoBusy] = useState(false);
+  // Loqo seçiləndə yalnız önbaxışda dəyişir; "Saxla" basılanda göndərilir (undefined = dəyişməyib, null = silinsin)
+  const [localLogo, setLocalLogo] = useState<string | null | undefined>(undefined);
+  const [pendingLogo, setPendingLogo] = useState<string | null | undefined>(undefined);
+  const shownLogo = localLogo !== undefined ? localLogo : w.logoUrl ?? null;
   const fileRef = useRef<HTMLInputElement>(null);
 
   const colorOk = /^#[0-9a-fA-F]{6}$/.test(color);
-  const dirty = enabled !== w.enabled || liveOn !== Boolean(w.live?.enabled) || title !== w.title || greeting !== w.greeting || color !== w.color || label !== (w.label ?? "") || theme !== (w.theme ?? "light");
+  const dirty = enabled !== w.enabled || liveOn !== Boolean(w.live?.enabled) || title !== w.title || greeting !== w.greeting || color !== w.color || label !== (w.label ?? "") || theme !== (w.theme ?? "light") || pendingLogo !== undefined;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!dirty || busy) return;
     if (!colorOk) { toast.error(t("Rəng #rrggbb formatında olmalıdır")); return; }
     setBusy(true);
-    try { onChange(await saveWidget({ enabled, title, greeting, color, label, theme, live: { enabled: liveOn } })); toast.success(t("Saxlandı. Dəyişiklik saytda səhifə yenilənəndə görünəcək.")); }
+    try {
+      if (pendingLogo !== undefined) { if (pendingLogo === null) await deleteWidgetLogo(); else await uploadWidgetLogo(pendingLogo); }
+      onChange(await saveWidget({ enabled, title, greeting, color, label, theme, live: { enabled: liveOn } }));
+      setPendingLogo(undefined);
+      toast.success(t("Saxlandı. Dəyişiklik saytda səhifə yenilənəndə görünəcək.")); }
     catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); }
   }
@@ -116,15 +124,12 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
     try {
       let b64: string;
       try { b64 = await shrink(file); } catch (err) { throw new Error((err as Error).message === "TOO_LARGE" ? t("Loqo çox böyükdür. Daha sadə və ya kiçik şəkil seç.") : t("Şəkil oxuna bilmədi. PNG, JPG və ya WebP seç.")); }
-      onChange(await uploadWidgetLogo(b64));
-      toast.success(t("Loqo yükləndi."));
+      setLocalLogo(`data:image/${b64.startsWith("iVBOR") ? "png" : "webp"};base64,${b64}`);
+      setPendingLogo(b64);
     } catch (err) { toast.error((err as Error).message); }
     finally { setLogoBusy(false); if (fileRef.current) fileRef.current.value = ""; }
   }
-  async function removeLogo() {
-    setLogoBusy(true);
-    try { onChange(await deleteWidgetLogo()); toast.success(t("Loqo silindi.")); } catch (err) { toast.error((err as Error).message); } finally { setLogoBusy(false); }
-  }
+  function removeLogo() { setLocalLogo(null); setPendingLogo(w.logoUrl ? null : undefined); }
   const changeTheme = (v: Theme) => { setTheme(v); if (v !== "auto") setPrev(v); };
 
   return (
@@ -136,7 +141,7 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
             <SwitchRow className="sm:col-span-2" checked={enabled} onChange={setEnabled} on={t("Açıq")} off={t("Bağlı")}
               title={t("Vidjet aktivdir")} description={t("Söndürsən çat düyməsi saytında göstərilmir (skripti silmək lazım deyil).")} />
             <SwitchRow className="sm:col-span-2" checked={liveOn} onChange={setLiveOn} on={t("Açıq")} off={t("Bağlı")}
-              title={t("Canlı operator söhbəti")} description={t("Ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, sən isə Müraciətlər bölməsindən real vaxtda cavab verirsən. Yalnız panelə baxa bildiyin vaxtlarda aç: operator cavab verməsə ziyarətçiyə əlaqə forması təklif olunur.")} />
+              title={t("Canlı operator söhbəti")} description={t("Ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, Telegram və WhatsApp müştəriləri isə /operator yazır; sən Müraciətlər bölməsindən real vaxtda cavab verirsən. Yalnız panelə baxa bildiyin vaxtlarda aç: operator cavab verməsə ziyarətçiyə əlaqə forması təklif olunur.")} />
             <div className="flex flex-col gap-1"><Label htmlFor="title">{t("Başlıq")}</Label><Input id="title" required maxLength={60} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="color">{t("Rəng")}</Label>
@@ -159,20 +164,20 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
             <div className="flex flex-col gap-2 sm:col-span-2">
               <Label>{t("Loqo")}</Label>
               <div className="flex flex-wrap items-center gap-3">
-                {w.logoUrl ? (
+                {shownLogo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={w.logoUrl} alt={t("Cari loqo")} className="size-14 rounded-full border border-border object-cover" />
+                  <img src={shownLogo} alt={t("Cari loqo")} className="size-14 rounded-full border border-border object-cover" />
                 ) : <span className="grid size-14 place-items-center rounded-full border border-dashed border-border text-muted-foreground"><ImagePlus size={20} aria-hidden /></span>}
-                <Button type="button" size="sm" variant="outline" disabled={logoBusy} onClick={() => fileRef.current?.click()}>{logoBusy ? t("Gözlə…") : w.logoUrl ? t("Loqonu dəyiş") : t("Loqo yüklə")}</Button>
-                {w.logoUrl && <Button type="button" size="sm" variant="ghost" disabled={logoBusy} onClick={removeLogo}><Trash2 size={14} aria-hidden />{t("Sil")}</Button>}
+                <Button type="button" size="sm" variant="outline" disabled={logoBusy} onClick={() => fileRef.current?.click()}>{logoBusy ? t("Gözlə…") : shownLogo ? t("Loqonu dəyiş") : t("Loqo yüklə")}</Button>
+                {shownLogo && <Button type="button" size="sm" variant="ghost" disabled={logoBusy} onClick={removeLogo}><Trash2 size={14} aria-hidden />{t("Sil")}</Button>}
                 <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" aria-label={t("Loqo yüklə")} onChange={(e) => void pick(e.target.files?.[0])} />
               </div>
-              <p className="text-xs text-muted-foreground">{t("Çat başlığında və çat düyməsində göstərilir. Kvadrat və ya dairəvi şəkil yaxşı görünür. Şəkil avtomatik kiçildilir. Loqo dərhal saxlanır.")}</p>
+              <p className="text-xs text-muted-foreground">{t("Çat başlığında və çat düyməsində göstərilir. Kvadrat və ya dairəvi şəkil yaxşı görünür. Şəkil avtomatik kiçildilir. Loqo “Saxla” düyməsi ilə saxlanır.")}</p>
             </div>
             <div className="flex flex-col gap-1 sm:col-span-2"><Label htmlFor="greeting">{t("Salamlama mesajı")}</Label><Textarea id="greeting" required maxLength={300} value={greeting} onChange={(e) => setGreeting(e.target.value)} /></div>
           </div>
           <div className="lg:sticky lg:top-4 lg:self-start">
-            <Preview mode={prev} setMode={setPrev} accent={colorOk ? color : "#ea580c"} title={title.trim()} greeting={greeting.trim()} label={label.trim()} logo={w.logoUrl ?? null} side="right" />
+            <Preview mode={prev} setMode={setPrev} accent={colorOk ? color : "#ea580c"} title={title.trim()} greeting={greeting.trim()} label={label.trim()} logo={shownLogo} side="right" />
           </div>
         </CardContent>
         <div className="flex items-center justify-end gap-3 border-t border-border px-5 py-3">

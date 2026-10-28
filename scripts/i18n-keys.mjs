@@ -9,6 +9,7 @@ const DIRS = ["app", "components", "lib"];
 const SKIP = (f) => f.includes(`${path.sep}locales${path.sep}`) || f.includes(`${path.sep}ui${path.sep}`);
 // t() ilə birbaşa çağırılmayan (dəyişənlə ötürülən) açarlar
 const EXTRA = [
+  "Mesaj Telegram-a göndərilə bilmədi", "Mesaj WhatsApp-a göndərilə bilmədi",
   "Gözləyən 3 yükləmə sorğun var. Əvvəlcə onlar həll olunmalıdır", "Məbləğ düzgün deyil", "Sorğu tapılmadı", "Sorğu artıq həll olunub",
   "Bakı", "Gəncə", "Sumqayıt", "Qiymət (min)", "Qiymət (max)", "Şəhər", "Yanacaq növü", "Rəng",
   "İstifadə", "Sınaq söhbəti", "Sorğular", "Elanlar", "Elan mənbəyi", "Saytına qoş", "Ayarlar",
@@ -27,7 +28,7 @@ const EXTRA = [
   "Marka (dəqiq ad)", "Model, məs. X5, Camry", "Kateqoriya / kuzov tipi (dəqiq ad)", "Şəhər / region (dəqiq ad)", "Yanacaq növü (dəqiq ad)", "Sürətlər qutusu (dəqiq ad)", "Ən aşağı buraxılış ili", "Ən yüksək buraxılış ili", "Maksimum yürüş (km)",
   // serverin statik xəta mesajları (lib/api.ts tərcümə edir)
   // bilik bazası: serverin statik xəta mesajları
-  "Fayl göndərilməyib", "Ünvan http:// və ya https:// ilə başlamalıdır", "Mətn ən azı 20 simvol olmalıdır", "Çox əməliyyat oldu, bir az gözləyin", "Yanlış identifikator",
+  "Ən azı bir sual yazın", "Cavab boşdur", "Cütlük tapılmadı", "Fayl göndərilməyib", "Ünvan http:// və ya https:// ilə başlamalıdır", "Mətn ən azı 20 simvol olmalıdır", "Çox əməliyyat oldu, bir az gözləyin", "Yanlış identifikator",
   "Mənbə tapılmadı", "Müraciət tapılmadı", "Fayl boşdur", "Bu fayl artıq əlavə edilib", "Bu mətn artıq əlavə edilib", "Bu ünvan artıq əlavə edilib", "Mətn çox qısadır",
   "Dəstəklənməyən format. PDF, DOCX, TXT, MD, CSV və ya HTML yükləyin.", "PDF oxuna bilmədi (zədəli və ya parolludur)",
   "PDF-də oxunan mətn yoxdur (skan edilmiş şəkil ola bilər). Mətnli PDF və ya Word yükləyin.", "Word faylı oxuna bilmədi", "Düzgün telefon və ya e-poçt yazın",

@@ -66,7 +66,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   if (!enabled) return (
     <div className="flex flex-col items-start gap-3 rounded-lg border border-border bg-card p-5">
       <p className="text-sm font-medium">{t("Canlı operator söhbəti söndürülüb.")}</p>
-      <p className="text-sm text-muted-foreground">{t("Açanda ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür və sən buradan ona real vaxtda cavab verirsən. Bu bölməyə baxa bildiyin vaxtlarda aç.")}</p>
+      <p className="text-sm text-muted-foreground">{t("Açanda ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, Telegram və WhatsApp müştəriləri isə /operator yazır; sən buradan onlara real vaxtda cavab verirsən. Bu bölməyə baxa bildiyin vaxtlarda aç.")}</p>
       <Link href="/embed" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">{t("Saytına qoş bölməsində aç")}</Link>
     </div>
   );
@@ -82,7 +82,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
         ))}
       </div>
       {items === null ? <p className="text-sm text-muted-foreground">{t("Yüklənir…")}</p>
-        : !items.length ? <p className="text-sm text-muted-foreground">{status === "open" ? t("Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa burada görünəcək.") : t("Bağlanmış söhbət yoxdur.")}</p>
+        : !items.length ? <p className="text-sm text-muted-foreground">{status === "open" ? t("Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa və ya Telegram/WhatsApp-da /operator yazsa burada görünəcək.") : t("Bağlanmış söhbət yoxdur.")}</p>
         : (
           <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
             {items.map((c) => (
@@ -91,6 +91,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
                   className={cn("flex w-full cursor-pointer flex-col gap-1 px-4 py-3 text-left hover:bg-muted/50", sel === c.id && "bg-primary/5")}>
                   <span className="flex items-center gap-2 text-sm font-medium">
                     {c.name || t("Adsız ziyarətçi")}
+                    {c.channel && <Badge className="bg-primary/10 text-primary">{c.channel === "telegram" ? "Telegram" : "WhatsApp"}</Badge>}
                     {c.waiting && <Badge className="bg-amber/15 text-amber">{t("Cavab gözləyir")}</Badge>}
                   </span>
                   <span className="truncate text-sm text-muted-foreground">{c.last ? (c.last.from === "operator" ? `${t("Sən")}: ` : "") + (c.last.from === "system" ? "—" : c.last.text) : t("Hələ mesaj yoxdur")}</span>
@@ -110,7 +111,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         <Button size="sm" variant="ghost" className="md:hidden" onClick={() => setSel("")} aria-label={t("Geri")}><ArrowLeft size={16} aria-hidden /></Button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{chat.name || t("Adsız ziyarətçi")}</p>
+          <p className="truncate text-sm font-medium">{chat.name || t("Adsız ziyarətçi")}{chat.channel && <span className="ml-2 text-xs font-normal text-muted-foreground">{chat.channel === "telegram" ? "Telegram" : "WhatsApp"}</span>}</p>
           {chat.contact && (
             <a href={chat.contact.includes("@") ? `mailto:${chat.contact}` : `tel:${chat.contact.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1.5 text-xs text-primary underline">
               {chat.contact.includes("@") ? <Mail size={12} aria-hidden /> : <Phone size={12} aria-hidden />}{chat.contact}

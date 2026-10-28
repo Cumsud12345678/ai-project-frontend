@@ -108,6 +108,13 @@ function BehaviorCards() {
             description={t("Məs. “bu modelin ümumi üstünlükləri nədir”. Cavab “ümumi məlumatdır” qeydi ilə verilir, elanda və ya sənəddə olmayan konkret qiymət və şərt uydurulmur. Söndürsən, köməkçi yalnız öz məlumatlarından cavab verir.")} />
         )}
       </ProfileCard>
+      <ProfileCard title={t("Şəkillə axtarış")} description={t("Ziyarətçi çatda, Telegram-da və ya WhatsApp-da şəkil göndərəndə köməkçi şəkildən növ, marka, model, rəng kimi xüsusiyyətləri çıxarıb oxşar elan, məhsul və ya məlumat axtarsın.")} keys={["imageSearch"]}>
+        {(d, set) => (
+          <SwitchRow checked={d.imageSearch === true} onChange={(v) => set({ imageSearch: v })} on={t("Açıq")} off={t("Bağlı")}
+            title={t("Şəkil qəbul et")}
+            description={t("Hər şəkil əlavə AI sorğusu sayılır və balansdan çıxılır. Ziyarətçi başına 10 dəqiqədə ən çox 6 şəkil qəbul olunur. Şəkillər saxlanmır. Dəqiq eyni elanı tapacağına zəmanət yoxdur, oxşar olanları göstərir. Çatda şəkil düyməsi görünməsi üçün səhifəni yeniləmək lazım ola bilər.")} />
+        )}
+      </ProfileCard>
       <ProfileCard title={t("Sorğu jurnalı")} description={t("Sayt istifadəçilərinin suallarının “Sorğular” bölməsində saxlanması.")} keys={["logQueries"]}>
         {(d, set) => (
           <SwitchRow checked={d.logQueries !== false} onChange={(v) => set({ logQueries: v })} on={t("Açıq")} off={t("Bağlı")}

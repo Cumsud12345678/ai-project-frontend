@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { en } from "./locales/en";
-import { ru } from "./locales/ru";
+import { ru } from "./locales/en";
 import { LangDropdown } from "@/components/lang-dropdown";
 
 import { isLocale, type Locale } from "./locale";
