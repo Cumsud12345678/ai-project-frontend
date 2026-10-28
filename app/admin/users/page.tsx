@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { adminBillingRequests, adminBillingSettings, adminDeleteUser, adminResolveRequest, adminRotateKey, adminSetRole, adminTenantBilling, adminTopup, adminUsage, adminUsers, type AdminTopupRequest, type AdminUser, type Billing, type Usage } from "@/lib/api";
+import { adminBillingRequests, adminBillingSettings, adminDeleteUser, adminSetBranding, adminResolveRequest, adminRotateKey, adminSetRole, adminTenantBilling, adminTopup, adminUsage, adminUsers, type AdminTopupRequest, type AdminUser, type Billing, type Usage } from "@/lib/api";
 import { DangerAction } from "@/components/danger-action";
 import { RotateKey } from "@/components/rotate-key";
 import { UserListSkeleton } from "@/components/skeletons";
@@ -64,6 +64,16 @@ function BillingAdmin({ tenantId, onChange }: { tenantId: string; onChange: () =
         <div><Label htmlFor={`c-${tenantId}`}>{t("Kredit limiti (AZN)")}</Label><Input id={`c-${tenantId}`} value={credit} onChange={(e) => setCredit(e.target.value)} className="w-32" inputMode="decimal" /></div>
         <Button size="sm" variant="outline" onClick={async () => { try { await adminBillingSettings(tenantId, { markup: markup.trim() ? Number(markup.replace(",", ".")) : null, creditLimitAzn: Number(credit.replace(",", ".")) || 0 }); toast.success(t("Ayarlar yadda saxlandı.")); await load(); } catch (e) { toast.error((e as Error).message); } }}>{t("Yadda saxla")}</Button>
       </div>
+    </div>
+  );
+}
+
+function BrandingAdmin({ tenantId, removed, onChange }: { tenantId: string; removed: boolean; onChange: () => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <span>{t("Vidjetdə brend yazısı")}: <strong>{removed ? t("silinib") : t("görünür")}</strong></span>
+      <Button size="sm" variant="outline" onClick={async () => { try { await adminSetBranding(tenantId, !removed); toast.success(t("Ayarlar yadda saxlandı.")); onChange(); } catch (e) { toast.error((e as Error).message); } }}>{removed ? t("Yazını qaytar") : t("Yazını sil")}</Button>
     </div>
   );
 }
@@ -188,6 +198,7 @@ export default function AdminPage() {
                 </dl>
                 <UsageLine tenantId={u.tenant.tenantId} />
                 <BillingAdmin tenantId={u.tenant.tenantId} onChange={reload} />
+                <BrandingAdmin tenantId={u.tenant.tenantId} removed={Boolean(u.tenant.brandRemoved)} onChange={reload} />
               </>
             ) : (
               <p className="text-sm text-muted-foreground">{t("Elan mənbəyi hələ qoşulmayıb.")}</p>

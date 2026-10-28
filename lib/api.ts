@@ -188,11 +188,6 @@ export const getConversations = (q: { days?: number; limit?: number; before?: st
 export const getConversation = (sid: string) => call<{ sid: string; messages: ConversationMsg[] }>(`/tenant/conversations/${encodeURIComponent(sid)}`);
 export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null };
 export const getFunnel = (days: number) => call<Funnel>(`/tenant/funnel?days=${days}`);
-export type TrendDay = { day: string; total: number; unanswered: number };
-export type InsightsTrend = { days: number; enabled: boolean; daily: TrendDay[]; feedback: { up: number; down: number; satisfaction: number | null } };
-export const getInsightsTrend = (days: number) => call<InsightsTrend>(`/tenant/insights/trend?days=${days}`);
-export type InsightsResult = { asked?: number; tooFew?: boolean; minQuestions?: number; cached?: boolean; analyzedAt?: string; topics: { name: string; count: number; unanswered: number; examples: string[] }[]; gaps: { title: string; why: string; count: number; examples: string[] }[] };
-export const analyzeInsights = (days: number, fresh = false) => post<InsightsResult>("/tenant/insights/analyze", { days, ...(fresh && { fresh: true }) });
 export const getReport = () => call<{ monthly: boolean }>("/tenant/report");
 export const setReport = (monthly: boolean) => call<{ monthly: boolean }>("/tenant/report", { method: "PUT", body: { monthly } });
 export type ExportKind = "queries" | "conversations" | "leads" | "unanswered" | "live";
@@ -232,12 +227,12 @@ export const testPrivateData = (kind: string, userId: string) => post<{ ok: bool
 
 // Bilik bazası (dəstək botu)
 export type KbSource = {
-  id: string; type: "file" | "url" | "site" | "text" | "qa" | "proc"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
-  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string; triggers?: string[]; steps?: string;
+  id: string; type: "file" | "url" | "site" | "text" | "qa"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
+  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string;
 };
 export type KbInfo = {
   mode: Mode; autoRefresh?: AutoRefresh; fallbackMessage: string; defaultFallback: string; sources: KbSource[];
-  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number; proc?: number; procTriggers?: number; procTriggerChars?: number; procNameChars?: number; procStepsChars?: number }; totals: { sources: number; chunks: number; qa?: number; proc?: number };
+  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number }; totals: { sources: number; chunks: number; qa?: number };
 };
 export const getKb = () => call<KbInfo>("/tenant/kb");
 
@@ -252,8 +247,6 @@ export const kbUploadFile = async (file: File) =>
 export const kbAddUrl = (url: string, crawl: boolean) => post<{ source: KbSource }>("/tenant/kb/urls", { url, crawl });
 export const kbAddText = (title: string, text: string) => post<{ source: KbSource }>("/tenant/kb/texts", { title, text });
 export const kbAddQa = (questions: string[], answer: string) => post<{ source: KbSource }>("/tenant/kb/qa", { questions, answer });
-export const kbAddProc = (name: string, triggers: string[], steps: string) => post<{ source: KbSource }>("/tenant/kb/proc", { name, triggers, steps });
-export const kbUpdateProc = (id: string, name: string, triggers: string[], steps: string) => call<{ source: KbSource }>(`/tenant/kb/proc/${id}`, { method: "PUT", body: { name, triggers, steps } });
 export const kbUpdateQa = (id: string, questions: string[], answer: string) => call<{ source: KbSource }>(`/tenant/kb/qa/${id}`, { method: "PUT", body: { questions, answer } });
 export const kbRefresh = (id: string) => post<{ source: KbSource }>(`/tenant/kb/sources/${id}/refresh`);
 export const kbDelete = (id: string) => call<{ ok: true }>(`/tenant/kb/sources/${id}`, { method: "DELETE" });

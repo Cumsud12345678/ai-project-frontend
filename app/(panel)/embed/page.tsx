@@ -270,6 +270,12 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
             </div>
           </CardContent>
         </SaveCard>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("Brend yazısı")}</CardTitle>
+            <CardDescription>{data.brandRemoved ? t("Çatın altındakı “Powered by” yazısı sənin üçün silinib.") : t("Çatın altında kiçik “Powered by {name}” yazısı görünür. Silmək istəyirsənsə dəstəyə yaz, bu ödənişli xidmətdir.", { name: data.brandName ?? "" })}</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
 
       <Card>
