@@ -3,7 +3,7 @@ import { isLocale, translate } from "./i18n";
 export type Mode = "listings" | "support" | "both";
 export type AutoRefresh = "off" | "daily" | "weekly";
 export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; imageSearch?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
-export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string };
+export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string; /** CSV/JSON/XML faylının mətni (yalnız fayl ilə qoşulmada) */ feedText?: string };
 
 export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string };
@@ -89,6 +89,13 @@ export const getTenant = () => call<TenantResponse>("/tenant");
 export const testConfig = (config: ConfigJson) => post<TestResult>("/tenant/config/test", { config });
 export const activate = (config: ConfigJson) => post<{ apiKey: string; tenant: TenantInfo; sampleListings: Listing[] }>("/tenant", { config });
 export const updateConfig = (config: ConfigJson) => call<{ tenant: TenantInfo; sampleListings: Listing[] }>("/tenant/config", { method: "PUT", body: { config } });
+// Fayl/link ilə qoşulma (CSV, JSON, XML)
+export type FeedColumn = { path: string; samples: string[]; filled: number };
+export type FeedPreview = { ok: true; format: "csv" | "json" | "xml"; itemsPath: string; delimiter: string | null; count: number; truncated: boolean; columns: FeedColumn[]; suggestion: { fields: Record<string, unknown>; defaults: Record<string, unknown> }; sample: Listing[]; rawSample: unknown[] };
+export const feedPreview = (b: { feedText?: string; url?: string; format?: string; itemsPath?: string }) => post<FeedPreview>("/tenant/feed/preview", b);
+export type FeedStatus = { enabled: boolean; feed: { url?: string; format: string; count: number; updatedAt: string; refreshHours: number; lastError?: string; lastErrorAt?: string } | null };
+export const getFeedStatus = () => call<FeedStatus>("/tenant/feed");
+export const feedRefresh = (feedText?: string) => post<{ ok: true; count: number; truncated?: boolean }>("/tenant/feed/refresh", feedText ? { feedText } : {});
 export const saveProfile = (profile: Profile) => call<{ profile: Profile }>("/tenant/profile", { method: "PATCH", body: profile });
 export const rotateMyKey = () => post<{ apiKey: string }>("/tenant/key/rotate");
 export const getWidget = () => call<WidgetResponse>("/tenant/widget");

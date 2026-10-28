@@ -9,6 +9,8 @@ import { jsonErrorLocation, lintConfig, type Issue } from "@/lib/config-edit";
 import { useI18n } from "@/lib/i18n";
 import { ConfigGuide } from "@/components/config-guide";
 import { ConfigTools } from "@/components/config-tools";
+import { FeedSetup } from "@/components/feed-setup";
+import { Segmented } from "@/components/ui/segmented";
 import { ConfigAssist } from "@/components/config-assist";
 import { KeyReveal } from "@/components/key-reveal";
 import { ListingTable } from "@/components/listing-table";
@@ -32,6 +34,7 @@ function ListingsSetup() {
   const [busy, setBusy] = useState<"" | "test" | "save">("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [confirmEx, setConfirmEx] = useState(false);
+  const [way, setWay] = useState<"api" | "feed">((tenant?.config?.source as { type?: string } | undefined)?.type === "feed" ? "feed" : "api");
 
   // Canlı yoxlama: JSON səhvi (sətir/sütun ilə) və ya konfiqurasiya xəbərdarlıqları
   const live = useMemo<{ json?: string; issues: Issue[]; legacy?: boolean } | null>(() => {
@@ -115,16 +118,28 @@ function ListingsSetup() {
         <p className="text-sm text-muted-foreground">
           {tenant
             ? t("Konfiqurasiya JSON-unu dəyişib yenidən yoxla və yenilə.")
-            : t("Saytının elan, məhsul və ya xidmət API-sini JSON konfiqurasiya ilə təsvir et. Yoxlamadan keçəndə məsləhətçi aktiv olur və API açarını alırsan.")}
+            : t("Saytının elan, məhsul və ya xidmət API-sini JSON konfiqurasiya ilə təsvir et və ya API yoxdursa CSV/JSON/XML fayl və ya link ver. Yoxlamadan keçəndə məsləhətçi aktiv olur və API açarını alırsan.")}
         </p>
       </header>
 
-      <ConfigAssist text={text} onChange={adopt} />
-      <ConfigGuide />
+      <Segmented value={way} onChange={setWay} label={t("Qoşulma yolu")}
+        options={[{ value: "api", label: t("API ilə (JSON)") }, { value: "feed", label: t("Fayl və ya link ilə (CSV, JSON, XML)") }]} />
+
+      {way === "api" && <><ConfigAssist text={text} onChange={adopt} /><ConfigGuide /></>}
 
       {issuedKey && <KeyReveal apiKey={issuedKey} title={t("Aktivləşdi. Bu sənin API açarındır")} onDone={() => setIssuedKey("")} />}
 
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
+      {way === "feed" && (
+        <>
+          <section className="grid gap-4 rounded-lg border border-border bg-card p-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1"><Label htmlFor="bn-f">{t("Biznes adı")}</Label><Input id="bn-f" maxLength={120} value={businessName} onChange={(e) => setBusinessName(e.target.value)} /></div>
+            <div className="flex flex-col gap-1"><Label htmlFor="dm-f">{t("Sayt domeni")}</Label><Input id="dm-f" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
+          </section>
+          <FeedSetup businessName={businessName} domain={domain} onIssuedKey={setIssuedKey} />
+        </>
+      )}
+
+      {way === "api" && <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1"><Label htmlFor="bn">{t("Biznes adı")}</Label><Input id="bn" maxLength={120} value={businessName} onChange={(e) => setBusinessName(e.target.value)} /></div>
           <div className="flex flex-col gap-1"><Label htmlFor="dm">{t("Sayt domeni")}</Label><Input id="dm" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
@@ -173,16 +188,16 @@ function ListingsSetup() {
           <Button onClick={() => run("save")} disabled={!!busy}>{busy === "save" ? t("Gözlə…") : tenant ? t("Yenilə") : t("Aktivləşdir")}</Button>
           <p className="text-xs text-muted-foreground">{t("Hər iki düymə saytının API-sinə real sorğu göndərir.")}</p>
         </div>
-      </section>
+      </section>}
 
-      {error && (
+      {way === "api" && error && (
         <div role="alert" className="flex flex-col gap-1 rounded-lg border border-destructive/40 bg-card p-4 text-sm">
           <p className="text-destructive">{error.message}</p>
           {error.dropped && error.dropped.length > 0 && <p className="text-muted-foreground">{t("Atılan qeydlər:")} {[...new Set(error.dropped)].slice(0, 5).join(", ")}</p>}
         </div>
       )}
-      {busy && <CardSkeleton rows={2} />}
-      {!busy && result && (
+      {way === "api" && busy && <CardSkeleton rows={2} />}
+      {way === "api" && !busy && result && (
         <div className="flex flex-col gap-3">
           <p className="text-sm"><strong>{result.sampleCount}</strong> {t("qeyd oxundu")}{result.debug?.dropped?.length ? <span className="text-destructive">. {t("Atılan qeydlər:")} {[...new Set(result.debug.dropped)].join(", ")}.</span> : "."}</p>
           {result.supportedFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 text-sm">{t("Dəstəklənən süzgəclər:")} {result.supportedFilters.map((f) => <Badge key={f}>{f}</Badge>)}</div>}
