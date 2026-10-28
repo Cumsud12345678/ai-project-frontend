@@ -5,6 +5,7 @@ import { BarChart3, BookOpen, Camera, Check, ChevronDown, Headset, ListChecks, M
 import { LOCALES, useI18n } from "@/lib/i18n";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { Reveal } from "@/components/landing/reveal";
+import { LiveDemo } from "@/components/landing/demo";
 import { Everything, Showcase } from "@/components/landing/showcase";
 import { LangDropdown } from "@/components/lang-dropdown";
 
@@ -358,6 +359,7 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
         <Steps />
         <Features />
         <Showcase />
+        <LiveDemo signedIn={signedIn} />
         <Everything />
         <Pricing signedIn={signedIn} />
         <Faq />

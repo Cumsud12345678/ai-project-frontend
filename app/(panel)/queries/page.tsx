@@ -137,6 +137,17 @@ function Queries() {
             <Stat label={t("Yönəlmə faizi")} value={funnel.handoffRate === null ? "–" : `${funnel.handoffRate}%`} />
             <Stat label={t("Emal olunub")} value={funnel.handledRate === null ? "–" : `${funnel.handledRate}%`} hint={funnel.leads ? t("{a} / {b} müraciət", { a: funnel.leadsHandled, b: funnel.leads }) : undefined} />
           </div>
+          <div>
+            <h3 className="text-sm font-medium">{t("AI nə qədər iş gördü")}</h3>
+            <p className="text-xs text-muted-foreground">{t("Bu rəqəmlər çatın saytda gördüyü işin göstəricisidir. Satış məbləği burada yoxdur, çünki sifariş sənin saytında tamamlanır.")}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <Stat label={t("Operatorsuz bitən söhbət")} value={funnel.withoutHandoff ?? "–"} hint={t("Operatora keçməyən söhbətlər; hamısının həll olunduğunu göstərmir.")} />
+            <Stat label={t("Təsdiqlə icra olunan əməliyyat")} value={funnel.actionsDone ?? "–"} hint={t("İstifadəçinin kartda təsdiq verdiyi və uğurla bitən.")} />
+            <Stat label={t("Kart klikləri")} value={funnel.cardClicks} hint={t("Çatda göstərilən elan və ya məhsul kartına klik.")} />
+            <Stat label={t("Faydalı / faydasız cavab")} value={`${funnel.feedbackUp} / ${funnel.feedbackDown}`} />
+            <Stat label={t("Operator qiyməti")} value={funnel.csatAvg === null ? "–" : `${funnel.csatAvg}/5`} hint={funnel.csatCount ? t("{n} qiymət", { n: funnel.csatCount }) : undefined} />
+          </div>
         </section>
       )}
 

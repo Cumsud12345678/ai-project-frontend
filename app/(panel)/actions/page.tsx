@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { clearActionLog, deleteActions, getActionLog, getActions, newSigningSecret, saveActions, testAction, type ActionItem, type ActionLogEntry, type ActionParam, type ActionsData, type ActionTestResult } from "@/lib/api";
+import { clearActionLog, deleteActions, getActionLog, getActions, getActionStats, newSigningSecret, saveActions, testAction, type ActionItem, type ActionLogEntry, type ActionStats, type ActionParam, type ActionsData, type ActionTestResult } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
 import { KeyReveal } from "@/components/key-reveal";
@@ -62,7 +62,7 @@ function Code({ code }: { code: string }) {
 
 const select = "h-10 rounded-md border border-border bg-card px-2 text-sm";
 
-function ActionCard({ f, set, remove, index, identityReady }: { f: Form; set: (a: Form) => void; remove: () => void; index: number; identityReady: boolean }) {
+function ActionCard({ f, set, remove, index, identityReady, runs }: { f: Form; set: (a: Form) => void; remove: () => void; index: number; identityReady: boolean; runs?: Record<string, number> }) {
   const { t } = useI18n();
   const up = (p: Partial<Form>) => set({ ...f, ...p });
   const setParam = (i: number, p: Partial<Form["params"][number]>) => up({ params: f.params.map((x, j) => (j === i ? { ...x, ...p } : x)) });
@@ -71,7 +71,7 @@ function ActionCard({ f, set, remove, index, identityReady }: { f: Form; set: (a
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <div><CardTitle className="text-base">{f.title || t("Yeni əməliyyat")}</CardTitle><CardDescription>{t("AI bu əməliyyatı yalnız istifadəçi açıq istəyəndə təklif edir; icra üçün istifadəçi ayrıca təsdiq verir.")}</CardDescription></div>
+          <div><CardTitle className="flex flex-wrap items-center gap-2 text-base">{f.title || t("Yeni əməliyyat")}{runs && (runs.done || runs.failed || runs.cancelled) ? <Badge className="bg-primary/10 text-xs font-normal text-primary">{t("30 gündə: {done} icra, {other} icra olunmadı", { done: runs.done ?? 0, other: (runs.failed ?? 0) + (runs.cancelled ?? 0) + (runs.unknown ?? 0) + (runs.expired ?? 0) + (runs.denied ?? 0) })}</Badge> : null}</CardTitle><CardDescription>{t("AI bu əməliyyatı yalnız istifadəçi açıq istəyəndə təklif edir; icra üçün istifadəçi ayrıca təsdiq verir.")}</CardDescription></div>
           <Button type="button" size="sm" variant="outline" onClick={remove}>{t("Sil")}</Button>
         </div>
       </CardHeader>
@@ -136,6 +136,7 @@ function ActionsPage() {
   const [revealed, setRevealed] = useState<string | null>(null);
   const [lang, setLang] = useState<"node" | "py">("node");
   const [log, setLog] = useState<ActionLogEntry[] | null>(null);
+  const [stats, setStats] = useState<ActionStats | null>(null);
   const [testKey, setTestKey] = useState("");
   const [testVals, setTestVals] = useState<Record<string, string>>({});
   const [testUser, setTestUser] = useState("test-user");
@@ -147,7 +148,7 @@ function ActionsPage() {
     setBaseUrl(d.baseUrl ?? ""); setAuthType(d.auth?.type ?? "bearer"); setAuthName(d.auth?.name ?? "X-Api-Key");
     setItems(d.items.map(toForm)); setTestKey((k) => k || d.items[0]?.key || "");
   }, []);
-  const loadLog = useCallback(() => { getActionLog().then((r) => setLog(r.entries)).catch(() => setLog([])); }, []);
+  const loadLog = useCallback(() => { getActionLog().then((r) => setLog(r.entries)).catch(() => setLog([])); getActionStats().then(setStats).catch(() => setStats(null)); }, []);
   useEffect(() => { getActions().then(apply).catch((e: Error) => setError(e.message)); loadLog(); }, [apply, loadLog]);
 
   const STATUS: Record<ActionLogEntry["status"], string> = { done: t("icra olundu"), failed: t("alınmadı"), unknown: t("bəlli deyil"), cancelled: t("ləğv edildi"), expired: t("vaxtı bitdi"), denied: t("rədd edildi"), test: t("sınaq") };
@@ -240,7 +241,7 @@ function ActionsPage() {
           <h2 className="font-medium">{t("2. Hansı əməliyyatlar olsun?")}</h2>
           <p className="text-sm text-muted-foreground">{t("Hər biri üçün ünvan, parametrlər və təsdiq mətni göstərilir. Ən çox 10 əməliyyat.")}</p>
         </div>
-        {items.map((f, i) => <ActionCard key={i} index={i} f={f} identityReady={data.identityReady === true} set={(n) => setItems((cur) => cur.map((x, j) => (j === i ? n : x)))} remove={() => setItems((cur) => cur.filter((_, j) => j !== i))} />)}
+        {items.map((f, i) => <ActionCard key={i} index={i} f={f} runs={stats?.byKey[f.key]} identityReady={data.identityReady === true} set={(n) => setItems((cur) => cur.map((x, j) => (j === i ? n : x)))} remove={() => setItems((cur) => cur.filter((_, j) => j !== i))} />)}
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1"><Label htmlFor="ac-preset">{t("Əməliyyat əlavə et")}</Label>
             <select id="ac-preset" value={preset} onChange={(e) => setPreset(e.target.value)} className="h-10 rounded-md border border-border bg-card px-3 text-sm">{presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select></div>

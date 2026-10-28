@@ -7,7 +7,33 @@ export type ConfigJson = { businessName?: string; domain?: string; profile?: Pro
 
 export type WorkHours = { tz: string; days: ({ from: string; to: string } | null)[] };
 export type ProactiveRule = { id: string; text: string; delaySec: number; match: string };
-export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean; csat?: boolean; hours?: WorkHours | null }; proactive?: { enabled: boolean; rules: ProactiveRule[] }; lastSeenAt?: string | null };
+export type WidgetSettings = {
+  key: string;
+  enabled: boolean;
+  origins: string[];
+  title: string;
+  greeting: string;
+  color: string;
+  bg?: string; // əlavə edildi
+  theme?: "light" | "dark" | "auto";
+  logoUrl?: string | null;
+  label: string;
+  limits?: {
+    perVisitorDay: number;
+    siteHour: number;
+  };
+  live?: {
+    enabled: boolean;
+    csat?: boolean;
+    hours?: WorkHours | null;
+  };
+  proactive?: {
+    enabled: boolean;
+    rules: ProactiveRule[];
+  };
+  lastSeenAt?: string | null;
+};
+
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string; brandRemoved?: boolean; brandName?: string };
 
 export type Me = { email: string; role: "user" | "admin" };
@@ -188,7 +214,7 @@ export const getConversations = (q: { days?: number; limit?: number; before?: st
   return call<ConversationList>(`/tenant/conversations${p.size ? `?${p}` : ""}`);
 };
 export const getConversation = (sid: string) => call<{ sid: string; messages: ConversationMsg[] }>(`/tenant/conversations/${encodeURIComponent(sid)}`);
-export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null };
+export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null; withoutHandoff: number | null; actionsDone: number | null; feedbackUp: number; feedbackDown: number; csatAvg: number | null; csatCount: number; cardClicks: number };
 export const getFunnel = (days: number) => call<Funnel>(`/tenant/funnel?days=${days}`);
 export type TrendDay = { day: string; total: number; unanswered: number };
 export type InsightsTrend = { days: number; enabled: boolean; daily: TrendDay[]; feedback: { up: number; down: number; satisfaction: number | null } };
@@ -287,7 +313,8 @@ export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; a
 export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
 export type LiveNote = { text: string; by: string; at: string };
 export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; tags?: string[]; csat?: number | null; notes?: number; last: LiveMsg | null };
-export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[] };
+export type LivePrevious = { id: string; createdAt: string; status: "open" | "closed"; count: number; tags: string[]; csat: number | null; first: string };
 export const claimLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/claim`);
 export const releaseLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/release`);
 export type LiveContact = { channel: "telegram" | "whatsapp"; chatId: string; name: string; last: string; updatedAt: string };
@@ -359,3 +386,7 @@ export type CannedReply = { id: string; title: string; text: string };
 export const getCanned = () => call<{ items: CannedReply[] }>("/tenant/canned");
 export const saveCanned = (items: { id?: string; title: string; text: string }[]) => call<{ items: CannedReply[] }>("/tenant/canned", { method: "PUT", body: { items } });
 export const draftLive = (id: string) => post<{ draft: string }>(`/tenant/live/${id}/draft`);
+
+/** Əməliyyat başına son 30 günün icra statistikası (status → say) */
+export type ActionStats = { days: number; done: number; byKey: Record<string, Record<string, number>> };
+export const getActionStats = () => call<ActionStats>("/tenant/actions/stats");

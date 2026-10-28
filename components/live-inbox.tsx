@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookPlus, Hand, Mail, MessageSquarePlus, Phone, Send, Sparkles, Star, StickyNote, Undo2, X, XCircle } from "lucide-react";
+import { ArrowLeft, BookPlus, Globe, Hand, Mail, MessageSquarePlus, Phone, Send, Sparkles, Star, StickyNote, Undo2, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
@@ -20,6 +20,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   const [kb, setKb] = useState<{ q: string; a: string } | null>(null);
   const myName = (me?.email || "").split("@")[0].slice(0, 40);
   const [who, setWho] = useState<"all" | "mine" | "free">("all");
+  const [ch, setCh] = useState<"all" | "site" | "telegram" | "whatsapp" | "vip">("all");
   const [starting, setStarting] = useState(false);
   const [contacts, setContacts] = useState<LiveContact[] | null>(null);
   const [pick, setPick] = useState("");
@@ -143,7 +144,13 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     </div>
   );
 
-  const shown = (items || []).filter((c) => status !== "open" || who === "all" || (who === "free" ? !c.assignee : c.assignee?.name === myName));
+  const isVip = (tags?: string[]) => !!tags?.some((g) => g.toLowerCase() === "vip");
+  const chOf = (c: LiveItem) => c.channel ?? "site";
+  const counts = { site: 0, telegram: 0, whatsapp: 0, vip: 0 };
+  for (const c of items || []) { counts[chOf(c)]++; if (isVip(c.tags)) counts.vip++; }
+  const shown = (items || [])
+    .filter((c) => status !== "open" || who === "all" || (who === "free" ? !c.assignee : c.assignee?.name === myName))
+    .filter((c) => ch === "all" || (ch === "vip" ? isVip(c.tags) : chOf(c) === ch));
   const list = (
     <div className={cn("flex flex-col gap-3", sel && "hidden md:flex")}>
       <div className="inline-flex self-start rounded-lg border border-border bg-muted p-1 text-sm">
@@ -165,6 +172,18 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
             ))}
           </div>
           <Button size="sm" variant="outline" onClick={openStart}><MessageSquarePlus size={14} aria-hidden />{t("Yeni söhbət")}</Button>
+        </div>
+      )}
+      {(items?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap gap-1.5 text-xs" role="group" aria-label={t("Kanal və VIP filtri")}>
+          {([["all", t("Bütün kanallar"), items?.length ?? 0], ["site", t("Sayt"), counts.site], ["telegram", "Telegram", counts.telegram], ["whatsapp", "WhatsApp", counts.whatsapp], ["vip", "VIP", counts.vip]] as const)
+            .filter(([k, , n]) => k === "all" || n > 0 || ch === k)
+            .map(([k, label, n]) => (
+              <button key={k} type="button" aria-pressed={ch === k} onClick={() => setCh(k)}
+                className={cn("cursor-pointer rounded-full border px-2.5 py-1 font-medium", ch === k ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted/50")}>
+                {label} <span className="opacity-70">{n}</span>
+              </button>
+            ))}
         </div>
       )}
       {status === "closed" && csatSum && csatSum.count > 0 && csatSum.avg !== null && (
@@ -204,7 +223,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
                     {c.waiting && <Badge className="bg-amber/15 text-amber">{t("Cavab gözləyir")}</Badge>}
                     {typeof c.csat === "number" && <Badge className="bg-muted text-muted-foreground"><Star size={11} aria-hidden className="mr-0.5 inline" />{c.csat}/5</Badge>}
                   </span>
-                  {!!c.tags?.length && <span className="flex flex-wrap gap-1">{c.tags.map((g) => <Badge key={g} className="bg-primary/10 text-primary">{g}</Badge>)}</span>}
+                  {!!c.tags?.length && <span className="flex flex-wrap gap-1">{c.tags.map((g) => <Badge key={g} className={g.toLowerCase() === "vip" ? "bg-amber/15 text-amber" : "bg-primary/10 text-primary"}>{g}</Badge>)}</span>}
                   <span className="truncate text-sm text-muted-foreground">{c.last ? (c.last.from === "operator" ? `${t("Sən")}: ` : "") + (c.last.from === "system" ? "—" : c.last.text) : t("Hələ mesaj yoxdur")}</span>
                   <span className="text-xs text-muted-foreground">{short(c.updatedAt)}</span>
                 </button>
@@ -234,6 +253,29 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
           : <Button size="sm" variant="outline" onClick={() => claim(false)}><Hand size={14} aria-hidden />{t("Götür")}</Button>)}
         {chat.status === "open" && <Button size="sm" variant="outline" onClick={close}><XCircle size={14} aria-hidden />{t("Söhbəti bitir")}</Button>}
       </div>
+      {(chat.page || !!chat.previous?.length) && (
+        <div className="flex flex-col gap-1.5 border-b border-border bg-muted/30 px-4 py-2 text-xs">
+          {chat.page && (
+            <p className="flex min-w-0 items-center gap-1.5 text-muted-foreground"><Globe size={12} aria-hidden className="shrink-0" /><span className="shrink-0">{t("Yazdığı səhifə:")}</span>
+              <span className="min-w-0 truncate font-medium text-foreground" title={chat.page.title ? `${chat.page.title} · ${chat.page.path}` : chat.page.path}>{chat.page.title ? `${chat.page.title} · ` : ""}{chat.page.path}</span></p>
+          )}
+          {!!chat.previous?.length && (
+            <details>
+              <summary className="cursor-pointer text-primary">{t("Bu müştəri ilə əvvəlki söhbətlər ({n})", { n: chat.previous.length })}</summary>
+              <ul className="mt-1.5 flex flex-col gap-1">
+                {chat.previous.map((o) => (
+                  <li key={o.id}>
+                    <button type="button" onClick={() => { setStatus(o.status); setSel(o.id); }} className="flex w-full cursor-pointer flex-col rounded-md border border-border bg-card px-2.5 py-1.5 text-left hover:bg-muted/50">
+                      <span className="text-muted-foreground">{short(o.createdAt)} · {o.status === "open" ? t("Açıq") : t("Bağlanmış")}{o.csat ? ` · ${o.csat}/5` : ""}{o.tags.length ? ` · ${o.tags.join(", ")}` : ""}</span>
+                      <span className="truncate text-foreground">{o.first || "—"}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
       {!!chat.context.length && (
         <details className="border-b border-border px-4 py-2 text-sm">
           <summary className="cursor-pointer text-primary">{t("Çatla əvvəlki yazışma ({n} mesaj)", { n: chat.context.length })}</summary>
@@ -244,10 +286,11 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
       )}
       <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-4 py-2 text-xs">
         {(chat.tags ?? []).map((g) => (
-          <Badge key={g} className="gap-1 bg-primary/10 text-primary">{g}
+          <Badge key={g} className={cn("gap-1", g.toLowerCase() === "vip" ? "bg-amber/15 text-amber" : "bg-primary/10 text-primary")}>{g}
             <button type="button" className="cursor-pointer" aria-label={t("Etiketi sil")} onClick={() => saveTags((chat.tags ?? []).filter((x) => x !== g))}><X size={11} aria-hidden /></button>
           </Badge>
         ))}
+        {!isVip(chat.tags) && (chat.tags?.length ?? 0) < 5 && <button type="button" onClick={() => saveTags([...(chat.tags ?? []), "VIP"])} className="h-7 cursor-pointer rounded-md border border-border px-2 text-xs text-muted-foreground hover:bg-muted/50">{t("VIP et")}</button>}
         {(chat.tags?.length ?? 0) < 5 && (
           <form onSubmit={(e) => { e.preventDefault(); const v = tagIn.trim(); if (v) saveTags([...(chat.tags ?? []), v]); }}>
             <input value={tagIn} onChange={(e) => setTagIn(e.target.value)} maxLength={24} aria-label={t("Etiket əlavə et")} placeholder={t("+ etiket")} className="h-7 w-24 rounded-md border border-border bg-card px-2 text-xs" />
