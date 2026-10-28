@@ -188,6 +188,11 @@ export const getConversations = (q: { days?: number; limit?: number; before?: st
 export const getConversation = (sid: string) => call<{ sid: string; messages: ConversationMsg[] }>(`/tenant/conversations/${encodeURIComponent(sid)}`);
 export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null };
 export const getFunnel = (days: number) => call<Funnel>(`/tenant/funnel?days=${days}`);
+export type TrendDay = { day: string; total: number; unanswered: number };
+export type InsightsTrend = { days: number; enabled: boolean; daily: TrendDay[]; feedback: { up: number; down: number; satisfaction: number | null } };
+export const getInsightsTrend = (days: number) => call<InsightsTrend>(`/tenant/insights/trend?days=${days}`);
+export type InsightsResult = { asked?: number; tooFew?: boolean; minQuestions?: number; cached?: boolean; analyzedAt?: string; topics: { name: string; count: number; unanswered: number; examples: string[] }[]; gaps: { title: string; why: string; count: number; examples: string[] }[] };
+export const analyzeInsights = (days: number, fresh = false) => post<InsightsResult>("/tenant/insights/analyze", { days, ...(fresh && { fresh: true }) });
 export const getReport = () => call<{ monthly: boolean }>("/tenant/report");
 export const setReport = (monthly: boolean) => call<{ monthly: boolean }>("/tenant/report", { method: "PUT", body: { monthly } });
 export type ExportKind = "queries" | "conversations" | "leads" | "unanswered" | "live";
@@ -227,12 +232,12 @@ export const testPrivateData = (kind: string, userId: string) => post<{ ok: bool
 
 // Bilik bazası (dəstək botu)
 export type KbSource = {
-  id: string; type: "file" | "url" | "site" | "text" | "qa"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
-  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string;
+  id: string; type: "file" | "url" | "site" | "text" | "qa" | "proc"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
+  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string; triggers?: string[]; steps?: string;
 };
 export type KbInfo = {
   mode: Mode; autoRefresh?: AutoRefresh; fallbackMessage: string; defaultFallback: string; sources: KbSource[];
-  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number }; totals: { sources: number; chunks: number; qa?: number };
+  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number; proc?: number; procTriggers?: number; procTriggerChars?: number; procNameChars?: number; procStepsChars?: number }; totals: { sources: number; chunks: number; qa?: number; proc?: number };
 };
 export const getKb = () => call<KbInfo>("/tenant/kb");
 
@@ -247,6 +252,8 @@ export const kbUploadFile = async (file: File) =>
 export const kbAddUrl = (url: string, crawl: boolean) => post<{ source: KbSource }>("/tenant/kb/urls", { url, crawl });
 export const kbAddText = (title: string, text: string) => post<{ source: KbSource }>("/tenant/kb/texts", { title, text });
 export const kbAddQa = (questions: string[], answer: string) => post<{ source: KbSource }>("/tenant/kb/qa", { questions, answer });
+export const kbAddProc = (name: string, triggers: string[], steps: string) => post<{ source: KbSource }>("/tenant/kb/proc", { name, triggers, steps });
+export const kbUpdateProc = (id: string, name: string, triggers: string[], steps: string) => call<{ source: KbSource }>(`/tenant/kb/proc/${id}`, { method: "PUT", body: { name, triggers, steps } });
 export const kbUpdateQa = (id: string, questions: string[], answer: string) => call<{ source: KbSource }>(`/tenant/kb/qa/${id}`, { method: "PUT", body: { questions, answer } });
 export const kbRefresh = (id: string) => post<{ source: KbSource }>(`/tenant/kb/sources/${id}/refresh`);
 export const kbDelete = (id: string) => call<{ ok: true }>(`/tenant/kb/sources/${id}`, { method: "DELETE" });
@@ -321,3 +328,24 @@ export const adminTenantBilling = (tenantId: string) => call<Billing>(`/admin/te
 export const adminTopup = (tenantId: string, amountAzn: number, note: string) => post<{ balance?: { totalAzn: number } }>(`/admin/tenants/${tenantId}/billing/topup`, { amountAzn, note });
 export const adminSetBranding = (tenantId: string, removed: boolean) => call<{ ok: true; brandRemoved: boolean }>(`/admin/tenants/${tenantId}/branding`, { method: "PATCH", body: { removed } });
 export const adminBillingSettings = (tenantId: string, patch: { markup?: number | null; creditLimitAzn?: number }) => call<unknown>(`/admin/tenants/${tenantId}/billing/settings`, { method: "PATCH", body: patch });
+
+// Əməliyyatlar (yazma): AI istifadəçinin təsdiqi ilə sənin API-ndə əməliyyat icra edir
+export type ActionParam = { name: string; type: "string" | "number" | "integer" | "boolean" | "enum"; description: string; required?: boolean; enum?: string[]; maxLength?: number; min?: number; max?: number };
+export type ActionItem = {
+  key: string; title: string; description: string; method: "POST" | "PUT" | "PATCH" | "DELETE"; path: string; params: ActionParam[];
+  confirmText?: string; successMessage?: string; requireIdentity?: boolean; enabled?: boolean;
+};
+export type ActionsData = {
+  configured: boolean; baseUrl?: string; auth?: { type: "header" | "bearer"; name?: string; hasSecret: boolean };
+  items: ActionItem[]; signing: { configured: boolean; createdAt?: string | null }; identityReady?: boolean;
+};
+export type ActionsInput = { baseUrl: string; apiSecret?: string; auth?: { type: string; name?: string }; items: ActionItem[] };
+export type ActionLogEntry = { id?: string; at: string; key: string; title: string; status: "done" | "failed" | "unknown" | "cancelled" | "expired" | "denied" | "test"; httpStatus?: number; subject?: string | null; channel?: string | null; params?: Record<string, string>; ms?: number };
+export type ActionTestResult = { preview?: { method: string; url: string; headers: Record<string, string>; body: unknown }; sent?: boolean; status?: string; httpStatus?: number | null; message?: string; ms?: number };
+export const getActions = () => call<ActionsData>("/tenant/actions");
+export const saveActions = (b: ActionsInput) => call<ActionsData & { signingSecret?: string }>("/tenant/actions", { method: "PUT", body: b });
+export const deleteActions = () => call<{ ok: true }>("/tenant/actions", { method: "DELETE" });
+export const newSigningSecret = () => post<{ signingSecret: string }>("/tenant/actions/signing-secret");
+export const testAction = (b: { key: string; params: Record<string, string>; send: boolean; userId?: string }) => post<ActionTestResult>("/tenant/actions/test", b);
+export const getActionLog = () => call<{ entries: ActionLogEntry[] }>("/tenant/actions/log");
+export const clearActionLog = () => call<{ ok: true }>("/tenant/actions/log", { method: "DELETE" });

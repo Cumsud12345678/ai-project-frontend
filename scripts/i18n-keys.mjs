@@ -9,6 +9,20 @@ const DIRS = ["app", "components", "lib"];
 const SKIP = (f) => f.includes(`${path.sep}locales${path.sep}`) || f.includes(`${path.sep}ui${path.sep}`);
 // t() ilə birbaşa çağırılmayan (dəyişənlə ötürülən) açarlar
 const EXTRA = [
+  "Əməliyyat tapılmadı",
+  "Əvvəlcə əməliyyatları saxlayın",
+  "Ən azı bir əməliyyat təyin edilməlidir",
+  "baseUrl HTTPS ünvanı olmalıdır",
+  "API autentifikasiyası üçün apiSecret tələb olunur",
+  "Əməliyyat icra olundu.",
+  "Saytdan cavab gəlmədi, əməliyyatın icra olunub-olunmadığı bəlli deyil. Təkrar etmə, operatorla yoxla.",
+  "Sayta qoşulmaq alınmadı, əməliyyat icra olunmadı. Bir az sonra yenidən cəhd edin.",
+  "Əməliyyat konfiqurasiyasında xəta var, sahibə bildirildi.",
+  "Çox əməliyyat oldu, bir az gözləyin",
+  "Çox real sınaq göndərildi, bir az gözləyin",
+  "Ən çox 10 əməliyyat ola bilər",
+  "Bu əməliyyat yalnız çat vidjeti və kanallar üzərindən təsdiqlənir",
+  "key tələb olunur",
   "Ssenarinin adı 2-80 simvol olmalıdır",
   "Ssenarinin nə vaxt işləməli olduğunu ən azı bir ifadə ilə yazın",
   "Ən çox 6 ifadə yaza bilərsiniz",

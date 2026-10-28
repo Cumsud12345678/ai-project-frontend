@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Send, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X } from "lucide-react";
+import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Send, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLiveCount } from "@/lib/api";
 import { AnnouncementBanner } from "@/components/announcement-banner";
@@ -22,6 +22,7 @@ const nav: { href: string; label: string; icon: typeof Gauge; only?: ("listings"
   { href: "/listings", label: "Kataloq", icon: List, only: ["listings", "both"] },
   { href: "/connection", label: "Elan mənbəyi", icon: Plug, only: ["listings", "both"] },
   { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck },
+  { href: "/actions", label: "Əməliyyatlar", icon: Zap },
   { href: "/billing", label: "Balans", icon: Wallet },
   { href: "/embed", label: "Saytına qoş", icon: Code },
   { href: "/channels", label: "Kanallar", icon: Send },
