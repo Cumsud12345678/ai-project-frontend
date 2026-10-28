@@ -96,3 +96,12 @@ h1, h2, h3 { letter-spacing: -0.01em; }
   .landing .l-lift, .landing .l-lift:hover { transition: none; transform: none; }
   .landing .l-float { animation: none; }
 }
+
+/* Yan menyu: nazik scroll, dayanıqlı vəziyyətdə görünmür, üzərinə gələndə menyuya uyğun açıq tonda çıxır */
+.sb-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.sb-scroll:hover, .sb-scroll:focus-within { scrollbar-color: rgba(255,255,255,.28) transparent; }
+.sb-scroll::-webkit-scrollbar { width: 6px; }
+.sb-scroll::-webkit-scrollbar-track { background: transparent; }
+.sb-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
+.sb-scroll:hover::-webkit-scrollbar-thumb, .sb-scroll:focus-within::-webkit-scrollbar-thumb { background: rgba(255,255,255,.28); }
+.sb-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.45); }

@@ -36,15 +36,15 @@ function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; 
   const t = useT();
   const mode = tenant?.config.profile?.mode ?? "listings";
   return (
-    <div className="flex h-full flex-col gap-4 bg-sidebar p-4 text-sidebar-foreground">
-      <div className="flex min-w-0 items-center gap-3 border-b border-white/10 pb-4">
+    <div className="flex h-full min-h-0 flex-col gap-4 bg-sidebar p-4 text-sidebar-foreground">
+      <div className="flex min-w-0 shrink-0 items-center gap-3 border-b border-white/10 pb-4">
         <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary text-base font-bold text-primary-foreground">{(tenant?.businessName ?? "C").trim().charAt(0).toUpperCase()}</span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{tenant?.businessName ?? "Car Advisor"}</p>
           <p className="truncate text-xs text-sidebar-muted">{tenant?.domain ?? me.email}</p>
         </div>
       </div>
-      <nav aria-label={t("Panel")} className="flex flex-col gap-1">
+      <nav aria-label={t("Panel")} className="sb-scroll -mr-2 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-2">
         {nav.filter((n) => (isOperator ? n.href === "/inbox" : n.href === "/setup" ? !tenant : !n.only || !tenant || n.only.includes(mode))).map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
@@ -61,11 +61,13 @@ function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; 
           </Link>
         )}
       </nav>
-      <LangSwitch className="mt-auto self-start" up alignRight={false} showName />
+      <div className="flex shrink-0 flex-col gap-2 border-t border-white/10 pt-3">
+      <LangSwitch className="self-start" up alignRight={false} showName />
       <p className="truncate px-3 text-xs text-sidebar-muted">{me.email}</p>
       <button onClick={signOut} className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-sidebar-muted hover:bg-sidebar-accent hover:text-white">
         <LogOut size={16} aria-hidden /> {t("Çıxış")}
       </button>
+      </div>
     </div>
   );
 }
@@ -120,7 +122,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className={cn("fixed inset-0 z-40 md:hidden", open ? "" : "pointer-events-none")} aria-hidden={!open}>
         <div onClick={() => setOpen(false)} className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", open ? "opacity-100" : "opacity-0")} />
         <aside id="mobile-menu" role="dialog" aria-modal="true" aria-label={t("Menyu")} inert={!open}
-          className={cn("absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-sidebar shadow-xl transition-transform duration-300 ease-out", open ? "translate-x-0" : "-translate-x-full")}>
+          className={cn("absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-hidden bg-sidebar shadow-xl transition-transform duration-300 ease-out", open ? "translate-x-0" : "-translate-x-full")}>
           <button ref={closeRef} type="button" onClick={() => { setOpen(false); menuRef.current?.focus(); }} aria-label={t("Menyunu bağla")}
             className="absolute top-3 right-3 grid size-9 cursor-pointer place-items-center rounded-lg text-sidebar-foreground hover:bg-sidebar-accent"><X size={20} aria-hidden /></button>
           <SidebarContent onNavigate={() => setOpen(false)} waiting={waiting} />

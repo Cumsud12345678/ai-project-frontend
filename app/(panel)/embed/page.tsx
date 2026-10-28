@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 import { AppearanceCard } from "./appearance-card";
+import { CannedCard, HelpdeskCard } from "./helpdesk-card";
 
 // Ekran 3 pilləyə bölünür: lg (kompüter), md (planşet), sm (telefon). Boş xana yuxarı pillədən miras alır.
 type Placement = {
@@ -225,6 +226,8 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
 
       <div className="flex flex-col gap-6">
         <AppearanceCard data={data} onChange={onChange} />
+        <HelpdeskCard data={data} onChange={onChange} />
+        <CannedCard />
         <SaveCard dirty={limitsDirty} onSave={saveLimits}>
           <CardHeader>
             <CardTitle>{t("İstifadə limitləri")}</CardTitle>

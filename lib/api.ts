@@ -5,7 +5,9 @@ export type AutoRefresh = "off" | "daily" | "weekly";
 export type Profile = { language?: string; tone?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; imageSearch?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string; /** CSV/JSON/XML faylının mətni (yalnız fayl ilə qoşulmada) */ feedText?: string };
 
-export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
+export type WorkHours = { tz: string; days: ({ from: string; to: string } | null)[] };
+export type ProactiveRule = { id: string; text: string; delaySec: number; match: string };
+export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean; csat?: boolean; hours?: WorkHours | null }; proactive?: { enabled: boolean; rules: ProactiveRule[] }; lastSeenAt?: string | null };
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string; brandRemoved?: boolean; brandName?: string };
 
 export type Me = { email: string; role: "user" | "admin" };
@@ -283,8 +285,9 @@ export const getOverview = () => call<Overview>("/tenant/overview");
 // Canlı operator söhbəti və cavablara rəy
 export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string };
 export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
-export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
-export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
+export type LiveNote = { text: string; by: string; at: string };
+export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; tags?: string[]; csat?: number | null; notes?: number; last: LiveMsg | null };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null };
 export const claimLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/claim`);
 export const releaseLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/release`);
 export type LiveContact = { channel: "telegram" | "whatsapp"; chatId: string; name: string; last: string; updatedAt: string };
@@ -297,7 +300,7 @@ export const addTeamMember = (email: string) => post<{ ok: true }>("/tenant/team
 export const removeTeamMember = (email: string) => call<{ ok: true }>(`/tenant/team/${encodeURIComponent(email)}`, { method: "DELETE" });
 export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
 export const getLiveTicket = () => post<{ ticket: string; url: string }>("/tenant/live/ws-ticket");
-export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[] }>(`/tenant/live?status=${status}`);
+export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[]; csat?: { count: number; avg: number | null } }>(`/tenant/live?status=${status}`);
 export const getLiveChat = (id: string) => call<{ chat: LiveChat }>(`/tenant/live/${id}`);
 export const sendLive = (id: string, text: string) => post<{ total: number }>(`/tenant/live/${id}/messages`, { text });
 export const closeLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/close`);
@@ -349,3 +352,10 @@ export const newSigningSecret = () => post<{ signingSecret: string }>("/tenant/a
 export const testAction = (b: { key: string; params: Record<string, string>; send: boolean; userId?: string }) => post<ActionTestResult>("/tenant/actions/test", b);
 export const getActionLog = () => call<{ entries: ActionLogEntry[] }>("/tenant/actions/log");
 export const clearActionLog = () => call<{ ok: true }>("/tenant/actions/log", { method: "DELETE" });
+
+export const addLiveNote = (id: string, text: string) => post<{ notes: LiveNote[] }>(`/tenant/live/${id}/notes`, { text });
+export const setLiveTags = (id: string, tags: string[]) => call<{ tags: string[] }>(`/tenant/live/${id}/tags`, { method: "PUT", body: { tags } });
+export type CannedReply = { id: string; title: string; text: string };
+export const getCanned = () => call<{ items: CannedReply[] }>("/tenant/canned");
+export const saveCanned = (items: { id?: string; title: string; text: string }[]) => call<{ items: CannedReply[] }>("/tenant/canned", { method: "PUT", body: { items } });
+export const draftLive = (id: string) => post<{ draft: string }>(`/tenant/live/${id}/draft`);

@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookPlus, Hand, Mail, MessageSquarePlus, Phone, Send, Undo2, XCircle } from "lucide-react";
+import { ArrowLeft, BookPlus, Hand, Mail, MessageSquarePlus, Phone, Send, Sparkles, Star, StickyNote, Undo2, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { claimLive, kbAddQa, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
+import { addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { useI18n } from "@/lib/i18n";
 import { sendTyping, useLiveEvents } from "@/lib/live-socket";
@@ -34,10 +34,15 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   const stick = useRef(true);
   const [typing, setTyping] = useState(false);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [csatSum, setCsatSum] = useState<{ count: number; avg: number | null } | null>(null);
+  const [canned, setCanned] = useState<CannedReply[]>([]);
+  const [note, setNote] = useState("");
+  const [tagIn, setTagIn] = useState("");
+  const [drafting, setDrafting] = useState(false);
   const selRef = useRef("");
   selRef.current = sel;
 
-  const loadList = useCallback(() => { getLiveList(status).then((r) => setItems(r.items)).catch(() => {}); }, [status]);
+  const loadList = useCallback(() => { getLiveList(status).then((r) => { setItems(r.items); setCsatSum(r.csat ?? null); }).catch(() => {}); }, [status]);
   const loadChat = useCallback(() => {
     if (!sel) return;
     getLiveChat(sel).then((r) => setChat(r.chat)).catch(() => setChat(null));
@@ -55,6 +60,8 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   // Soket qoşuludursa polling yalnız ehtiyatdır
   useEffect(() => { setItems(null); loadList(); const i = setInterval(loadList, live ? 30000 : 5000); return () => clearInterval(i); }, [loadList, live]);
 
+  useEffect(() => { if (enabled) getCanned().then((r) => setCanned(r.items)).catch(() => {}); }, [enabled]);
+  useEffect(() => { setNote(""); setTagIn(""); }, [sel]);
   useEffect(() => { setChat(null); setTyping(false); setKb(null); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, live ? 20000 : 3000); return () => clearInterval(i); }, [sel, loadChat, live]);
   useEffect(() => { const el = logRef.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [chat?.messages.length]);
 
@@ -84,6 +91,28 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     if (!chat) return;
     try { await (release ? releaseLive(chat.id) : claimLive(chat.id)); loadChat(); loadList(); }
     catch (err) { toast.error((err as Error).message); }
+  }
+  async function addNote(e: React.FormEvent) {
+    e.preventDefault();
+    const v = note.trim();
+    if (!v || !chat || busy) return;
+    setBusy(true);
+    try { await addLiveNote(chat.id, v); setNote(""); loadChat(); loadList(); }
+    catch (err) { toast.error((err as Error).message); }
+    finally { setBusy(false); }
+  }
+  async function saveTags(tags: string[]) {
+    if (!chat) return;
+    try { await setLiveTags(chat.id, tags); setTagIn(""); loadChat(); loadList(); }
+    catch (err) { toast.error((err as Error).message); }
+  }
+  /** AI yalnız qaralama yazır: mətn sahəyə düşür, operator oxuyub özü göndərir. */
+  async function aiDraft() {
+    if (!chat || drafting) return;
+    setDrafting(true);
+    try { const r = await draftLive(chat.id); setText(r.draft); }
+    catch (err) { toast.error((err as Error).message); }
+    finally { setDrafting(false); }
   }
   function openStart() {
     setStarting(true); setPick(""); setFirst(""); setContacts(null);
@@ -138,6 +167,9 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
           <Button size="sm" variant="outline" onClick={openStart}><MessageSquarePlus size={14} aria-hidden />{t("Yeni söhbət")}</Button>
         </div>
       )}
+      {status === "closed" && csatSum && csatSum.count > 0 && csatSum.avg !== null && (
+        <p className="text-sm text-muted-foreground">{t("Orta qiymət: {avg} / 5 ({n} qiymət)", { avg: csatSum.avg, n: csatSum.count })}</p>
+      )}
       {starting && (
         <form onSubmit={startChat} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
           <p className="text-sm font-medium">{t("Müştəriyə özün yaz")}</p>
@@ -170,7 +202,9 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
                     {c.channel && <Badge className="bg-primary/10 text-primary">{c.channel === "telegram" ? "Telegram" : "WhatsApp"}</Badge>}
                     {c.assignee && <Badge className="bg-muted text-muted-foreground">{c.assignee.name === myName ? t("Sən") : c.assignee.name}</Badge>}
                     {c.waiting && <Badge className="bg-amber/15 text-amber">{t("Cavab gözləyir")}</Badge>}
+                    {typeof c.csat === "number" && <Badge className="bg-muted text-muted-foreground"><Star size={11} aria-hidden className="mr-0.5 inline" />{c.csat}/5</Badge>}
                   </span>
+                  {!!c.tags?.length && <span className="flex flex-wrap gap-1">{c.tags.map((g) => <Badge key={g} className="bg-primary/10 text-primary">{g}</Badge>)}</span>}
                   <span className="truncate text-sm text-muted-foreground">{c.last ? (c.last.from === "operator" ? `${t("Sən")}: ` : "") + (c.last.from === "system" ? "—" : c.last.text) : t("Hələ mesaj yoxdur")}</span>
                   <span className="text-xs text-muted-foreground">{short(c.updatedAt)}</span>
                 </button>
@@ -208,6 +242,30 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
           </ul>
         </details>
       )}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-4 py-2 text-xs">
+        {(chat.tags ?? []).map((g) => (
+          <Badge key={g} className="gap-1 bg-primary/10 text-primary">{g}
+            <button type="button" className="cursor-pointer" aria-label={t("Etiketi sil")} onClick={() => saveTags((chat.tags ?? []).filter((x) => x !== g))}><X size={11} aria-hidden /></button>
+          </Badge>
+        ))}
+        {(chat.tags?.length ?? 0) < 5 && (
+          <form onSubmit={(e) => { e.preventDefault(); const v = tagIn.trim(); if (v) saveTags([...(chat.tags ?? []), v]); }}>
+            <input value={tagIn} onChange={(e) => setTagIn(e.target.value)} maxLength={24} aria-label={t("Etiket əlavə et")} placeholder={t("+ etiket")} className="h-7 w-24 rounded-md border border-border bg-card px-2 text-xs" />
+          </form>
+        )}
+        {chat.csat && <span className="ml-auto inline-flex items-center gap-1 text-muted-foreground"><Star size={12} aria-hidden />{t("Müştəri qiyməti: {n}/5", { n: chat.csat.rating })}{chat.csat.comment ? ` · ${chat.csat.comment}` : ""}</span>}
+      </div>
+      <details className="border-b border-border px-4 py-2 text-sm">
+        <summary className="inline-flex cursor-pointer items-center gap-1.5 text-primary"><StickyNote size={14} aria-hidden />{t("Daxili qeydlər ({n})", { n: chat.notes?.length ?? 0 })}</summary>
+        <p className="mt-1 text-xs text-muted-foreground">{t("Yalnız komanda görür, müştəriyə getmir.")}</p>
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {(chat.notes ?? []).map((n, i) => <li key={i} className="whitespace-pre-wrap break-words rounded-md bg-amber/10 p-2"><span className="block text-[10px] text-muted-foreground">{n.by} · {short(n.at)}</span>{n.text}</li>)}
+        </ul>
+        <form onSubmit={addNote} className="mt-2 flex items-end gap-2">
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={2} className="min-h-0 flex-1" aria-label={t("Daxili qeyd")} placeholder={t("Qeyd yaz…")} />
+          <Button size="sm" variant="outline" disabled={busy || !note.trim()}>{t("Əlavə et")}</Button>
+        </form>
+      </details>
       <div ref={logRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40; }}
         className="flex max-h-[28rem] flex-1 flex-col gap-2 overflow-y-auto bg-muted/30 p-4" role="log" aria-live="polite" aria-label={t("Söhbət")}>
         {chat.messages.map((m, i) => m.from === "system"
@@ -235,7 +293,17 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
         </form>
       )}
       {chat.status === "open" ? (
-        <form onSubmit={send} className="flex items-end gap-2 border-t border-border p-3">
+        <form onSubmit={send} className="flex flex-wrap items-end gap-2 border-t border-border p-3">
+          <div className="flex w-full flex-wrap items-center gap-2">
+            {!!canned.length && (
+              <select value="" onChange={(e) => { const c = canned.find((x) => x.id === e.target.value); if (c) setText(c.text); }} aria-label={t("Hazır cavab")} className="h-8 max-w-48 rounded-md border border-border bg-card px-2 text-xs">
+                <option value="">{t("Hazır cavab…")}</option>
+                {canned.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            )}
+            <Button type="button" size="sm" variant="outline" onClick={aiDraft} disabled={drafting || !chat.messages.some((m) => m.from === "visitor")}><Sparkles size={14} aria-hidden />{drafting ? t("Hazırlanır…") : t("AI qaralaması")}</Button>
+            <span className="text-xs text-muted-foreground">{t("Qaralama yalnız sahəyə yazılır, sən oxuyub göndərirsən. Balansdan az xərc çıxır.")}</span>
+          </div>
           <Textarea value={text} onChange={(e) => { setText(e.target.value); if (chat) sendTyping(chat.id); }} maxLength={1000} rows={2} className="min-h-0 flex-1" aria-label={t("Cavabın")} placeholder={t("Cavabını yaz…")}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} />
           <Button disabled={busy || !text.trim()}><Send size={16} aria-hidden />{t("Göndər")}</Button>
