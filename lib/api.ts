@@ -6,14 +6,14 @@ export type Profile = { language?: string; tone?: string; maxResults?: number; e
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string; /** CSV/JSON/XML faylının mətni (yalnız fayl ilə qoşulmada) */ feedText?: string };
 
 export type WidgetSettings = { key: string; enabled: boolean; origins: string[]; title: string; greeting: string; color: string; theme?: "light" | "dark" | "auto"; logoUrl?: string | null; label: string; limits?: { perVisitorDay: number; siteHour: number }; live?: { enabled: boolean }; lastSeenAt?: string | null };
-export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string };
+export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string; brandRemoved?: boolean; brandName?: string };
 
 export type Me = { email: string; role: "user" | "admin" };
 export type TenantInfo = {
   tenantId: string; businessName: string; domain: string; config: ConfigJson;
   createdAt: string; updatedAt: string; keyRotatedAt: string | null;
 };
-export type TenantResponse = { tenant: TenantInfo | null; advisorUrl: string };
+export type TenantResponse = { tenant: TenantInfo | null; advisorUrl: string; role?: "owner" | "operator" };
 
 export type Listing = {
   id: string; title: string; price?: number | null; currency?: string | null; url?: string | null; image?: string | null;
@@ -28,7 +28,7 @@ export type TestResult = { ok: boolean; sampleCount: number; sampleListings: Lis
 
 export type AdminUser = {
   id: string; email: string; verified: boolean; isAdmin: boolean; isOwner?: boolean; createdAt: string;
-  tenant: { mode?: Mode; balance?: { totalAzn: number; paidAzn: number; spentAzn: number } | null; tenantId: string; businessName: string; domain: string; createdAt: string; keyRotatedAt: string | null } | null;
+  tenant: { mode?: Mode; balance?: { totalAzn: number; paidAzn: number; spentAzn: number } | null; tenantId: string; businessName: string; domain: string; createdAt: string; keyRotatedAt: string | null; brandRemoved?: boolean } | null;
 };
 
 /** Serverin statik xəta mesajları lüğətdə varsa, panelin dilinə çevrilir; yoxdursa olduğu kimi qalır. */
@@ -188,6 +188,11 @@ export const getConversations = (q: { days?: number; limit?: number; before?: st
 export const getConversation = (sid: string) => call<{ sid: string; messages: ConversationMsg[] }>(`/tenant/conversations/${encodeURIComponent(sid)}`);
 export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null };
 export const getFunnel = (days: number) => call<Funnel>(`/tenant/funnel?days=${days}`);
+export type TrendDay = { day: string; total: number; unanswered: number };
+export type InsightsTrend = { days: number; enabled: boolean; daily: TrendDay[]; feedback: { up: number; down: number; satisfaction: number | null } };
+export const getInsightsTrend = (days: number) => call<InsightsTrend>(`/tenant/insights/trend?days=${days}`);
+export type InsightsResult = { asked?: number; tooFew?: boolean; minQuestions?: number; cached?: boolean; analyzedAt?: string; topics: { name: string; count: number; unanswered: number; examples: string[] }[]; gaps: { title: string; why: string; count: number; examples: string[] }[] };
+export const analyzeInsights = (days: number, fresh = false) => post<InsightsResult>("/tenant/insights/analyze", { days, ...(fresh && { fresh: true }) });
 export const getReport = () => call<{ monthly: boolean }>("/tenant/report");
 export const setReport = (monthly: boolean) => call<{ monthly: boolean }>("/tenant/report", { method: "PUT", body: { monthly } });
 export type ExportKind = "queries" | "conversations" | "leads" | "unanswered" | "live";
@@ -274,9 +279,20 @@ export type Overview = {
 export const getOverview = () => call<Overview>("/tenant/overview");
 
 // Canlı operator söhbəti və cavablara rəy
-export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string };
-export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
-export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
+export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string };
+export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
+export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; last: LiveMsg | null };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string };
+export const claimLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/claim`);
+export const releaseLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/release`);
+export type LiveContact = { channel: "telegram" | "whatsapp"; chatId: string; name: string; last: string; updatedAt: string };
+export const getLiveContacts = () => call<{ items: LiveContact[] }>("/tenant/live/contacts");
+export const startLiveChat = (b: { channel: "telegram" | "whatsapp"; chatId: string; text: string }) => post<{ id: string; existing?: boolean }>("/tenant/live/start", b);
+// Operator komandası (yalnız sahib)
+export type TeamMember = { email: string; joined: boolean; addedAt: string };
+export const getTeam = () => call<{ max: number; members: TeamMember[] }>("/tenant/team");
+export const addTeamMember = (email: string) => post<{ ok: true }>("/tenant/team", { email });
+export const removeTeamMember = (email: string) => call<{ ok: true }>(`/tenant/team/${encodeURIComponent(email)}`, { method: "DELETE" });
 export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
 export const getLiveTicket = () => post<{ ticket: string; url: string }>("/tenant/live/ws-ticket");
 export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[] }>(`/tenant/live?status=${status}`);
@@ -308,4 +324,5 @@ export const adminBillingRequests = (status = "pending") => call<{ requests: Adm
 export const adminResolveRequest = (id: string, action: "approve" | "reject") => post<{ request: TopupRequest }>(`/admin/billing/requests/${id}/${action}`);
 export const adminTenantBilling = (tenantId: string) => call<Billing>(`/admin/tenants/${tenantId}/billing`);
 export const adminTopup = (tenantId: string, amountAzn: number, note: string) => post<{ balance?: { totalAzn: number } }>(`/admin/tenants/${tenantId}/billing/topup`, { amountAzn, note });
+export const adminSetBranding = (tenantId: string, removed: boolean) => call<{ ok: true; brandRemoved: boolean }>(`/admin/tenants/${tenantId}/branding`, { method: "PATCH", body: { removed } });
 export const adminBillingSettings = (tenantId: string, patch: { markup?: number | null; creditLimitAzn?: number }) => call<unknown>(`/admin/tenants/${tenantId}/billing/settings`, { method: "PATCH", body: patch });

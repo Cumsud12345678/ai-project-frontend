@@ -5,7 +5,7 @@ import { Check, Mail, Phone, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteLead, deleteUnanswered, getLeads, getLiveCount, getUnanswered, setLeadHandled, type LeadRow, type UnansweredRow } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { RequireTenant } from "@/components/session";
+import { RequireTenant, useSession } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,23 @@ function Unanswered({ rows, reload }: { rows: UnansweredRow[]; reload: () => voi
   );
 }
 
+/** Komanda üzvü (operator): yalnız canlı söhbət. */
+function OperatorInbox() {
+  const { t } = useI18n();
+  const [live, setLive] = useState<{ enabled: boolean; open: number; waiting: number } | null>(null);
+  const load = useCallback(() => { getLiveCount().then(setLive).catch(() => {}); }, []);
+  useEffect(() => { load(); const i = setInterval(load, 8000); return () => clearInterval(i); }, [load]);
+  return (
+    <div className="flex flex-col gap-6">
+      <header>
+        <h1 className="text-2xl font-semibold">{t("Canlı söhbət")}</h1>
+        <p className="text-sm text-muted-foreground">{t("Müştərilərin operatorla yazışmaq istədiyi söhbətlər. “Götür” bassan söhbət sənə təyin olunur.")}</p>
+      </header>
+      {live ? <LiveInbox enabled={live.enabled} onChange={load} /> : <CardSkeleton rows={3} />}
+    </div>
+  );
+}
+
 function Inbox() {
   const { t } = useI18n();
   const [tab, setTab] = useState<"live" | "leads" | "unanswered">("leads");
@@ -111,5 +128,6 @@ function Inbox() {
 }
 
 export default function InboxPage() {
-  return <RequireTenant><Inbox /></RequireTenant>;
+  const { isOperator } = useSession();
+  return <RequireTenant>{isOperator ? <OperatorInbox /> : <Inbox />}</RequireTenant>;
 }

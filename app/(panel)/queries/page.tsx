@@ -4,6 +4,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { clearQueries, downloadExport, getFunnel, getQueries, getQueryStats, getReport, setReport, type ExportKind, type Funnel, type QueryRow, type QueryStats } from "@/lib/api";
 import { Conversations } from "@/components/conversations";
+import { Insights } from "@/components/insights";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
 import { RequireTenant, useSession } from "@/components/session";
@@ -46,7 +47,7 @@ function Queries() {
   const [rows, setRows] = useState<QueryRow[] | null>(null);
   const [meta, setMeta] = useState<{ enabled: boolean; retentionDays: number; hasMore: boolean; nextCursor: string | null }>({ enabled: true, retentionDays: 30, hasMore: false, nextCursor: null });
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"questions" | "conversations">("questions");
+  const [tab, setTab] = useState<"questions" | "conversations" | "analytics">("questions");
   const [funnel, setFunnel] = useState<Funnel | null>(null);
   const [report, setReportOn] = useState<boolean | null>(null);
   const [exportKind, setExportKind] = useState<ExportKind>("queries");
@@ -146,8 +147,8 @@ function Queries() {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div role="tablist" className="inline-flex rounded-md border border-border p-0.5 text-sm">
-          {(["questions", "conversations"] as const).map((k) => (
-            <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded px-3 py-1.5 ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{k === "questions" ? t("Suallar") : t("Söhbətlər")}</button>
+          {(["questions", "conversations", "analytics"] as const).map((k) => (
+            <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded px-3 py-1.5 ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{k === "questions" ? t("Suallar") : k === "conversations" ? t("Söhbətlər") : t("Analitika")}</button>
           ))}
         </div>
         <div className="flex flex-wrap items-end gap-2">
@@ -160,7 +161,7 @@ function Queries() {
         </div>
       </div>
 
-      {tab === "conversations" ? <Conversations days={days} enabled={stats.enabled} /> : (<>
+      {tab === "analytics" ? <Insights days={days} onDays={setDays} enabled={stats.enabled} /> : tab === "conversations" ? <Conversations days={days} enabled={stats.enabled} /> : (<>
       <form onSubmit={(e) => { e.preventDefault(); if (q.trim() === applied) loadFirst(); else setApplied(q.trim()); }} className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1"><Label htmlFor="days">{t("Dövr")}</Label>
           <select id="days" value={days} onChange={(e) => setDays(Number(e.target.value))} className="h-9 rounded-md border border-border bg-card px-3 text-sm">

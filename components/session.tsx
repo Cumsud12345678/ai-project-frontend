@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n";
 import { AppSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 
-type Session = { me: Me; tenant: TenantInfo | null; advisorUrl: string; refresh: () => Promise<void>; signOut: () => Promise<void> };
+type Session = { me: Me; tenant: TenantInfo | null; advisorUrl: string; /** operator: yalnız canlı söhbət qutusunu görən komanda üzvü */ isOperator: boolean; refresh: () => Promise<void>; signOut: () => Promise<void> };
 const Ctx = createContext<Session | null>(null);
 
 export const useSession = () => {
@@ -19,14 +19,14 @@ export const useSession = () => {
 export function SessionProvider({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const router = useRouter();
   const t = useT();
-  const [state, setState] = useState<{ me: Me; tenant: TenantInfo | null; advisorUrl: string } | null>(null);
+  const [state, setState] = useState<{ me: Me; tenant: TenantInfo | null; advisorUrl: string; isOperator: boolean } | null>(null);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
       const [me, t] = await Promise.all([getMe(), getTenant()]);
       if (adminOnly && me.role !== "admin") return router.replace("/dashboard");
-      setState({ me, tenant: t.tenant, advisorUrl: t.advisorUrl });
+      setState({ me, tenant: t.tenant, advisorUrl: t.advisorUrl, isOperator: t.role === "operator" });
       setError("");
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {

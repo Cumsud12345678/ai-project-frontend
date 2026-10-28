@@ -1,9 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Mail, Phone, Send, XCircle } from "lucide-react";
+import { ArrowLeft, Hand, Mail, MessageSquarePlus, Phone, Send, Undo2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { closeLive, getLiveChat, getLiveList, sendLive, type LiveChat, type LiveItem } from "@/lib/api";
+import { claimLive, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
+import { useSession } from "@/components/session";
 import { useI18n } from "@/lib/i18n";
 import { sendTyping, useLiveEvents } from "@/lib/live-socket";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,13 @@ import { Textarea } from "@/components/ui/input";
 /** Canlı operator söhbəti: solda söhbətlər, sağda yazışma. Yeni mesaj WebSocket siqnalı ilə dərhal gəlir; bağlantı yoxdursa siyahı 5, açıq söhbət 3 saniyədən bir yenilənir. */
 export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: () => void }) {
   const { t, short } = useI18n();
+  const { me, isOperator } = useSession();
+  const myName = (me?.email || "").split("@")[0].slice(0, 40);
+  const [who, setWho] = useState<"all" | "mine" | "free">("all");
+  const [starting, setStarting] = useState(false);
+  const [contacts, setContacts] = useState<LiveContact[] | null>(null);
+  const [pick, setPick] = useState("");
+  const [first, setFirst] = useState("");
   const [status, setStatus] = useState<"open" | "closed">("open");
   const [items, setItems] = useState<LiveItem[] | null>(null);
   const [sel, setSel] = useState("");
@@ -57,6 +65,26 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); }
   }
+  async function claim(release: boolean) {
+    if (!chat) return;
+    try { await (release ? releaseLive(chat.id) : claimLive(chat.id)); loadChat(); loadList(); }
+    catch (err) { toast.error((err as Error).message); }
+  }
+  function openStart() {
+    setStarting(true); setPick(""); setFirst(""); setContacts(null);
+    getLiveContacts().then((r) => setContacts(r.items)).catch((err) => { toast.error((err as Error).message); setContacts([]); });
+  }
+  async function startChat(e: React.FormEvent) {
+    e.preventDefault();
+    const c = contacts?.find((x) => `${x.channel}:${x.chatId}` === pick);
+    if (!c || !first.trim() || busy) return;
+    setBusy(true);
+    try {
+      const r = await startLiveChat({ channel: c.channel, chatId: c.chatId, text: first.trim() });
+      setStarting(false); setStatus("open"); setSel(r.id); loadList(); onChange?.();
+    } catch (err) { toast.error((err as Error).message); }
+    finally { setBusy(false); }
+  }
   async function close() {
     if (!chat) return;
     try { await closeLive(chat.id); toast.success(t("Söhbət bağlandı.")); setSel(""); loadList(); onChange?.(); }
@@ -71,6 +99,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     </div>
   );
 
+  const shown = (items || []).filter((c) => status !== "open" || who === "all" || (who === "free" ? !c.assignee : c.assignee?.name === myName));
   const list = (
     <div className={cn("flex flex-col gap-3", sel && "hidden md:flex")}>
       <div className="inline-flex self-start rounded-lg border border-border bg-muted p-1 text-sm">
@@ -81,17 +110,50 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
           </button>
         ))}
       </div>
+      {status === "open" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-muted p-1 text-xs">
+            {(["all", "mine", "free"] as const).map((w) => (
+              <button key={w} type="button" aria-pressed={who === w} onClick={() => setWho(w)}
+                className={cn("cursor-pointer rounded-md px-2 py-1 font-medium", who === w ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}>
+                {w === "all" ? t("Hamısı") : w === "mine" ? t("Mənimkilər") : t("Təyin olunmamış")}
+              </button>
+            ))}
+          </div>
+          <Button size="sm" variant="outline" onClick={openStart}><MessageSquarePlus size={14} aria-hidden />{t("Yeni söhbət")}</Button>
+        </div>
+      )}
+      {starting && (
+        <form onSubmit={startChat} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+          <p className="text-sm font-medium">{t("Müştəriyə özün yaz")}</p>
+          <p className="text-xs text-muted-foreground">{t("Yalnız əvvəllər botla yazışmış müştərilərə yaza bilərsən (soyuq mesaj yoxdur).")}</p>
+          {contacts === null ? <p className="text-sm text-muted-foreground">{t("Yüklənir…")}</p>
+            : !contacts.length ? <p className="text-sm text-muted-foreground">{t("Hələ botla yazışan müştəri yoxdur.")}</p>
+            : (
+              <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label={t("Müştəri")} className="h-10 rounded-md border border-border bg-card px-2 text-sm">
+                <option value="">{t("Müştəri seç…")}</option>
+                {contacts.map((c) => <option key={`${c.channel}:${c.chatId}`} value={`${c.channel}:${c.chatId}`}>{(c.name || t("Adsız ziyarətçi")) + " · " + (c.channel === "telegram" ? "Telegram" : "WhatsApp") + (c.last ? " · " + c.last.slice(0, 40) : "")}</option>)}
+              </select>
+            )}
+          <Textarea value={first} onChange={(e) => setFirst(e.target.value)} maxLength={1000} rows={2} aria-label={t("İlk mesaj")} placeholder={t("İlk mesajını yaz…")} />
+          <div className="flex gap-2">
+            <Button disabled={busy || !pick || !first.trim()}><Send size={14} aria-hidden />{t("Göndər")}</Button>
+            <Button type="button" variant="ghost" onClick={() => setStarting(false)}>{t("Ləğv et")}</Button>
+          </div>
+        </form>
+      )}
       {items === null ? <p className="text-sm text-muted-foreground">{t("Yüklənir…")}</p>
-        : !items.length ? <p className="text-sm text-muted-foreground">{status === "open" ? t("Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa və ya Telegram/WhatsApp-da /operator yazsa burada görünəcək.") : t("Bağlanmış söhbət yoxdur.")}</p>
+        : !shown.length ? <p className="text-sm text-muted-foreground">{status === "open" ? t("Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa və ya Telegram/WhatsApp-da /operator yazsa burada görünəcək.") : t("Bağlanmış söhbət yoxdur.")}</p>
         : (
           <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-            {items.map((c) => (
+            {shown.map((c) => (
               <li key={c.id}>
                 <button type="button" onClick={() => setSel(c.id)} aria-current={sel === c.id}
                   className={cn("flex w-full cursor-pointer flex-col gap-1 px-4 py-3 text-left hover:bg-muted/50", sel === c.id && "bg-primary/5")}>
                   <span className="flex items-center gap-2 text-sm font-medium">
                     {c.name || t("Adsız ziyarətçi")}
                     {c.channel && <Badge className="bg-primary/10 text-primary">{c.channel === "telegram" ? "Telegram" : "WhatsApp"}</Badge>}
+                    {c.assignee && <Badge className="bg-muted text-muted-foreground">{c.assignee.name === myName ? t("Sən") : c.assignee.name}</Badge>}
                     {c.waiting && <Badge className="bg-amber/15 text-amber">{t("Cavab gözləyir")}</Badge>}
                   </span>
                   <span className="truncate text-sm text-muted-foreground">{c.last ? (c.last.from === "operator" ? `${t("Sən")}: ` : "") + (c.last.from === "system" ? "—" : c.last.text) : t("Hələ mesaj yoxdur")}</span>
@@ -118,6 +180,9 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
             </a>
           )}
         </div>
+        {chat.status === "open" && (chat.assignee
+          ? (chat.assignee.name === myName || !isOperator) && <Button size="sm" variant="ghost" onClick={() => claim(true)}><Undo2 size={14} aria-hidden />{t("Burax")}</Button>
+          : <Button size="sm" variant="outline" onClick={() => claim(false)}><Hand size={14} aria-hidden />{t("Götür")}</Button>)}
         {chat.status === "open" && <Button size="sm" variant="outline" onClick={close}><XCircle size={14} aria-hidden />{t("Söhbəti bitir")}</Button>}
       </div>
       {!!chat.context.length && (
@@ -133,7 +198,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
         {chat.messages.map((m, i) => m.from === "system"
           ? <p key={i} className="self-center text-xs text-muted-foreground">{t("Söhbət bitdi.")}</p>
           : (
-            <div key={i} className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "self-end bg-primary text-primary-foreground" : "self-start border border-border bg-card")}>{m.text}</div>
+            <div key={i} className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "self-end bg-primary text-primary-foreground" : "self-start border border-border bg-card")}>{m.from === "operator" && m.by && <span className="mb-0.5 block text-[10px] opacity-70">{m.by}</span>}{m.text}</div>
           ))}
         {!chat.messages.length && <p className="text-sm text-muted-foreground">{t("Ziyarətçi hələ mesaj yazmayıb.")}</p>}
         {typing && <p className="self-start text-xs italic text-muted-foreground" aria-live="polite">{t("Ziyarətçi yazır…")}</p>}

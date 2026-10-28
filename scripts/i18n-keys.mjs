@@ -9,6 +9,21 @@ const DIRS = ["app", "components", "lib"];
 const SKIP = (f) => f.includes(`${path.sep}locales${path.sep}`) || f.includes(`${path.sep}ui${path.sep}`);
 // t() ilə birbaşa çağırılmayan (dəyişənlə ötürülən) açarlar
 const EXTRA = [
+  "Təhlil çox tez-tez istənilir, bir az gözləyin",
+  "Sorğu jurnalı söndürülüb, təhlil üçün məlumat yoxdur",
+  "Təhlil alınmadı, bir az sonra yenidən yoxla",
+  "Bu istifadəçinin öz hesabı var, onu operator kimi əlavə etmək olmaz",
+  "Bu e-poçt başqa hesabın komandasındadır",
+  "Bu e-poçt artıq əlavə olunub",
+  "Düzgün e-poçt yaz",
+  "Bu sənin öz e-poçtundur",
+  "Operator tapılmadı",
+  "Sən başqa hesabın operatorusan, öz hesabını yaratmaq olmur",
+  "Çox tez-tez dəvət göndərirsən",
+  "Çox tez-tez söhbət başladırsan",
+  "Kanal, müştəri və 1-1000 simvolluq mesaj lazımdır",
+  "Bu müştəri botla yazışmayıb: ona yalnız o yazandan sonra cavab vermək olar",
+  "Ən çox 5 operator əlavə edə bilərsən",
   "Mesaj Telegram-a göndərilə bilmədi", "Mesaj WhatsApp-a göndərilə bilmədi",
   "Gözləyən 3 yükləmə sorğun var. Əvvəlcə onlar həll olunmalıdır", "Məbləğ düzgün deyil", "Sorğu tapılmadı", "Sorğu artıq həll olunub",
   "Bakı", "Gəncə", "Sumqayıt", "Qiymət (min)", "Qiymət (max)", "Şəhər", "Yanacaq növü", "Rəng",

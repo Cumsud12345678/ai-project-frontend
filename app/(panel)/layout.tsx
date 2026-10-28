@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Send, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ const nav: { href: string; label: string; icon: typeof Gauge; only?: ("listings"
 /** Menyunun məzmunu: kompüterdə sol panel, telefonda açılan yan menyu. */
 function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; waiting?: number }) {
   const pathname = usePathname();
-  const { me, tenant, signOut } = useSession();
+  const { me, tenant, signOut, isOperator } = useSession();
   const t = useT();
   const mode = tenant?.config.profile?.mode ?? "listings";
   return (
@@ -44,7 +44,7 @@ function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; 
         </div>
       </div>
       <nav aria-label={t("Panel")} className="flex flex-col gap-1">
-        {nav.filter((n) => (n.href === "/setup" ? !tenant : !n.only || !tenant || n.only.includes(mode))).map(({ href, label, icon: Icon }) => {
+        {nav.filter((n) => (isOperator ? n.href === "/inbox" : n.href === "/setup" ? !tenant : !n.only || !tenant || n.only.includes(mode))).map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link key={href} href={href} onClick={onNavigate} aria-current={active ? "page" : undefined}
@@ -71,7 +71,8 @@ function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; 
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { tenant } = useSession();
+  const { tenant, isOperator } = useSession();
+  const router = useRouter();
   const t = useT();
   const [open, setOpen] = useState(false);
   const [waiting, setWaiting] = useState(0);
@@ -81,6 +82,8 @@ function Shell({ children }: { children: React.ReactNode }) {
   const menuRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+  // Operator (komanda üzvü) yalnız canlı söhbət qutusuna girə bilər
+  useEffect(() => { if (isOperator && !pathname.startsWith("/inbox")) router.replace("/inbox"); }, [isOperator, pathname, router]);
   // Cavab gözləyən canlı söhbətlər menyuda qırmızı sayğacla görünür
   useEffect(() => {
     if (!tenant) return;

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
+import { TeamCard } from "./team-card";
 
 const PROFILE_DEFAULTS: Profile = { language: "az", tone: "dostcasına", maxResults: 5, extraInstructions: "", logQueries: true, generalKnowledge: true };
 
@@ -164,6 +165,9 @@ export default function SettingsPage() {
             </Card>
           </Section>
 
+          <Section title={t("Komanda")} description={t("Canlı söhbətlərə cavab verəcək əlavə operatorlar.")}>
+            <TeamCard />
+          </Section>
           <Section title={t("Məsləhətçinin davranışı")} description={t("İstifadəçilərə necə cavab verəcəyini müəyyən edir. Hər kartı ayrıca saxlayırsan.")}>
             <BehaviorCards />
           </Section>
