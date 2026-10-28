@@ -7,6 +7,7 @@ import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProf
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { QaCard } from "./qa-card";
+import { ProcCard } from "./proc-card";
 import { RequireTenant, useSession } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +144,7 @@ function AddSection({ info, onAdded }: { info: KbInfo; onAdded: () => void }) {
   );
 }
 
-const ICON = { file: FileText, url: Globe, site: Globe, text: Type, qa: Type } as const;
+const ICON = { file: FileText, url: Globe, site: Globe, text: Type, qa: Type, proc: Type } as const;
 
 function SourceRow({ s, onChange }: { s: KbSource; onChange: () => void }) {
   const { t, num, short } = useI18n();
@@ -256,7 +257,7 @@ function Knowledge() {
   }, [processing, load]);
 
   if (!info || !mode) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <CardSkeleton rows={4} />;
-  const plain = info.sources.filter((s) => s.type !== "qa"); // sual-cavab cütləri ayrıca kartdadır
+  const plain = info.sources.filter((s) => s.type !== "qa" && s.type !== "proc"); // sual-cavab cütləri və ssenarilər ayrıca kartdadır
   const ready = plain.filter((s) => s.status === "ready").length;
   const dirty = mode !== info.mode;
   const usesKb = mode !== "listings";
@@ -295,6 +296,7 @@ function Knowledge() {
       </Card>
 
       {usesKb && <QaCard info={info} onChange={load} />}
+      {usesKb && <ProcCard info={info} onChange={load} />}
       {usesKb && <AutoRefreshCard info={info} />}
       {usesKb && <FallbackCard info={info} />}
     </div>

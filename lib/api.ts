@@ -232,12 +232,12 @@ export const testPrivateData = (kind: string, userId: string) => post<{ ok: bool
 
 // Bilik bazası (dəstək botu)
 export type KbSource = {
-  id: string; type: "file" | "url" | "site" | "text" | "qa"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
-  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string;
+  id: string; type: "file" | "url" | "site" | "text" | "qa" | "proc"; name: string; url: string | null; status: "processing" | "ready" | "failed"; error: string | null;
+  chunks: number; chars: number; pages: number; size: number | null; createdAt: string; lastIndexedAt: string | null; lastRefreshAt?: string | null; refreshError?: string | null; questions?: string[]; answer?: string; triggers?: string[]; steps?: string;
 };
 export type KbInfo = {
   mode: Mode; autoRefresh?: AutoRefresh; fallbackMessage: string; defaultFallback: string; sources: KbSource[];
-  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number }; totals: { sources: number; chunks: number; qa?: number };
+  limits: { sources: number; chunks: number; fileBytes: number; qa?: number; qaQuestions?: number; qaQuestionChars?: number; qaAnswerChars?: number; proc?: number; procTriggers?: number; procTriggerChars?: number; procNameChars?: number; procStepsChars?: number }; totals: { sources: number; chunks: number; qa?: number; proc?: number };
 };
 export const getKb = () => call<KbInfo>("/tenant/kb");
 
@@ -252,6 +252,8 @@ export const kbUploadFile = async (file: File) =>
 export const kbAddUrl = (url: string, crawl: boolean) => post<{ source: KbSource }>("/tenant/kb/urls", { url, crawl });
 export const kbAddText = (title: string, text: string) => post<{ source: KbSource }>("/tenant/kb/texts", { title, text });
 export const kbAddQa = (questions: string[], answer: string) => post<{ source: KbSource }>("/tenant/kb/qa", { questions, answer });
+export const kbAddProc = (name: string, triggers: string[], steps: string) => post<{ source: KbSource }>("/tenant/kb/proc", { name, triggers, steps });
+export const kbUpdateProc = (id: string, name: string, triggers: string[], steps: string) => call<{ source: KbSource }>(`/tenant/kb/proc/${id}`, { method: "PUT", body: { name, triggers, steps } });
 export const kbUpdateQa = (id: string, questions: string[], answer: string) => call<{ source: KbSource }>(`/tenant/kb/qa/${id}`, { method: "PUT", body: { questions, answer } });
 export const kbRefresh = (id: string) => post<{ source: KbSource }>(`/tenant/kb/sources/${id}/refresh`);
 export const kbDelete = (id: string) => call<{ ok: true }>(`/tenant/kb/sources/${id}`, { method: "DELETE" });

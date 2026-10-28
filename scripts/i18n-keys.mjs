@@ -9,6 +9,14 @@ const DIRS = ["app", "components", "lib"];
 const SKIP = (f) => f.includes(`${path.sep}locales${path.sep}`) || f.includes(`${path.sep}ui${path.sep}`);
 // t() ilə birbaşa çağırılmayan (dəyişənlə ötürülən) açarlar
 const EXTRA = [
+  "Ssenarinin adı 2-80 simvol olmalıdır",
+  "Ssenarinin nə vaxt işləməli olduğunu ən azı bir ifadə ilə yazın",
+  "Ən çox 6 ifadə yaza bilərsiniz",
+  "Hər ifadə 3-200 simvol olmalıdır",
+  "Addımlar çox qısadır",
+  "Addımlar çox uzundur (maksimum 2500 simvol)",
+  "Ən çox 20 ssenari əlavə edə bilərsiniz",
+  "Ssenari tapılmadı",
   "Təhlil çox tez-tez istənilir, bir az gözləyin",
   "Sorğu jurnalı söndürülüb, təhlil üçün məlumat yoxdur",
   "Təhlil alınmadı, bir az sonra yenidən yoxla",
