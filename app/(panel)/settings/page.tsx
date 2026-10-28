@@ -85,7 +85,7 @@ function BehaviorCards() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1"><Label htmlFor="lang">{t("Məsləhətçinin cavab dili")}</Label>
               <select id="lang" value={d.language} onChange={(e) => set({ language: e.target.value })} className="h-9 rounded-md border border-border bg-card px-3 text-sm">
-                <option value="az">{t("Azərbaycan dili")}</option><option value="ru">{t("Rus dili")}</option><option value="en">{t("İngilis dili")}</option>
+                <option value="az">{t("Azərbaycan dili")}</option><option value="ru">{t("Rus dili")}</option><option value="en">{t("İngilis dili")}</option><option value="tr">{t("Türk dili")}</option>
               </select>
             </div>
             <div className="flex flex-col gap-1"><Label htmlFor="tone">{t("Ton")}</Label><Input id="tone" maxLength={60} value={d.tone ?? ""} onChange={(e) => set({ tone: e.target.value })} /></div>

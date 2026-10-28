@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 export type ChatMsg =
   | { from: "user" | "bot"; text: string; note?: string }
   | { from: "operator"; text: string; name: string }
+  | { from: "action"; title: string; rows: [string, string][]; yes: string; no: string }
   | { from: "system"; text: string }
   | { from: "typing"; text: string };
 
@@ -34,6 +35,18 @@ export function PhoneChat({ title, subtitle, messages, label }: { title: string;
               <Reveal key={i} delay={d} className="max-w-[90%] rounded-2xl rounded-bl-md border border-[var(--l-orange-d)]/30 bg-white px-3.5 py-2.5 shadow-sm">
                 <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--l-orange-d)]"><Headset size={13} aria-hidden />{m.name}</p>
                 <p>{m.text}</p>
+              </Reveal>
+            );
+            if (m.from === "action") return (
+              <Reveal key={i} delay={d} className="max-w-[92%] rounded-2xl rounded-bl-md border border-[var(--l-teal)]/30 bg-white p-3.5 shadow-sm">
+                <p className="font-semibold">{m.title}</p>
+                <dl className="mt-2 flex flex-col gap-1 text-xs text-[#41594f]">
+                  {m.rows.map(([k, v]) => <div key={k} className="flex justify-between gap-3"><dt>{k}</dt><dd className="font-medium text-[var(--l-ink)]">{v}</dd></div>)}
+                </dl>
+                <div className="mt-3 flex gap-2 text-xs font-semibold">
+                  <span className="rounded-lg bg-[var(--l-teal)] px-3 py-1.5 text-white">{m.yes}</span>
+                  <span className="rounded-lg border border-[var(--l-line)] px-3 py-1.5">{m.no}</span>
+                </div>
               </Reveal>
             );
             if (m.from === "system") return <Reveal key={i} delay={d} className="mx-auto rounded-full bg-[var(--l-mist)] px-3 py-1 text-xs text-[#41594f]">{m.text}</Reveal>;

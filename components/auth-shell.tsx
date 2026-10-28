@@ -36,7 +36,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
             ))}
           </ul>
         </div>
-        <p className="relative flex items-center gap-2 text-sm text-white/60"><Check size={14} aria-hidden />{t("Azərbaycan, ingilis və rus dillərində")}</p>
+        <p className="relative flex items-center gap-2 text-sm text-white/60"><Check size={14} aria-hidden />{t("Azərbaycan, ingilis, rus və türk dillərində")}</p>
       </aside>
 
       <main className="flex flex-col px-6 py-8 sm:px-10">

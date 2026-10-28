@@ -136,6 +136,26 @@ const EXTRA = [
   "Elan API-sindən heç bir elan gəlmədi. Xəritələməni yoxlaya bilmək üçün saytda ən azı bir elan olmalıdır.",
   "Müştəri aktivləşdirilə bilmədi",
   "Xidmət müvəqqəti yüklüdür, bir azdan yenə cəhd edin",
+  "İşçi saatları: saat qurşağı düzgün deyil (məs. Asia/Baku)",
+  "İşçi saatları: həftənin 7 günü göndərilməlidir",
+  "İşçi saatları: saat HH:MM formatında olmalı və başlanğıc bitişdən əvvəl olmalıdır",
+  "İşçi saatları: ən azı bir iş günü olmalıdır",
+  "Ən çox 5 proaktiv mesaj yaza bilərsiniz",
+  "Proaktiv mesaj 3-140 simvol olmalıdır",
+  "Gözləmə vaxtı 3-300 saniyə olmalıdır",
+  "Səhifə şablonu düzgün deyil (məs. /, /products/*, *)",
+  "Ən çox 30 hazır cavab ola bilər",
+  "Hazır cavabın adı 1-40 simvol olmalıdır",
+  "Hazır cavabın mətni 1-1000 simvol olmalıdır",
+  "Ən çox 5 etiket ola bilər",
+  "Etiket 1-24 simvol olmalıdır",
+  "Qeyd 1-1000 simvol olmalıdır",
+  "Bir söhbətdə ən çox 50 qeyd ola bilər",
+  "Çox tez-tez qeyd yazırsan",
+  "Çox tez-tez qaralama istəyirsən",
+  "Ziyarətçi hələ yazmayıb",
+  "Balans bitib, AI qaralaması mümkün deyil",
+  "AI qaralama hazırlaya bilmədi, bir az sonra yenidən cəhd et",
 ];
 
 function walk(d, out = []) {
@@ -171,14 +191,14 @@ const read = (n) => {
   return m;
 };
 let bad = 0;
-for (const n of ["en", "ru"]) {
+for (const n of ["en", "ru", "tr"]) {
   const d = read(n);
   const missing = all.filter((k) => !d.has(k));
   const stale = [...d.keys()].filter((k) => !keys.has(k));
   // dəyişən yer tutucuları ({x}) və <c>/<b> işarələri tərcümədə saxlanmalıdır
   const tokens = (s) => (s.match(/\{\w+\}|<\/?[cbi]>/g) ?? []).sort().join(",");
   const broken = all.filter((k) => d.has(k) && tokens(k) !== tokens(d.get(k)));
-  const same = all.filter((k) => d.has(k) && d.get(k) === k && /[əıöüçşğƏİÖÜÇŞĞ]/.test(k));
+  const same = all.filter((k) => d.has(k) && d.get(k) === k && (n === "tr" ? /[əƏ]/ : /[əıöüçşğƏİÖÜÇŞĞ]/).test(k));
   console.log(`${n}: ${all.length} açar, çatışmayan ${missing.length}, artıq ${stale.length}, yer tutucu pozulub ${broken.length}, tərcümə olunmayıb ${same.length}`);
   for (const [label, list] of [["ÇATIŞMIR", missing], ["POZULUB", broken], ["TƏRCÜMƏSİZ", same]]) for (const k of list.slice(0, 40)) console.log(`  ${label}: ${k.slice(0, 90)}`);
   bad += missing.length + broken.length + same.length;

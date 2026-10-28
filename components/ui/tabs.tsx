@@ -13,8 +13,8 @@ export function Tabs<T extends string>({ value, onChange, items, label, classNam
     refs.current[n]?.focus();
   };
   return (
-    <div className={cn("-mx-5 overflow-x-auto border-b border-border px-5 md:mx-0 md:px-0", className)}>
-      <div role="tablist" aria-label={label} className="flex min-w-max gap-1">
+    <div className={cn("-mx-5 overflow-x-auto overflow-y-hidden px-5 md:mx-0 md:px-0", className)}>
+      <div role="tablist" aria-label={label} className="flex w-full min-w-max gap-1 border-b border-border">
         {items.map((it, i) => {
           const on = it.value === value;
           return (

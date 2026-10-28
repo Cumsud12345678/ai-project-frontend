@@ -2,6 +2,7 @@
 import { Check } from "lucide-react";
 import { Reveal } from "@/components/landing/reveal";
 import { PhoneChat, type ChatMsg } from "@/components/landing/phone-chat";
+import { DeskMock, ProactiveMock } from "@/components/landing/mocks";
 import { useI18n } from "@/lib/i18n";
 
 const wrap = "mx-auto w-full max-w-6xl px-5";
@@ -67,6 +68,20 @@ export function Showcase() {
     { from: "user", text: t("Son ödənişim keçib?") },
     { from: "bot", text: t("Bəli, dünən 139 ₼ ödənişiniz uğurla tamamlanıb."), note: t("Mənbə: sənin ödənişlərin") },
   ];
+  const act: ChatMsg[] = [
+    { from: "user", text: t("Sifariş #10482-ni ləğv etmək istəyirəm") },
+    { from: "bot", text: t("Ləğv etməzdən əvvəl yoxla:") },
+    { from: "action", title: t("Sifariş {orderNo} ləğv olunacaq", { orderNo: "#10482" }), rows: [[t("Sifariş nömrəsi"), "10482"], [t("Səbəb"), t("Fikrimi dəyişdim")]], yes: t("Təsdiq et"), no: t("Ləğv et") },
+    { from: "user", text: t("Təsdiq et") },
+    { from: "bot", text: t("Sifariş {orderNo} ləğv edildi.", { orderNo: "#10482" }) },
+  ];
+  const tg: ChatMsg[] = [
+    { from: "user", text: t("Salam, məhsulların zəmanəti var?") },
+    { from: "bot", text: t("Bəli, bütün məhsullara 12 ay zəmanət verilir."), note: t("Mənbə: Zəmanət şərtləri") },
+    { from: "user", text: t("Operatorla danışmaq istəyirəm") },
+    { from: "system", text: t("Operator söhbətə qoşuldu") },
+    { from: "operator", name: t("Operator · Aynur"), text: t("Salam! Sizə necə kömək edə bilərəm?") },
+  ];
   const langs: ChatMsg[] = [
     { from: "user", text: "Сколько стоит доставка?" },
     { from: "bot", text: "По Баку доставка 1–2 рабочих дня. При заказе от 100 ₼ она бесплатная." },
@@ -77,7 +92,7 @@ export function Showcase() {
     <div id="daha">
       <section className={`${wrap} pt-20 lg:pt-28`}>
         <Reveal as="h2" className="l-display max-w-3xl text-[clamp(1.5rem,3.4vw,2.4rem)] font-semibold leading-[1.15]">{t("Çat cavab verməklə bitmir")}</Reveal>
-        <Reveal as="p" delay={100} className="mt-5 max-w-2xl text-[17px] leading-relaxed text-[#41594f]">{t("Köməkçini ilk gündən bəri artırdıq: indi canlı operator, müştərinin öz məlumatı, statistika və hesabat da var. Aşağıda hər birinin real söhbətdə necə göründüyünü görə bilərsən.")}</Reveal>
+        <Reveal as="p" delay={100} className="mt-5 max-w-2xl text-[17px] leading-relaxed text-[#41594f]">{t("Köməkçini ilk gündən bəri artırdıq: indi canlı operator və operator iş masası, əməliyyatlar, proaktiv mesajlar, Telegram və WhatsApp, müştərinin öz məlumatı, statistika və hesabat da var. Aşağıda hər birinin necə göründüyünü görə bilərsən.")}</Reveal>
       </section>
 
       <Block id="canli" eyebrow={t("Canlı operator")} title={t("Lazım olanda insan söhbətə qoşulur")}
@@ -90,10 +105,30 @@ export function Showcase() {
         points={[t("Müştəri saytın imzaladığı gizli açarla tanınır, ona görə başqasının məlumatını soruşmaq mümkün deyil."), t("Köməkçiyə yalnız sənin icazə verdiyin sahələr çatır, kart və telefon kimi həssas dəyərlər gizlədilir."), t("Hər müştəri üçün sorğu limiti var, sənin API-ni yükləmir."), t("Məlumat sorğu anında sənin API-ndən oxunur.")]}
         phone={<PhoneChat title={t("Köməkçi")} subtitle={t("Sənin hesabın üçün")} label={t("Nümunə söhbət: müştəri sifarişini soruşur")} messages={mine} />} />
 
-      <Block id="diller" eyebrow={t("Üç dildə")} title={t("Ziyarətçi hansı dildə yazırsa, o dildə cavab alır")}
+      <Block id="emeliyyat" eyebrow={t("Əməliyyatlar")} title={t("Çat yalnız cavab vermir, sənin saytında iş də görür")}
+        body={t("İstifadəçi “sifarişimi ləğv et”, “bilet aç”, “görüş rezerv et” və ya “mənimlə əlaqə saxlayın” yazanda köməkçi hərəkəti təklif edir. Nə olacağı kartda bütün dəyərlərlə göstərilir və yalnız istifadəçi “Təsdiq et” basandan sonra sənin API-nə göndərilir.")}
+        points={[t("AI əməliyyatı özü icra etmir: yalnız təklif yaradır, qərarı istifadəçi verir."), t("Yalnız sənin yazdığın əməliyyatlar və parametrlər mümkündür, hər dəyər tip və uzunluq üzrə yoxlanır."), t("Sorğular imzalanır, təkrar icra olunmur, cavab gəlməsə uğur uydurulmur: “bəlli deyil” bildirilir."), t("Hər addım jurnala yazılır, istifadəçi və sayt üzrə limit var."), t("Bunun üçün saytının API-si lazımdır: əməliyyatı orada sən yazırsan.")]}
+        phone={<PhoneChat title={t("Köməkçi")} subtitle={t("Təsdiqlə icra olunan əməliyyat")} label={t("Nümunə söhbət: sifarişin ləğvi təsdiq kartı ilə")} messages={act} />} />
+
+      <Block id="masa" tint flip eyebrow={t("Operator iş masası")} title={t("Operatorlar üçün hazır iş masası: qeyd, etiket, hazır cavab, AI qaralaması")}
+        body={t("Canlı söhbət qutusu yalnız yazışma deyil. Komanda söhbətə daxili qeyd yazır, etiket qoyur, hazır cavabı seçib redaktə edir və istəsə AI-dan qaralama alır. Qaralama yalnız yazı sahəsinə düşür, operator oxuyub özü göndərir.")}
+        points={[t("Daxili qeydləri yalnız komanda görür, müştəriyə heç vaxt getmir."), t("Hər söhbətə 5-ə qədər etiket qoy, söhbətləri onlara görə ayır."), t("Hazır cavabları bir dəfə yaz, operatorlar bir kliklə seçir."), t("İşçi saatlarını və saat qurşağını təyin et: kənarda canlı operator düyməsi gizlənir, ziyarətçiyə əlaqə forması çıxır."), t("Söhbət bitəndə ziyarətçi 1-5 ulduzla qiymət verir, orta qiyməti paneldə görürsən."), t("AI qaralaması balansdan az məbləğ çıxır.")]}
+        phone={<DeskMock />} />
+
+      <Block id="proaktiv" eyebrow={t("Proaktiv mesajlar")} title={t("Ziyarətçi yazmamış, çat özü təklif göstərir")}
+        body={t("Məhsul səhifəsində 20 saniyə qalan ziyarətçiyə çat düyməsinin yanında qısa təklif çıxır. Mətni, gözləmə vaxtını və hansı səhifələrdə göstəriləcəyini sən seçirsən.")}
+        points={[t("Mətn sənin yazdığındır, ona görə AI xərci yoxdur."), t("Ən çox 5 qayda: hər biri üçün gözləmə vaxtı və səhifə şablonu (məs. /products/*)."), t("Eyni ziyarətçiyə bir sessiyada hər mesaj yalnız bir dəfə göstərilir."), t("Səbət tərk edilib kimi öz şərtin üçün saytın skriptindən bir sətirlə çağıra bilərsən.")]}
+        phone={<ProactiveMock />} />
+
+      <Block id="kanallar" tint flip eyebrow={t("Telegram və WhatsApp")} title={t("Eyni köməkçi müştərilərin yazdığı mesajlaşma tətbiqlərində də cavab verir")}
+        body={t("Öz Telegram botunu bir tokenlə, WhatsApp nömrəni QR kodla qoşursan. Müştəri orada yazanda köməkçi saytdakı çatla eyni bilik bazasından cavab verir, tapmasa operatora yönləndirir.")}
+        points={[t("Telegram: BotFather-dən aldığın tokeni yapışdırmaq kifayətdir."), t("WhatsApp QR ilə qoşulur: bu, rəsmi API deyil və nömrənin bloklanma riski var, ona görə ayrıca iş nömrəsi məsləhətdir."), t("Cavab tapılmayanda köməkçi telefon və ya e-poçt istəyir, müraciət gələn qutusuna düşür."), t("Operator həmin söhbətə paneldən qoşulub canlı cavab verə bilər."), t("Qrup yazışmalarına cavab vermir, sifariş və ödəniş kimi müştəri məlumatı bu kanallarda açılmır.")]}
+        phone={<PhoneChat title="Telegram" subtitle="@magaza_bot" label={t("Nümunə söhbət: Telegram-da sual və operatora keçid")} messages={tg} />} />
+
+      <Block id="diller" eyebrow={t("Dörd dildə")} title={t("Ziyarətçi hansı dildə yazırsa, o dildə cavab alır")}
         body={t("Sənədlərin Azərbaycan dilindədirsə belə, rus və ya ingilis dilində gələn suala həmin dildə cavab verir. Ayrıca tərcümə hazırlamaq lazım deyil.")}
-        points={[t("Çat pəncərəsi və panel Azərbaycan, ingilis və rus dillərindədir."), t("Kataloqdakı ad və dəyərlər (rəng, şəhər, marka) ziyarətçinin dilində də başa düşülür.")]}
-        phone={<PhoneChat title="Assistant" subtitle="AZ · EN · RU" label={t("Nümunə söhbət: rus və ingilis dilində suallar")} messages={langs} />} />
+        points={[t("Çat pəncərəsi və panel Azərbaycan, ingilis, rus və türk dillərindədir."), t("Kataloqdakı ad və dəyərlər (rəng, şəhər, marka) ziyarətçinin dilində də başa düşülür.")]}
+        phone={<PhoneChat title="Assistant" subtitle="AZ · EN · RU · TR" label={t("Nümunə söhbət: rus və ingilis dilində suallar")} messages={langs} />} />
 
       <section id="statistika" className="scroll-mt-20 bg-[var(--l-mist)] py-16 lg:py-24">
         <div className={`${wrap} grid items-center gap-12 lg:grid-cols-2 lg:gap-20`}>
@@ -114,8 +149,11 @@ export function Showcase() {
 export function Everything() {
   const { t } = useI18n();
   const groups: [string, string[]][] = [
-    [t("Söhbət"), [t("Canlı operator söhbəti"), t("“Operator yazır” göstəricisi"), t("Söhbətin 7 gün davam etməsi"), t("Ziyarətçiyə e-poçtla cavab"), t("Əlaqə forması və gələn qutusu")]],
-    [t("Axtarış və cavab"), [t("Kataloq axtarışı (REST və GraphQL API)"), t("Bilik bazası: fayl, link, bütün sayt, mətn"), t("Məna və açar söz üzrə birgə axtarış"), t("Cavabın altında mənbə"), t("Bilmədikdə uydurmaq əvəzinə operatora yönləndirmə")]],
+    [t("Söhbət"), [t("Canlı operator söhbəti"), t("“Operator yazır” göstəricisi"), t("Söhbətin 7 gün davam etməsi"), t("Ziyarətçiyə e-poçtla cavab"), t("Əlaqə forması və gələn qutusu"), t("Proaktiv mesajlar (səhifə və vaxta görə)")]],
+    [t("Operator iş masası"), [t("Daxili qeydlər"), t("Etiketlər"), t("Hazır cavablar"), t("AI qaralaması (operator özü göndərir)"), t("İşçi saatları"), t("Söhbət sonrası qiymət (CSAT)")]],
+    [t("Əməliyyatlar"), [t("Sifarişin ləğvi, bilet, görüş rezervi, müraciət"), t("İstifadəçi kartda təsdiq verir"), t("İmzalı sorğu və təkrar icradan qorunma"), t("Əməliyyat jurnalı və limitlər")]],
+    [t("Kanallar"), [t("Telegram botu"), t("WhatsApp (QR ilə, qeyri-rəsmi)"), t("Operatorun müştəriyə ilk yazması"), t("Dörd dil: AZ, EN, RU, TR")]],
+    [t("Axtarış və cavab"), [t("Kataloq axtarışı (REST və GraphQL API)"), t("Bilik bazası: fayl, link, bütün sayt, mətn"), t("Məna və açar söz üzrə birgə axtarış"), t("Cavabın altında mənbə"), t("Bilmədikdə uydurmaq əvəzinə operatora yönləndirmə"), t("Şəkillə axtarış"), t("Ssenarilər və dəqiq cavablar"), t("Saytın avtomatik yenilənməsi"), t("CSV, JSON, XML fayl və ya feed")]],
     [t("Müştəri məlumatı"), [t("Sifariş, ödəniş, şikayət, abunə və başqa növlər"), t("İmzalı müştəri açarı"), t("Sahə siyahısı və maskalama"), t("Müştəri üzrə sorğu limiti"), t("Başqasının qeydinə baxmağa qarşı qoruma")]],
     [t("İdarəetmə"), [t("Söhbət tarixçəsi və satış hunisi"), t("CSV ixracı"), t("Aylıq e-poçt hesabatı"), t("İstifadəyə görə balans, aşağı balans xəbərdarlığı"), t("Rəng, başlıq və yer paneldən dəyişir")]],
     [t("Təhlükəsizlik"), [t("Telefon və e-poçtun avtomatik gizlədilməsi"), t("API açarı şifrələnib saxlanır"), t("Vidjet yalnız sənin domenində işləyir"), t("Qeydlərin 90 gündən sonra silinməsi"), t("E-poçt təsdiqi, güclü parol")]],

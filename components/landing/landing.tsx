@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, Check, ChevronDown, Headset, MessagesSquare, Plug, Search, ShieldCheck, ShoppingBag, SlidersHorizontal, Sparkles } from "lucide-react";
+import { BarChart3, BookOpen, Camera, Check, ChevronDown, Headset, ListChecks, MessagesSquare, Plug, RefreshCw, Search, ShieldCheck, ShoppingBag, SlidersHorizontal, Sparkles } from "lucide-react";
 import { LOCALES, useI18n } from "@/lib/i18n";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { Reveal } from "@/components/landing/reveal";
@@ -22,9 +22,9 @@ function Logo({ compact = false }: { compact?: boolean }) {
   );
 }
 
-const LANG_PATH = { az: "/", en: "/en", ru: "/ru" } as const;
+const LANG_PATH = { az: "/", en: "/en", ru: "/ru", tr: "/tr" } as const;
 
-/** Açılış səhifəsində dil ünvanın bir hissəsidir (/, /en, /ru): seçəndə həmin ünvana keçilir. Seçim cookie-yə də yazılır ki, panel eyni dildə açılsın. */
+/** Açılış səhifəsində dil ünvanın bir hissəsidir (/, /en, /ru, /tr): seçəndə həmin ünvana keçilir. Seçim cookie-yə də yazılır ki, panel eyni dildə açılsın. */
 function LandingLang() {
   const { locale, t } = useI18n();
   return (
@@ -79,7 +79,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           <a href="#nece" className={btnGhost}>{t("Necə işləyir")}</a>
         </Reveal>
         <Reveal as="ul" delay={360} className="mt-10 flex flex-col gap-2.5 text-sm text-[#41594f]">
-          {[t("Elan, e-ticarət və xidmət saytları üçün: kataloqunu API ilə oxuyur"), t("Sənəd, sayt linki və ya mətnlə öyrədilir, cavabda mənbəni göstərir"), t("Bir sətir kodla qoşulur, üç dildə cavab verir")].map((x) => (
+          {[t("Elan, e-ticarət və xidmət saytları üçün: kataloqunu API ilə oxuyur"), t("Sənəd, sayt linki və ya mətnlə öyrədilir, cavabda mənbəni göstərir"), t("Bir sətir kodla qoşulur, dörd dildə cavab verir")].map((x) => (
             <li key={x} className="flex items-start gap-2.5"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[var(--l-mist)] text-[var(--l-teal)]"><Check size={13} strokeWidth={3} aria-hidden /></span>{x}</li>
           ))}
         </Reveal>
@@ -213,8 +213,8 @@ function Features() {
           <Reveal delay={495} className="md:col-span-4">
           <div className={`${card} l-lift h-full`}>
             <span className={icon}><MessagesSquare size={22} aria-hidden /></span>
-            <h3 className={h}>{t("Hazır çat pəncərəsi, üç dildə")}</h3>
-            <p className={p}>{t("Backend yazmağa ehtiyac yoxdur. Rəng, başlıq və yer paneldən dəyişir, telefonda tam ekran açılır. Azərbaycan, rus və ingilis dilində cavab verir, panel də eyni üç dildədir.")}</p>
+            <h3 className={h}>{t("Hazır çat pəncərəsi, dörd dildə")}</h3>
+            <p className={p}>{t("Backend yazmağa ehtiyac yoxdur. Rəng, başlıq və yer paneldən dəyişir, telefonda tam ekran açılır. Azərbaycan, rus, ingilis və türk dilində cavab verir, panel də eyni dörd dildədir.")}</p>
           </div>
           </Reveal>
           <Reveal delay={540} className="md:col-span-4">
@@ -222,6 +222,27 @@ function Features() {
             <span className={icon}><ShieldCheck size={22} aria-hidden /></span>
             <h3 className={h}>{t("Məxfilik və nəzarət")}</h3>
             <p className={p}>{t("Suallardakı telefon və email avtomatik gizlədilir. API açarı şifrələnib saxlanır. Vidjet yalnız sənin domenində işləyir, aylıq limiti sən görürsən.")}</p>
+          </div>
+          </Reveal>
+          <Reveal delay={0} className="md:col-span-4">
+          <div className={`${card} l-lift h-full`}>
+            <span className={icon}><ListChecks size={22} aria-hidden /></span>
+            <h3 className={h}>{t("Ssenarilər və dəqiq cavablar")}</h3>
+            <p className={p}>{t("Qaytarma, ləğv, rezerv kimi prosesləri addım-addım yaz: bot sənin qaydanla irəliləyir. Vacib suallara özün cavab yaz: uyğun sual gələndə cavab olduğu kimi, AI-sız və pulsuz verilir.")}</p>
+          </div>
+          </Reveal>
+          <Reveal delay={90} className="md:col-span-4">
+          <div className={`${card} l-lift h-full`}>
+            <span className={icon}><Camera size={22} aria-hidden /></span>
+            <h3 className={h}>{t("Şəkillə axtarış")}</h3>
+            <p className={p}>{t("Ziyarətçi çatda, Telegram-da və ya WhatsApp-da şəkil göndərəndə köməkçi şəkildən növ, marka, rəng kimi xüsusiyyətləri çıxarıb oxşar elan və ya məhsul axtarır. Dəqiq eyni məhsulu tapacağına zəmanət yoxdur, oxşarlarını göstərir.")}</p>
+          </div>
+          </Reveal>
+          <Reveal delay={180} className="md:col-span-4">
+          <div className={`${card} l-lift h-full`}>
+            <span className={icon}><RefreshCw size={22} aria-hidden /></span>
+            <h3 className={h}>{t("Məlumat həmişə təzədir")}</h3>
+            <p className={p}>{t("Sayt linkləri seçdiyin tezliklə (hər gün və ya həftə) özü yenilənir. API-n yoxdursa, kataloqu CSV, JSON və ya XML fayl və ya feed linki ilə də qoşa bilərsən.")}</p>
           </div>
           </Reveal>
         </div>
@@ -269,6 +290,8 @@ function Faq() {
     [t("Müştəri çatdan öz sifarişini soruşa bilərmi?"), t("Bəli, sən sifariş, ödəniş və ya şikayət kimi məlumatı öz API-nlə qoşursan. Müştəri saytda daxil olubsa, köməkçi yalnız onun öz qeydlərini göstərir. Başqasının məlumatına baxmaq mümkün deyil.")],
     [t("Operator necə cavab verir?"), t("Ziyarətçi operator istəyəndə panelin gələn qutusundakı “Canlı söhbət” bölməsinə düşür. Orada cavab yazırsan və ziyarətçi onu dərhal görür. Çatda olmasa, cavab onun e-poçtuna gedir.")],
     [t("Ziyarətçilərin yazdıqları saxlanırmı?"), t("Yalnız sən “Sorğu jurnalı”nı aktiv saxlasan. Telefon və email avtomatik gizlədilir, qeydlər 90 gündən sonra silinir. İstəsən bunu ayarlardan söndürürsən.")],
+    [t("Köməkçi sifarişi ləğv edə və ya görüş rezerv edə bilərmi?"), t("Bəli, amma yalnız sənin yazdığın əməliyyatlar çərçivəsində və istifadəçi kartda “Təsdiq et” basandan sonra. AI özü heç nəyi icra etmir. Əməliyyat sənin saytının API-nə imzalı sorğu kimi gedir, buna görə API-ni sənin tərəfdən hazırlamaq lazımdır.")],
+    [t("Telegram və WhatsApp-da işləyirmi?"), t("Bəli. Telegram botunu tokenlə, WhatsApp nömrəsini QR kodla qoşursan. WhatsApp-ın bu üsulu rəsmi API deyil və nömrənin bloklanma riski var, ona görə əsas şəxsi nömrə yox, ayrıca iş nömrəsi məsləhətdir.")],
     [t("Gözlənilmədən çox pul tutula bilərmi?"), t("Xeyr. Əvvəlcədən yüklədiyin balansdan xərclənir, bitəndə çat dayanır. Balans azalanda email gəlir, panelin Balans səhifəsində orta sorğu qiyməti və ay sonuna proqnoz göstərilir.")],
     [t("Köməkçi səhv cavab verə bilərmi?"), t("Kataloq sualında yalnız sənin API-nin qaytardığını, digər suallarda yalnız bilik bazandakı məlumatı istifadə edir və cavabın altında mənbəni göstərir. Yenə də sınaq söhbətində yoxlamağı məsləhət görürük.")],
   ];

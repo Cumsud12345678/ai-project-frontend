@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/", "/en", "/ru", "/login", "/register", "/verify", "/forgot"];
-// Açılış səhifəsinin dili ünvandan gəlir: / = az, /en = en, /ru = ru (cookie-dən asılı deyil).
-const LANDING_LOCALE: Record<string, string> = { "/": "az", "/en": "en", "/ru": "ru" };
+const PUBLIC = ["/", "/en", "/ru", "/tr", "/login", "/register", "/verify", "/forgot"];
+// Açılış səhifəsinin dili ünvandan gəlir: / = az, /en = en, /ru = ru, /tr = tr (cookie-dən asılı deyil).
+const LANDING_LOCALE: Record<string, string> = { "/": "az", "/en": "en", "/ru": "ru", "/tr": "tr" };
 
 // Yalnız sürətli yönləndirmə: cookie yoxdursa giriş səhifəsinə. Sessiyanın həqiqiliyini backend yoxlayır.
 export function middleware(req: NextRequest) {

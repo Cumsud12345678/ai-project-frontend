@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { en } from "./locales/en";
-import { ru } from "./locales/en";
+import { ru } from "./locales/ru";
+import { tr } from "./locales/tr";
 import { LangDropdown } from "@/components/lang-dropdown";
 
 import { isLocale, type Locale } from "./locale";
@@ -11,12 +12,13 @@ export const LOCALES: { code: Locale; label: string; name: string }[] = [
   { code: "az", label: "AZ", name: "Azərbaycanca" },
   { code: "en", label: "EN", name: "English" },
   { code: "ru", label: "RU", name: "Русский" },
+  { code: "tr", label: "TR", name: "Türkçe" },
 ];
 const COOKIE = "lang";
-const INTL: Record<Locale, string> = { az: "az", en: "en-US", ru: "ru-RU" };
+const INTL: Record<Locale, string> = { az: "az", en: "en-US", ru: "ru-RU", tr: "tr-TR" };
 
 // Açar həmişə Azərbaycan mətnidir (mənbə dil). Tərcümə tapılmasa, Azərbaycan mətni göstərilir.
-const DICT: Record<Locale, Record<string, string>> = { az: {}, en, ru };
+const DICT: Record<Locale, Record<string, string>> = { az: {}, en, ru, tr };
 
 type Vars = Record<string, string | number>;
 export type T = (key: string, vars?: Vars) => string;

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"; // SITE_URL işə salınanda oxunsun, bu
 export default function robots(): MetadataRoute.Robots {
   const base = process.env.SITE_URL?.replace(/\/+$/, "");
   return {
-    rules: { userAgent: "*", allow: ["/", "/en", "/ru"], disallow: ["/dashboard", "/settings", "/admin", "/connection", "/embed", "/queries", "/listings", "/playground", "/api/"] },
+    rules: { userAgent: "*", allow: ["/", "/en", "/ru", "/tr"], disallow: ["/dashboard", "/settings", "/admin", "/connection", "/embed", "/queries", "/listings", "/playground", "/api/"] },
     ...(base ? { sitemap: `${base}/sitemap.xml` } : {}),
   };
 }
