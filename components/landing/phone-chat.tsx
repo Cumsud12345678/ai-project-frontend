@@ -1,5 +1,5 @@
 "use client";
-import { Headset, Send, Sparkles } from "lucide-react";
+import { Headset, Mic, Send, Sparkles } from "lucide-react";
 import { Reveal } from "@/components/landing/reveal";
 import { useI18n } from "@/lib/i18n";
 
@@ -7,6 +7,7 @@ export type ChatMsg =
   | { from: "user" | "bot"; text: string; note?: string }
   | { from: "operator"; text: string; name: string }
   | { from: "action"; title: string; rows: [string, string][]; yes: string; no: string }
+  | { from: "voice"; duration: string; heard: string }
   | { from: "system"; text: string }
   | { from: "typing"; text: string };
 
@@ -47,6 +48,16 @@ export function PhoneChat({ title, subtitle, messages, label }: { title: string;
                   <span className="rounded-lg bg-[var(--l-teal)] px-3 py-1.5 text-white">{m.yes}</span>
                   <span className="rounded-lg border border-[var(--l-line)] px-3 py-1.5">{m.no}</span>
                 </div>
+              </Reveal>
+            );
+            if (m.from === "voice") return (
+              <Reveal key={i} delay={d} className="ml-auto flex max-w-[85%] flex-col items-end gap-1.5">
+                <span className="flex items-center gap-2.5 rounded-2xl rounded-br-md bg-[var(--l-teal)] px-3.5 py-2.5 text-white">
+                  <Mic size={15} className="shrink-0" />
+                  <span className="flex h-5 items-center gap-[3px]">{[6, 12, 18, 10, 16, 8, 14, 20, 9, 13, 7, 11].map((h, k) => <span key={k} className="w-[3px] rounded-full bg-white/80" style={{ height: h }} />)}</span>
+                  <span className="text-xs tabular-nums text-white/85">{m.duration}</span>
+                </span>
+                <span className="rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[#41594f]">{m.heard}</span>
               </Reveal>
             );
             if (m.from === "system") return <Reveal key={i} delay={d} className="mx-auto rounded-full bg-[var(--l-mist)] px-3 py-1 text-xs text-[#41594f]">{m.text}</Reveal>;

@@ -23,4 +23,3 @@ Brauzer yalnız bu saytla danışır: `next.config.mjs` `/api/portal/*` sorğula
 
 Parol unudulubsa `/forgot`. Sessiya bitəndə panel avtomatik `/login`-ə yönləndirir.
 
-Günlük statistika qrafiki hələ nümunə məlumatdır (`lib/sample.ts`): AI servisində bunun üçün endpoint yoxdur.

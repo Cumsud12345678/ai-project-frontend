@@ -1,0 +1,24 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PORTAL_API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - name: Tərcümə yoxlaması (en/ru/tr-də çatışmayan mətn)
+        run: npm run check:i18n
+      - run: npm run build
+      - name: Təhlükəsizlik yoxlaması (high və yuxarı)
+        run: npm audit --omit=dev --audit-level=high

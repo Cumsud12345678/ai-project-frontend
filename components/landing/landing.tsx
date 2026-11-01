@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, Camera, Check, ChevronDown, Headset, ListChecks, MessagesSquare, Plug, RefreshCw, Search, ShieldCheck, ShoppingBag, SlidersHorizontal, Sparkles } from "lucide-react";
+import { BookOpen, Camera, Check, ChevronDown, ListChecks, MessagesSquare, Plug, RefreshCw, Search, ShoppingBag, SlidersHorizontal, Sparkles } from "lucide-react";
 import { LOCALES, useI18n } from "@/lib/i18n";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { Reveal } from "@/components/landing/reveal";
@@ -45,12 +45,12 @@ function Header({ signedIn }: { signedIn: boolean }) {
     on(); window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
-  const links = [["#problem", t("Problem")], ["#nece", t("Necə işləyir")], ["#imkanlar", t("İmkanlar")], ["#canli", t("Yeniliklər")], ["#qiymet", t("Qiymətlər")], ["#sual", t("Sual-cavab")]];
+  const links = [["#nece", t("Necə işləyir")], ["#imkanlar", t("İmkanlar")], ["#daha", t("Daha çox")], ["#qiymet", t("Qiymətlər")], ["#sual", t("Sual-cavab")]];
   return (
     <header className={`sticky top-0 z-30 border-b border-[var(--l-line)] bg-[var(--l-paper)]/85 backdrop-blur transition-shadow ${scrolled ? "shadow-[0_8px_24px_-16px_rgba(12,42,37,.35)]" : ""}`}>
       <div className={`${wrap} flex h-16 items-center gap-2 sm:gap-4`}>
         <Logo compact />
-        <nav aria-label={t("Səhifə bölmələri")} className="ml-6 hidden gap-6 text-sm font-medium text-[#41594f] lg:flex">
+        <nav aria-label={t("Səhifə bölmələri")} className="ml-4 hidden gap-4 whitespace-nowrap text-sm font-medium text-[#41594f] min-[1100px]:flex xl:ml-6 xl:gap-6">
           {links.map(([href, label]) => <a key={href} href={href} className="hover:text-[var(--l-ink)]">{label}</a>)}
         </nav>
         <span className="flex-1" />
@@ -59,7 +59,7 @@ function Header({ signedIn }: { signedIn: boolean }) {
           <Link href="/dashboard" className={`${btn} h-10 bg-[var(--l-teal)] px-4 text-white hover:bg-[var(--l-teal-d)]`}>{t("Panelə keç")}</Link>
         ) : (
           <>
-            <Link href="/login" className="hidden px-2 text-sm font-semibold hover:underline sm:inline">{t("Daxil ol")}</Link>
+            <Link href="/login" className="hidden whitespace-nowrap px-2 text-sm font-semibold hover:underline sm:inline">{t("Daxil ol")}</Link>
             <Link href="/register" className={`${btn} h-10 bg-[var(--l-teal)] px-4 text-white hover:bg-[var(--l-teal-d)]`}>{t("Qeydiyyat")}</Link>
           </>
         )}
@@ -80,7 +80,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           <a href="#nece" className={btnGhost}>{t("Necə işləyir")}</a>
         </Reveal>
         <Reveal as="ul" delay={360} className="mt-10 flex flex-col gap-2.5 text-sm text-[#41594f]">
-          {[t("Elan, e-ticarət və xidmət saytları üçün: kataloqunu API ilə oxuyur"), t("Sənəd, sayt linki və ya mətnlə öyrədilir, cavabda mənbəni göstərir"), t("Bir sətir kodla qoşulur, dörd dildə cavab verir")].map((x) => (
+          {[t("Elan, e-ticarət və xidmət saytları üçün: kataloqunu API ilə oxuyur"), t("Sənəd, sayt linki və ya mətnlə öyrədilir, cavabda mənbəni göstərir"), t("Bir sətir kodla qoşulur, ziyarətçinin öz dilində cavab verir")].map((x) => (
             <li key={x} className="flex items-start gap-2.5"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[var(--l-mist)] text-[var(--l-teal)]"><Check size={13} strokeWidth={3} aria-hidden /></span>{x}</li>
           ))}
         </Reveal>
@@ -128,7 +128,7 @@ function Problem() {
 function Steps() {
   const { t } = useI18n();
   const steps = [
-    { title: t("Məlumatını əlavə et"), body: t("Elan, məhsul və ya xidmətlərin API ünvanını yaz və/ya bilik bazasına sənəd, sayt linki və ya mətn əlavə et. Texniki biliyin azdırsa, hazır tapşırığı AI alətinə (ChatGPT, Claude, Cursor) ver: konfiqurasiyanı o yazsın, sən yapışdır.") },
+    { title: t("Məlumatını əlavə et"), body: t("Elan, məhsul və ya xidmətlərin API ünvanını yaz və/ya bilik bazasına sənəd, sayt linki və ya mətn əlavə et. Panel API-nin nümunə cavabından sahələri özü tanıyır. Texniki biliyin azdırsa, hazır tapşırığı AI alətinə (ChatGPT, Claude, Cursor) də verə bilərsən.") },
     { title: t("Sınaq söhbəti ilə yoxla"), body: t("Panelin içində köməkçi ilə yaz, nə tapdığını və cavabın hansı mənbəyə əsaslandığını gör. Səhv varsa, xəritələməni və ya bilik bazasını düzəldib yenidən yoxla.") },
     { title: t("Bir sətir kodu saytına yapışdır"), body: t("Çat düyməsi saytında görünür. Rəngini, yazısını və yerini paneldən dəyişirsən, kodu yenidən yapışdırmaq lazım olmur.") },
   ];
@@ -192,54 +192,26 @@ function Features() {
           </Reveal>
           <Reveal delay={270} className="md:col-span-4">
           <div className={`${card} l-lift h-full`}>
-            <span className={icon}><Headset size={22} aria-hidden /></span>
-            <h3 className={h}>{t("Lazım olanda operatora yönləndirir")}</h3>
-            <p className={p}>{t("Cavab tapılmayanda ziyarətçi əlaqə formasını doldurur. Müraciət panelindəki gələn qutusuna düşür və sənə email gəlir.")}</p>
+            <span className={icon}><SlidersHorizontal size={22} aria-hidden /></span>
+            <h3 className={h}>{t("Kataloqu sən öyrədirsən")}</h3>
+            <p className={p}>{t("API-nin nümunə cavabını yapışdır: panel ad, qiymət, şəkil kimi sahələri özü tanıyır (AI-sız və pulsuz). Filtrləri bir dəfə yazırsan, marka və kateqoriya kimi siyahıları (ID ilə işləyənləri də) köməkçi özü çevirir.")}</p>
           </div>
           </Reveal>
           <Reveal delay={360} className="md:col-span-4">
-          <div className={`${card} l-lift h-full`}>
-            <span className={icon}><BarChart3 size={22} aria-hidden /></span>
-            <h3 className={h}>{t("Nə soruşduqlarını gör")}</h3>
-            <p className={p}>{t("Ziyarətçilərin sualları, cavabsız qalanlar və ən çox soruşulanlar bir yerdə. Cavabsız qalan sual sənin növbəti əlavə edəcəyin məzmundur.")}</p>
-          </div>
-          </Reveal>
-          <Reveal delay={450} className="md:col-span-4">
-          <div className={`${card} l-lift h-full`}>
-            <span className={icon}><SlidersHorizontal size={22} aria-hidden /></span>
-            <h3 className={h}>{t("Kataloqu sən öyrədirsən")}</h3>
-            <p className={p}>{t("Hansı filtr nə üçündür və API-n onu hansı adla qəbul edir, bunu bir dəfə yazırsan. Marka, kateqoriya kimi siyahıları (ID ilə işləyənləri də) köməkçi özü çevirir.")}</p>
-          </div>
-          </Reveal>
-          <Reveal delay={495} className="md:col-span-4">
-          <div className={`${card} l-lift h-full`}>
-            <span className={icon}><MessagesSquare size={22} aria-hidden /></span>
-            <h3 className={h}>{t("Hazır çat pəncərəsi, dörd dildə")}</h3>
-            <p className={p}>{t("Backend yazmağa ehtiyac yoxdur. Rəng, başlıq və yer paneldən dəyişir, telefonda tam ekran açılır. Azərbaycan, rus, ingilis və türk dilində cavab verir, panel də eyni dörd dildədir.")}</p>
-          </div>
-          </Reveal>
-          <Reveal delay={540} className="md:col-span-4">
-          <div className={`${card} l-lift h-full`}>
-            <span className={icon}><ShieldCheck size={22} aria-hidden /></span>
-            <h3 className={h}>{t("Məxfilik və nəzarət")}</h3>
-            <p className={p}>{t("Suallardakı telefon və email avtomatik gizlədilir. API açarı şifrələnib saxlanır. Vidjet yalnız sənin domenində işləyir, aylıq limiti sən görürsən.")}</p>
-          </div>
-          </Reveal>
-          <Reveal delay={0} className="md:col-span-4">
           <div className={`${card} l-lift h-full`}>
             <span className={icon}><ListChecks size={22} aria-hidden /></span>
             <h3 className={h}>{t("Ssenarilər və dəqiq cavablar")}</h3>
             <p className={p}>{t("Qaytarma, ləğv, rezerv kimi prosesləri addım-addım yaz: bot sənin qaydanla irəliləyir. Vacib suallara özün cavab yaz: uyğun sual gələndə cavab olduğu kimi, AI-sız və pulsuz verilir.")}</p>
           </div>
           </Reveal>
-          <Reveal delay={90} className="md:col-span-4">
+          <Reveal delay={450} className="md:col-span-6">
           <div className={`${card} l-lift h-full`}>
             <span className={icon}><Camera size={22} aria-hidden /></span>
             <h3 className={h}>{t("Şəkillə axtarış")}</h3>
             <p className={p}>{t("Ziyarətçi çatda, Telegram-da və ya WhatsApp-da şəkil göndərəndə köməkçi şəkildən növ, marka, rəng kimi xüsusiyyətləri çıxarıb oxşar elan və ya məhsul axtarır. Dəqiq eyni məhsulu tapacağına zəmanət yoxdur, oxşarlarını göstərir.")}</p>
           </div>
           </Reveal>
-          <Reveal delay={180} className="md:col-span-4">
+          <Reveal delay={540} className="md:col-span-6">
           <div className={`${card} l-lift h-full`}>
             <span className={icon}><RefreshCw size={22} aria-hidden /></span>
             <h3 className={h}>{t("Məlumat həmişə təzədir")}</h3>
@@ -283,18 +255,13 @@ function Pricing({ signedIn }: { signedIn: boolean }) {
 function Faq() {
   const { t } = useI18n();
   const items = [
-    [t("Texniki biliyim azdırsa, qura bilərəm?"), t("Bəli. Yalnız bilik bazası (dəstək botu) istəyirsənsə, texniki iş yoxdur: fayl yüklə, sayt linki ver. Kataloq axtarışı üçün paneldə hazır tapşırıq var: onu saytını yazan AI alətinə verirsən, o konfiqurasiyanı hazırlayır. Sən cavabı yapışdırıb sınaq söhbəti ilə yoxlayırsan, sonra bir sətir kodu saytına əlavə edirsən.")],
+    [t("Texniki biliyim azdırsa, qura bilərəm?"), t("Bəli. Yalnız bilik bazası (dəstək botu) istəyirsənsə, texniki iş yoxdur: fayl yüklə, sayt linki ver. Kataloq axtarışı üçün API-nin nümunə cavabını yapışdırırsan, panel sahələri özü tanıyır. Çətin hal olsa, paneldəki hazır tapşırığı saytını yazan AI alətinə verirsən, o konfiqurasiyanı hazırlayır. Sən cavabı yapışdırıb sınaq söhbəti ilə yoxlayırsan, sonra bir sətir kodu saytına əlavə edirsən.")],
     [t("Verilənlər bazama giriş verməliyəm?"), t("Xeyr. Köməkçi yalnız saytının açıq API-sindən və sənin əlavə etdiyin fayl, link və mətnlərdən oxuyur. Bazaya heç bir giriş lazım deyil.")],
     [t("Hansı saytlarla işləyir?"), t("Elan, e-ticarət və ya xidmət saytı fərqi yoxdur. Kataloqu API ilə qaytaran istənilən sayt qoşula bilər. Kataloqun yoxdursa, yalnız dəstək botu kimi (sənədlər və sayt məzmunu ilə) qurmaq olar. İkisi birlikdə də işləyir.")],
     [t("Bilik bazasına nə əlavə edə bilərəm?"), t("PDF, Word, TXT, MD, CSV və HTML faylları (6 MB-a qədər), tək səhifənin linki, bütün saytın skanı və ya yapışdırılmış mətn. Şəkil kimi skan olunmuş PDF oxunmur, mətni seçilə bilən olmalıdır.")],
-    [t("Cavabı bilmədikdə nə edir?"), t("Uydurmur. Bilmədiyini deyir və ziyarətçiyə əlaqə formasını təklif edir. Müraciət panelindəki gələn qutusuna düşür, cavabsız suallar isə ayrıca siyahıda görünür ki, çatışan məzmunu əlavə edəsən.")],
-    [t("Müştəri çatdan öz sifarişini soruşa bilərmi?"), t("Bəli, sən sifariş, ödəniş və ya şikayət kimi məlumatı öz API-nlə qoşursan. Müştəri saytda daxil olubsa, köməkçi yalnız onun öz qeydlərini göstərir. Başqasının məlumatına baxmaq mümkün deyil.")],
-    [t("Operator necə cavab verir?"), t("Ziyarətçi operator istəyəndə panelin gələn qutusundakı “Canlı söhbət” bölməsinə düşür. Orada cavab yazırsan və ziyarətçi onu dərhal görür. Çatda olmasa, cavab onun e-poçtuna gedir.")],
+    [t("Köməkçi səhv cavab verə bilərmi? Bilmədikdə nə edir?"), t("Kataloq sualında yalnız sənin API-nin qaytardığını, digər suallarda yalnız bilik bazandakı məlumatı istifadə edir və cavabın altında mənbəni göstərir. Bilmirsə uydurmur: bunu deyir və əlaqə formasını təklif edir. Cavabsız və 👎 alan suallar paneldə ayrıca görünür ki, çatışan məzmunu əlavə edəsən. Yenə də sınaq söhbətində yoxlamağı məsləhət görürük.")],
     [t("Ziyarətçilərin yazdıqları saxlanırmı?"), t("Yalnız sən “Sorğu jurnalı”nı aktiv saxlasan. Telefon və email avtomatik gizlədilir, qeydlər 90 gündən sonra silinir. İstəsən bunu ayarlardan söndürürsən.")],
-    [t("Köməkçi sifarişi ləğv edə və ya görüş rezerv edə bilərmi?"), t("Bəli, amma yalnız sənin yazdığın əməliyyatlar çərçivəsində və istifadəçi kartda “Təsdiq et” basandan sonra. AI özü heç nəyi icra etmir. Əməliyyat sənin saytının API-nə imzalı sorğu kimi gedir, buna görə API-ni sənin tərəfdən hazırlamaq lazımdır.")],
-    [t("Telegram və WhatsApp-da işləyirmi?"), t("Bəli. Telegram botunu tokenlə, WhatsApp nömrəsini QR kodla qoşursan. WhatsApp-ın bu üsulu rəsmi API deyil və nömrənin bloklanma riski var, ona görə əsas şəxsi nömrə yox, ayrıca iş nömrəsi məsləhətdir.")],
     [t("Gözlənilmədən çox pul tutula bilərmi?"), t("Xeyr. Əvvəlcədən yüklədiyin balansdan xərclənir, bitəndə çat dayanır. Balans azalanda email gəlir, panelin Balans səhifəsində orta sorğu qiyməti və ay sonuna proqnoz göstərilir.")],
-    [t("Köməkçi səhv cavab verə bilərmi?"), t("Kataloq sualında yalnız sənin API-nin qaytardığını, digər suallarda yalnız bilik bazandakı məlumatı istifadə edir və cavabın altında mənbəni göstərir. Yenə də sınaq söhbətində yoxlamağı məsləhət görürük.")],
   ];
   return (
     <section id="sual" className={`${wrap} scroll-mt-20 grid gap-10 py-20 lg:grid-cols-[.8fr_1.2fr] lg:gap-16 lg:py-28`}>

@@ -17,6 +17,8 @@ export type WidgetSettings = {
   bg?: string; // əlavə edildi
   theme?: "light" | "dark" | "auto";
   logoUrl?: string | null;
+  /** Çatın içindəki profil şəkli (başlıq və bot mesajları). null: standart robot ikonu. */
+  avatarUrl?: string | null;
   label: string;
   limits?: {
     perVisitorDay: number;
@@ -127,8 +129,12 @@ export const feedRefresh = (feedText?: string) => post<{ ok: true; count: number
 export const saveProfile = (profile: Profile) => call<{ profile: Profile }>("/tenant/profile", { method: "PATCH", body: profile });
 export const rotateMyKey = () => post<{ apiKey: string }>("/tenant/key/rotate");
 export const getWidget = () => call<WidgetResponse>("/tenant/widget");
-export const uploadWidgetLogo = (data: string) => call<WidgetResponse>("/tenant/widget/logo", { method: "PUT", body: { data } });
-export const deleteWidgetLogo = () => call<WidgetResponse>("/tenant/widget/logo", { method: "DELETE" });
+/** logo = çat düyməsi, avatar = çatın içindəki profil şəkli (ayrı-ayrı saxlanır). */
+export type WidgetImageKind = "logo" | "avatar";
+export const uploadWidgetImage = (kind: WidgetImageKind, data: string) => call<WidgetResponse>(`/tenant/widget/${kind}`, { method: "PUT", body: { data } });
+export const deleteWidgetImage = (kind: WidgetImageKind) => call<WidgetResponse>(`/tenant/widget/${kind}`, { method: "DELETE" });
+export const uploadWidgetLogo = (data: string) => uploadWidgetImage("logo", data);
+export const deleteWidgetLogo = () => deleteWidgetImage("logo");
 export const saveWidget = (patch: Partial<Omit<WidgetSettings, "key">>) => call<WidgetResponse>("/tenant/widget", { method: "PUT", body: patch });
 export const rotateWidgetKey = () => post<WidgetResponse>("/tenant/widget/rotate");
 export const getUsage = () => call<Usage>("/tenant/usage");
