@@ -282,6 +282,29 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
       </div>
 
       <Card>
+        <CardHeader>
+          <CardTitle>{t("Google Analytics hadisələri")}</CardTitle>
+          <CardDescription>{t("Saytında Google Analytics (gtag) və ya Tag Manager varsa, çat bu hadisələri avtomatik göndərir. Heç nə quraşdırmaq lazım deyil: GA-da Hesabatlar → Hadisələr bölməsində görünəcək. Mesaj mətni və şəxsi məlumat göndərilmir.")}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 text-sm">
+          <ul className="grid gap-1.5 sm:grid-cols-2">
+            {([
+              ["ai_chat_open", t("Ziyarətçi çatı açdı")],
+              ["ai_chat_message", t("AI-a sual yazdı")],
+              ["ai_chat_listing_click", t("Çatdakı elana/məhsula keçdi (ad və qiymət ilə)")],
+              ["ai_chat_lead", t("Əlaqə formasını doldurdu")],
+              ["ai_chat_live_start", t("Operatorla canlı söhbət başladı")],
+              ["ai_chat_action", t("Əməliyyatı təsdiqlədi (sifariş ləğvi, rezerv və s.)")],
+            ] as const).map(([name, desc]) => (
+              <li key={name} className="flex flex-col rounded-md border border-border px-3 py-2"><code className="font-mono text-xs text-primary">{name}</code><span className="text-xs text-muted-foreground">{desc}</span></li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground">{t("“ai_chat_lead” hadisəsini GA-da “Əsas hadisə” (konversiya) kimi işarələsən, çatın neçə müraciət gətirdiyini reklam hesabatlarında da görərsən.")}</p>
+          <p className="text-xs text-muted-foreground">{t("Başqa analitika (Yandex Metrica, Facebook Pixel) üçün saytında “caradvisor:event” hadisəsini dinlə. Söndürmək üçün koda data-analytics=\"off\" əlavə et.")}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle>{t("Vidjet açarını yenilə")}</CardTitle><CardDescription>{t("Kod kimsə tərəfindən sui-istifadə olunursa istifadə et.")}</CardDescription></CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
           {rotating === "idle" ? (

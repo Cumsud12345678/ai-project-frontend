@@ -107,7 +107,8 @@ function Inbox() {
   useEffect(() => { load(); }, [load]);
   // Canlı söhbətlər gözləyirsə əvvəlcə onu göstər (yalnız ilk yüklənəndə)
   const picked = useRef(false);
-  useEffect(() => { if (live && !picked.current) { picked.current = true; if (live.enabled && live.waiting > 0) setTab("live"); } }, [live]);
+  // Canlı söhbət açıqdırsa ilk açılışda o tab: söhbətlər və "İndi saytda" siyahısı oradadır
+  useEffect(() => { if (live && !picked.current) { picked.current = true; if (live.enabled) setTab("live"); } }, [live]);
   useEffect(() => { const i = setInterval(() => { getLiveCount().then(setLive).catch(() => {}); }, 8000); return () => clearInterval(i); }, []);
 
   if (!leads || !un) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <CardSkeleton rows={3} />;

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookPlus, Globe, Hand, Mail, MessageSquarePlus, Phone, Send, Sparkles, Star, StickyNote, Undo2, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
+import { liveFileUrl, addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { useI18n } from "@/lib/i18n";
 import { sendTyping, useLiveEvents } from "@/lib/live-socket";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { NotifyBar } from "@/components/notify-bar";
+import { SiteVisitors } from "@/components/site-visitors";
 
 /** Canlı operator söhbəti: solda söhbətlər, sağda yazışma. Yeni mesaj WebSocket siqnalı ilə dərhal gəlir; bağlantı yoxdursa siyahı 5, açıq söhbət 3 saniyədən bir yenilənir. */
 export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: () => void }) {
@@ -53,6 +54,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   }, [sel]);
   // Real vaxt siqnalı: yeni mesaj/söhbət/bağlanma və "ziyarətçi yazır"
   const live = useLiveEvents((e) => {
+    if (e.t === "visitors") return; // "İndi saytda" bölməsi özü dinləyir
     if (e.t === "typing") {
       if (e.id !== selRef.current) return;
       clearTimeout(typingTimer.current);
@@ -161,6 +163,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     .filter((c) => ch === "all" || (ch === "vip" ? isVip(c.tags) : chOf(c) === ch));
   const list = (
     <div className={cn("flex flex-col gap-3", sel && "hidden md:flex")}>
+      <SiteVisitors onStarted={(id) => { setStatus("open"); setWho("all"); setCh("all"); setSel(id); loadList(); onChange?.(); }} />
       <div className="inline-flex self-start rounded-lg border border-border bg-muted p-1 text-sm">
         {(["open", "closed"] as const).map((s) => (
           <button key={s} type="button" aria-pressed={status === s} onClick={() => { setStatus(s); setSel(""); }}
@@ -323,7 +326,16 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
           ? <p key={i} className="self-center text-xs text-muted-foreground">{t("Söhbət bitdi.")}</p>
           : (
             <div key={i} className={cn("flex max-w-[85%] flex-col gap-1", m.from === "operator" ? "self-end items-end" : "self-start")}>
-              <div className={cn("whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "bg-primary text-primary-foreground" : "border border-border bg-card")}>{m.from === "operator" && m.by && <span className="mb-0.5 block text-[10px] opacity-70">{m.by}</span>}{m.text}</div>
+              <div className={cn("whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm", m.from === "operator" ? "bg-primary text-primary-foreground" : "border border-border bg-card")}>
+                {m.from === "operator" && m.by && <span className="mb-0.5 block text-[10px] opacity-70">{m.by}</span>}
+                {m.file && (
+                  <a href={liveFileUrl(chat.id, m.file.id)} target="_blank" rel="noopener noreferrer" className="block" title={t("Şəkli tam ölçüdə aç")}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={liveFileUrl(chat.id, m.file.id)} alt={t("Ziyarətçinin göndərdiyi şəkil")} loading="lazy" className={cn("max-h-60 max-w-full rounded-lg object-contain", m.text !== "📷" && "mb-1.5")} />
+                  </a>
+                )}
+                {m.file && m.text === "📷" ? null : m.text}
+              </div>
               {canKb && m.from === "operator" && (
                 <button type="button" onClick={() => setKb({ q: questionBefore(i).slice(0, 300), a: m.text.slice(0, 3000) })} className="inline-flex cursor-pointer items-center gap-1 text-xs text-primary underline"><BookPlus size={12} aria-hidden />{t("Biliyə əlavə et")}</button>
               )}

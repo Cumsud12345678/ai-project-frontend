@@ -315,7 +315,7 @@ export type Overview = {
 export const getOverview = () => call<Overview>("/tenant/overview");
 
 // Canlı operator söhbəti və cavablara rəy
-export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string };
+export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string; /** ziyarətçinin göndərdiyi şəkil */ file?: { id: string; mime: string } };
 export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
 export type LiveNote = { text: string; by: string; at: string };
 export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; tags?: string[]; csat?: number | null; notes?: number; last: LiveMsg | null };
@@ -325,6 +325,12 @@ export const claimLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/
 export const releaseLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/release`);
 export type LiveContact = { channel: "telegram" | "whatsapp"; chatId: string; name: string; last: string; updatedAt: string };
 export const getLiveContacts = () => call<{ items: LiveContact[] }>("/tenant/live/contacts");
+/** "İndi saytda kim var": vidjet açıq olan ziyarətçilər (yalnız yaddaşda, 45 saniyə xəbər gəlməsə düşür) */
+export type SiteVisitor = { pid: string; path: string; title: string; ref: string; lang: string; mobile: boolean; chat: "none" | "ai" | "live"; since: number; seen: number; pages: number; invited: boolean };
+export const getVisitors = () => call<{ enabled: boolean; items: SiteVisitor[] }>("/tenant/visitors");
+export const inviteVisitor = (pid: string, text: string) => post<{ id: string }>(`/tenant/visitors/${pid}/invite`, { text });
+/** Canlı söhbətdə ziyarətçinin göndərdiyi şəkil (panel proksisi ilə, sessiya cookie-si gedir) */
+export const liveFileUrl = (chatId: string, fileId: string) => `/api/portal/tenant/live/${encodeURIComponent(chatId)}/files/${encodeURIComponent(fileId)}`;
 export const startLiveChat = (b: { channel: "telegram" | "whatsapp"; chatId: string; text: string }) => post<{ id: string; existing?: boolean }>("/tenant/live/start", b);
 // Operator komandası (yalnız sahib)
 export type TeamMember = { email: string; joined: boolean; addedAt: string };

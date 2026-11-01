@@ -8,7 +8,7 @@ import { getLiveTicket } from "@/lib/api";
  * Bütün səhifələr tək bir bağlantıdan istifadə edir (menyudakı sayğac, gələnlər qutusu).
  */
 /** by: "visitor" yalnız ziyarətçidən gələn hadisələrdə olur (operatorun öz mesajında yox): səs və bildiriş yalnız bunlarda. draft: ziyarətçinin göndərilməmiş mətni. */
-export type LiveEvent = { t: "live"; id: string; kind: "start" | "message" | "close" | "assign" | "note" | "tags" | "csat"; by?: "visitor" } | { t: "typing"; id: string; draft?: string };
+export type LiveEvent = { t: "live"; id: string; kind: "start" | "message" | "close" | "assign" | "note" | "tags" | "csat"; by?: "visitor" } | { t: "typing"; id: string; draft?: string } | { t: "visitors" };
 type Listener = (e: LiveEvent) => void;
 
 const listeners = new Set<Listener>();
@@ -36,7 +36,7 @@ function connect() {
       let m: { t?: string };
       try { m = JSON.parse(String(ev.data)); } catch { return; }
       if (m.t === "ready") { tries = 0; setConnected(true); return; }
-      if (m.t === "live" || m.t === "typing") listeners.forEach((f) => f(m as LiveEvent));
+      if (m.t === "live" || m.t === "typing" || m.t === "visitors") listeners.forEach((f) => f(m as LiveEvent));
     };
     sock.onclose = (ev) => {
       if (ws === sock) ws = null;
