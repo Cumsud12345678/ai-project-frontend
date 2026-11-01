@@ -333,6 +333,11 @@ export const addTeamMember = (email: string) => post<{ ok: true }>("/tenant/team
 export const removeTeamMember = (email: string) => call<{ ok: true }>(`/tenant/team/${encodeURIComponent(email)}`, { method: "DELETE" });
 export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
 export const getLiveTicket = () => post<{ ticket: string; url: string }>("/tenant/live/ws-ticket");
+/** Operatorun Telegram bildirişləri (platformanın bildiriş botu ilə, hər istifadəçi özü bağlayır) */
+export type NotifyView = { available: boolean; botUsername: string | null; telegram: { name: string; at: string } | null };
+export const getNotify = () => call<NotifyView>("/tenant/notify");
+export const linkTelegramNotify = () => post<{ url: string; expiresInS: number }>("/tenant/notify/telegram");
+export const unlinkTelegramNotify = () => call<NotifyView>("/tenant/notify/telegram", { method: "DELETE" });
 export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[]; csat?: { count: number; avg: number | null } }>(`/tenant/live?status=${status}`);
 export const getLiveChat = (id: string) => call<{ chat: LiveChat }>(`/tenant/live/${id}`);
 export const sendLive = (id: string, text: string) => post<{ total: number }>(`/tenant/live/${id}/messages`, { text });

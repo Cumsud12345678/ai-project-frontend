@@ -9,6 +9,7 @@ import { AnnouncementBanner } from "@/components/announcement-banner";
 import { SessionProvider, useSession } from "@/components/session";
 import { LangSwitch, useT } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
+import { alertLive } from "@/lib/live-alerts";
 
 // label: Azərbaycan açarı, render zamanı tərcümə olunur
 // only: göstərildiyi rejimlər (yoxdursa hamısında); listings = elan, support = dəstək botu
@@ -98,7 +99,12 @@ function Shell({ children }: { children: React.ReactNode }) {
     return () => { on = false; clearInterval(i); };
   }, [tenant]);
   // Canlı söhbət açıqdırsa: yeni mesaj siqnalı ilə sayğac dərhal yenilənir
-  useLiveEvents((e) => { if (e.t === "live") refreshWaiting.current(); }, liveOn);
+  // Ziyarətçi yazanda: qısa səs, tab gizlidirsə brauzer bildirişi və başlıqda sayğac (lib/live-alerts.ts)
+  useLiveEvents((e) => {
+    if (e.t !== "live") return;
+    refreshWaiting.current();
+    alertLive(e, { start: t("Yeni canlı söhbət"), message: t("Ziyarətçi yeni mesaj yazdı"), body: t("Cavab vermək üçün Müraciətlər bölməsini aç.") }, pathname.startsWith("/inbox"));
+  }, liveOn);
   useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();

@@ -7,7 +7,8 @@ import { getLiveTicket } from "@/lib/api";
  * mesajlar yenə adi sorğularla yüklənir. Qoşulma alınmasa və ya qırılsa səhifələr əvvəlki kimi polling ilə işləyir.
  * Bütün səhifələr tək bir bağlantıdan istifadə edir (menyudakı sayğac, gələnlər qutusu).
  */
-export type LiveEvent = { t: "live"; id: string; kind: "start" | "message" | "close" } | { t: "typing"; id: string };
+/** by: "visitor" yalnız ziyarətçidən gələn hadisələrdə olur (operatorun öz mesajında yox): səs və bildiriş yalnız bunlarda. draft: ziyarətçinin göndərilməmiş mətni. */
+export type LiveEvent = { t: "live"; id: string; kind: "start" | "message" | "close" | "assign" | "note" | "tags" | "csat"; by?: "visitor" } | { t: "typing"; id: string; draft?: string };
 type Listener = (e: LiveEvent) => void;
 
 const listeners = new Set<Listener>();

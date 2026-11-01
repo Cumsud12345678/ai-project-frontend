@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
+import { NotifyBar } from "@/components/notify-bar";
 
 /** Canlı operator söhbəti: solda söhbətlər, sağda yazışma. Yeni mesaj WebSocket siqnalı ilə dərhal gəlir; bağlantı yoxdursa siyahı 5, açıq söhbət 3 saniyədən bir yenilənir. */
 export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: () => void }) {
@@ -34,6 +35,8 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   const logRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [typing, setTyping] = useState(false);
+  // "Sneak peek": ziyarətçinin hələ göndərmədiyi mətn (yalnız sayt çatında, canlı söhbət zamanı)
+  const [peek, setPeek] = useState("");
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [csatSum, setCsatSum] = useState<{ count: number; avg: number | null } | null>(null);
   const [canned, setCanned] = useState<CannedReply[]>([]);
@@ -52,19 +55,24 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   const live = useLiveEvents((e) => {
     if (e.t === "typing") {
       if (e.id !== selRef.current) return;
-      setTyping(true); clearTimeout(typingTimer.current); typingTimer.current = setTimeout(() => setTyping(false), 4000);
+      clearTimeout(typingTimer.current);
+      if (e.draft === "") { setTyping(false); setPeek(""); return; } // ziyarətçi yazdığını silib
+      setTyping(true);
+      if (typeof e.draft === "string") setPeek(e.draft);
+      // Qaralama ziyarətçi dayananda da bir müddət görünür; adi "yazır…" 4 saniyəyə itir
+      typingTimer.current = setTimeout(() => { setTyping(false); setPeek(""); }, e.draft ? 20000 : 4000);
       return;
     }
     loadList(); onChange?.();
-    if (e.id === selRef.current) { setTyping(false); loadChat(); }
+    if (e.id === selRef.current) { if (e.t === "live" && e.kind === "message") { setTyping(false); setPeek(""); } loadChat(); }
   }, enabled);
   // Soket qoşuludursa polling yalnız ehtiyatdır
   useEffect(() => { setItems(null); loadList(); const i = setInterval(loadList, live ? 30000 : 5000); return () => clearInterval(i); }, [loadList, live]);
 
   useEffect(() => { if (enabled) getCanned().then((r) => setCanned(r.items)).catch(() => {}); }, [enabled]);
   useEffect(() => { setNote(""); setTagIn(""); }, [sel]);
-  useEffect(() => { setChat(null); setTyping(false); setKb(null); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, live ? 20000 : 3000); return () => clearInterval(i); }, [sel, loadChat, live]);
-  useEffect(() => { const el = logRef.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [chat?.messages.length]);
+  useEffect(() => { setChat(null); setTyping(false); setPeek(""); setKb(null); stick.current = true; if (!sel) return; loadChat(); const i = setInterval(loadChat, live ? 20000 : 3000); return () => clearInterval(i); }, [sel, loadChat, live]);
+  useEffect(() => { const el = logRef.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [chat?.messages.length, peek, typing]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -322,7 +330,12 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
             </div>
           ))}
         {!chat.messages.length && <p className="text-sm text-muted-foreground">{t("Ziyarətçi hələ mesaj yazmayıb.")}</p>}
-        {typing && <p className="self-start text-xs italic text-muted-foreground" aria-live="polite">{t("Ziyarətçi yazır…")}</p>}
+        {peek ? (
+          <div className="flex max-w-[85%] flex-col gap-1 self-start" aria-live="polite">
+            <span className="text-[10px] font-medium text-muted-foreground">{t("Ziyarətçi yazır (hələ göndərməyib):")}</span>
+            <div className="whitespace-pre-wrap break-words rounded-xl border border-dashed border-border bg-card/60 px-3 py-2 text-sm italic text-muted-foreground">{peek}</div>
+          </div>
+        ) : typing && <p className="self-start text-xs italic text-muted-foreground" aria-live="polite">{t("Ziyarətçi yazır…")}</p>}
       </div>
       {kb && (
         <form onSubmit={saveKb} className="flex flex-col gap-2 border-t border-border bg-muted/40 p-3">
@@ -356,9 +369,12 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
   );
 
   return (
-    <div className="grid gap-4 md:grid-cols-[18rem_1fr]">
-      {list}
-      {thread}
+    <div className="flex flex-col gap-4">
+      <NotifyBar />
+      <div className="grid gap-4 md:grid-cols-[18rem_1fr]">
+        {list}
+        {thread}
+      </div>
     </div>
   );
 }
