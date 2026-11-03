@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
 import { LiveInbox } from "@/components/live-inbox";
+import { LeadForwardCard } from "@/components/lead-forward-card";
 
 function Leads({ rows, reload }: { rows: LeadRow[]; reload: () => void }) {
   const { t, short } = useI18n();
@@ -123,7 +124,7 @@ function Inbox() {
         { value: "leads", label: t("Müraciətlər"), badge: leads.open },
         { value: "unanswered", label: t("Cavabsız suallar"), badge: un.total },
       ]} />
-      {tab === "live" ? <LiveInbox enabled={Boolean(live?.enabled)} onChange={() => { getLiveCount().then(setLive).catch(() => {}); }} /> : tab === "leads" ? <Leads rows={leads.items} reload={load} /> : <Unanswered rows={un.items} reload={load} />}
+      {tab === "live" ? <LiveInbox enabled={Boolean(live?.enabled)} onChange={() => { getLiveCount().then(setLive).catch(() => {}); }} /> : tab === "leads" ? <div className="flex flex-col gap-4"><LeadForwardCard /><Leads rows={leads.items} reload={load} /></div> : <Unanswered rows={un.items} reload={load} />}
     </div>
   );
 }

@@ -325,6 +325,14 @@ export const claimLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/
 export const releaseLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/release`);
 export type LiveContact = { channel: "telegram" | "whatsapp"; chatId: string; name: string; last: string; updatedAt: string };
 export const getLiveContacts = () => call<{ items: LiveContact[] }>("/tenant/live/contacts");
+/** Yeni müraciətin ötürüldüyü yerlər (yalnız sahib). Bitrix24 və webhook linkləri serverdə şifrəlidir, panelə yalnız domen gəlir. */
+export type LeadForwardView = { telegram: { title: string } | null; telegramAvailable: boolean; bitrix: { host: string } | null; webhook: { host: string } | null; keyReady: boolean };
+export const getLeadForward = () => call<LeadForwardView>("/tenant/lead-forward");
+export const linkLeadTelegram = () => post<{ url: string; expiresInS: number }>("/tenant/lead-forward/telegram");
+export const unlinkLeadTelegram = () => call<LeadForwardView>("/tenant/lead-forward/telegram", { method: "DELETE" });
+export const saveLeadTarget = (kind: "bitrix" | "webhook", url: string) => call<LeadForwardView>(`/tenant/lead-forward/${kind}`, { method: "PUT", body: { url } });
+export const deleteLeadTarget = (kind: "bitrix" | "webhook") => call<LeadForwardView>(`/tenant/lead-forward/${kind}`, { method: "DELETE" });
+export const testLeadForward = () => post<{ results: Partial<Record<"telegram" | "bitrix" | "webhook", string>> }>("/tenant/lead-forward/test");
 /** "İndi saytda kim var": vidjet açıq olan ziyarətçilər (yalnız yaddaşda, 45 saniyə xəbər gəlməsə düşür) */
 export type SiteVisitor = { pid: string; path: string; title: string; ref: string; lang: string; mobile: boolean; chat: "none" | "ai" | "live"; since: number; seen: number; pages: number; invited: boolean };
 export const getVisitors = () => call<{ enabled: boolean; items: SiteVisitor[] }>("/tenant/visitors");
