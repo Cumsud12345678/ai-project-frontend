@@ -8,8 +8,7 @@ export function DeskMock() {
   const { t } = useI18n();
   return (
     <div className="relative mx-auto w-full max-w-md">
-      <div className="absolute inset-x-4 -bottom-3 top-6 rounded-[2rem] bg-white/70" aria-hidden />
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-24px_rgba(12,42,37,.35)]" role="img" aria-label={t("Nümunə: operator iş masası")}>
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--l-line)] bg-white shadow-[0_1px_2px_rgba(12,42,37,.06),0_24px_48px_-28px_rgba(12,42,37,.28)]" role="img" aria-label={t("Nümunə: operator iş masası")}>
         <div className="flex flex-wrap items-center gap-2 border-b border-[var(--l-line)] px-4 py-3" aria-hidden>
           <span className="grid size-9 place-items-center rounded-full bg-[var(--l-mist)] text-[var(--l-teal)]"><Headset size={17} /></span>
           <div className="min-w-0 flex-1 leading-tight">
@@ -50,8 +49,7 @@ export function ProactiveMock() {
   const { t } = useI18n();
   return (
     <div className="relative mx-auto w-full max-w-md">
-      <div className="absolute inset-x-4 -bottom-3 top-6 rounded-[2rem] bg-[var(--l-mist)]" aria-hidden />
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-24px_rgba(12,42,37,.35)]" role="img" aria-label={t("Nümunə: çat düyməsinin yanında proaktiv təklif")}>
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--l-line)] bg-white shadow-[0_1px_2px_rgba(12,42,37,.06),0_24px_48px_-28px_rgba(12,42,37,.28)]" role="img" aria-label={t("Nümunə: çat düyməsinin yanında proaktiv təklif")}>
         <div className="flex items-center gap-1.5 border-b border-[var(--l-line)] bg-[#f4f7f4] px-4 py-2.5" aria-hidden>
           {[0, 1, 2].map((k) => <span key={k} className="size-2.5 rounded-full bg-[#cfd9d2]" />)}
           <span className="ml-3 truncate rounded-md bg-white px-3 py-1 text-xs text-[#58706a]">magaza.az/products/5</span>

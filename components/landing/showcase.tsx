@@ -1,7 +1,7 @@
 "use client";
 import { Check } from "lucide-react";
 import { Reveal } from "@/components/landing/reveal";
-import { PhoneChat, type ChatMsg } from "@/components/landing/phone-chat";
+import { ActionFlowVisual, ChannelsVisual, DataAccessVisual, InboxVisual, LanguagesVisual } from "@/components/landing/visuals";
 import { DeskMock, ProactiveMock } from "@/components/landing/mocks";
 import { useI18n } from "@/lib/i18n";
 
@@ -15,9 +15,9 @@ function Points({ items }: { items: string[] }) {
   );
 }
 
-/** Mətn solda, telefon söhbəti sağda (flip=true olanda tərsinə). Kartsız: yalnız başlıq, abzas və siyahı. */
-function Block({ id, eyebrow, title, body, points, phone, flip = false, tint = false }: {
-  id: string; eyebrow: string; title: string; body: string; points: string[]; phone: React.ReactNode; flip?: boolean; tint?: boolean;
+/** Mətn solda, vizual sağda (flip=true olanda tərsinə). Kartsız: yalnız başlıq, abzas və siyahı. */
+function Block({ id, eyebrow, title, body, points, visual, flip = false, tint = false }: {
+  id: string; eyebrow: string; title: string; body: string; points: string[]; visual: React.ReactNode; flip?: boolean; tint?: boolean;
 }) {
   return (
     <section id={id} className={`scroll-mt-20 py-16 lg:py-24 ${tint ? "bg-[var(--l-mist)]" : ""}`}>
@@ -28,7 +28,7 @@ function Block({ id, eyebrow, title, body, points, phone, flip = false, tint = f
           <Reveal as="p" delay={160} className="mt-5 max-w-xl text-[16px] leading-relaxed text-[#41594f]">{body}</Reveal>
           <Reveal delay={240}><Points items={points} /></Reveal>
         </div>
-        <Reveal variant={flip ? "left" : "right"} delay={120} className={flip ? "lg:order-1" : ""}>{phone}</Reveal>
+        <Reveal variant={flip ? "left" : "right"} delay={120} className={flip ? "lg:order-1" : ""}>{visual}</Reveal>
       </div>
     </section>
   );
@@ -55,38 +55,6 @@ function Funnel() {
 
 export function Showcase() {
   const { t } = useI18n();
-  const live: ChatMsg[] = [
-    { from: "user", text: t("Zəmanəti 3 ilə uzatmaq olarmı?") },
-    { from: "bot", text: t("Bu barədə dəqiq məlumatım yoxdur. İstəsəniz operatoru çağırım.") },
-    { from: "system", text: t("Operator söhbətə qoşuldu") },
-    { from: "operator", name: t("Operator · Aynur"), text: t("Salam! Bəli, 3 ilə qədər uzatmaq olar. Qiyməti 45 ₼-dir.") },
-    { from: "typing", text: t("Operator yazır…") },
-  ];
-  const mine: ChatMsg[] = [
-    { from: "user", text: t("Sifarişim haradadır?") },
-    { from: "bot", text: t("#10482 nömrəli sifarişiniz yoldadır, kuryerə təhvil verilib. Çatdırılma: sabah 12:00–18:00.") , note: t("Mənbə: sənin sifarişlərin") },
-    { from: "user", text: t("Son ödənişim keçib?") },
-    { from: "bot", text: t("Bəli, dünən 139 ₼ ödənişiniz uğurla tamamlanıb."), note: t("Mənbə: sənin ödənişlərin") },
-  ];
-  const act: ChatMsg[] = [
-    { from: "user", text: t("Sifariş #10482-ni ləğv etmək istəyirəm") },
-    { from: "bot", text: t("Ləğv etməzdən əvvəl yoxla:") },
-    { from: "action", title: t("Sifariş {orderNo} ləğv olunacaq", { orderNo: "#10482" }), rows: [[t("Sifariş nömrəsi"), "10482"], [t("Səbəb"), t("Fikrimi dəyişdim")]], yes: t("Təsdiq et"), no: t("Ləğv et") },
-    { from: "user", text: t("Təsdiq et") },
-    { from: "bot", text: t("Sifariş {orderNo} ləğv edildi.", { orderNo: "#10482" }) },
-  ];
-  const tg: ChatMsg[] = [
-    { from: "user", text: t("Salam, məhsulların zəmanəti var?") },
-    { from: "bot", text: t("Bəli, bütün məhsullara 12 ay zəmanət verilir."), note: t("Mənbə: Zəmanət şərtləri") },
-    { from: "voice", duration: "0:06", heard: t("Səsli mesaj mətnə çevrildi: “Bu gün Sumqayıta çatdırılma var?”") },
-    { from: "bot", text: t("Bəli, saat 14:00-a qədər verilən sifariş Sumqayıta həmin gün çatdırılır."), note: t("Mənbə: Çatdırılma şərtləri") },
-  ];
-  const langs: ChatMsg[] = [
-    { from: "user", text: "Сколько стоит доставка?" },
-    { from: "bot", text: "По Баку доставка 1–2 рабочих дня. При заказе от 100 ₼ она бесплатная." },
-    { from: "user", text: "And how long does a refund take?" },
-    { from: "bot", text: "Refunds reach your card within 5 business days after we receive the item." },
-  ];
   return (
     <div id="daha">
       <section className={`${wrap} pt-20 lg:pt-28`}>
@@ -97,37 +65,37 @@ export function Showcase() {
       <Block id="canli" eyebrow={t("Canlı operator")} title={t("Lazım olanda insan söhbətə qoşulur")}
         body={t("Köməkçi cavab tapa bilmirsə, ziyarətçi eyni pəncərədə operatorla yazışır. Operator cavabı paneldən yazır, ziyarətçi dərhal görür və operatorun yazdığını canlı izləyir.")}
         points={[t("Cavab saniyənin bir hissəsində çatır, səhifəni yeniləmək lazım deyil."), t("Ziyarətçi səhifəni bağlasa belə, 7 gün ərzində qayıdanda söhbət qaldığı yerdən davam edir."), t("Ziyarətçi çatdan çıxıbsa, operatorun cavabı onun e-poçtuna gedir.")]}
-        phone={<PhoneChat title={t("Köməkçi")} subtitle={t("Operator ilə canlı söhbət")} label={t("Nümunə söhbət: operator canlı cavab verir")} messages={live} />} />
+        visual={<InboxVisual />} />
 
       <Block id="musteri" tint flip eyebrow={t("Müştərinin öz məlumatı")} title={t("“Sifarişim haradadır?” sualına cavab verir")}
         body={t("Hesabına daxil olmuş müştəri öz sifarişini, ödəniş tarixçəsini, müraciət və şikayətlərinin statusunu çatdan soruşa bilər. Hansı məlumat növlərinin açılacağını sən seçirsən: sifariş, ödəniş, şikayət, abunə və ya istənilən başqası.")}
         points={[t("Müştəri saytın imzaladığı gizli açarla tanınır, ona görə başqasının məlumatını soruşmaq mümkün deyil."), t("Köməkçiyə yalnız sənin icazə verdiyin sahələr çatır, kart və telefon kimi həssas dəyərlər gizlədilir."), t("Hər müştəri üçün sorğu limiti var, sənin API-ni yükləmir."), t("Məlumat sorğu anında sənin API-ndən oxunur.")]}
-        phone={<PhoneChat title={t("Köməkçi")} subtitle={t("Sənin hesabın üçün")} label={t("Nümunə söhbət: müştəri sifarişini soruşur")} messages={mine} />} />
+        visual={<DataAccessVisual />} />
 
       <Block id="emeliyyat" eyebrow={t("Əməliyyatlar")} title={t("Çat yalnız cavab vermir, sənin saytında iş də görür")}
         body={t("İstifadəçi “sifarişimi ləğv et”, “bilet aç”, “görüş rezerv et” və ya “mənimlə əlaqə saxlayın” yazanda köməkçi hərəkəti təklif edir. Nə olacağı kartda bütün dəyərlərlə göstərilir və yalnız istifadəçi “Təsdiq et” basandan sonra sənin API-nə göndərilir.")}
         points={[t("AI əməliyyatı özü icra etmir: yalnız təklif yaradır, qərarı istifadəçi verir."), t("Yalnız sənin yazdığın əməliyyatlar və parametrlər mümkündür, hər dəyər tip və uzunluq üzrə yoxlanır."), t("Sorğular imzalanır, təkrar icra olunmur, cavab gəlməsə uğur uydurulmur: “bəlli deyil” bildirilir."), t("Hər addım jurnala yazılır, istifadəçi və sayt üzrə limit var."), t("Bunun üçün saytının API-si lazımdır: əməliyyatı orada sən yazırsan.")]}
-        phone={<PhoneChat title={t("Köməkçi")} subtitle={t("Təsdiqlə icra olunan əməliyyat")} label={t("Nümunə söhbət: sifarişin ləğvi təsdiq kartı ilə")} messages={act} />} />
+        visual={<ActionFlowVisual />} />
 
       <Block id="masa" tint flip eyebrow={t("Operator iş masası və komanda")} title={t("Operatorlar üçün hazır iş masası: qeyd, etiket, hazır cavab, AI qaralaması")}
         body={t("Canlı söhbət qutusu yalnız yazışma deyil. Komanda söhbətə daxili qeyd yazır, etiket qoyur, hazır cavabı seçib redaktə edir və istəsə AI-dan qaralama alır. Qaralama yalnız yazı sahəsinə düşür, operator oxuyub özü göndərir.")}
         points={[t("Komandanı dəvət et: 5 operatora qədər işçi email ilə qoşulur və yalnız canlı söhbət qutusunu görür, ayarlara və balansa toxuna bilmir."), t("Daxili qeydləri yalnız komanda görür, müştəriyə heç vaxt getmir. Hər söhbətə 5-ə qədər etiket qoy."), t("Hazır cavabları bir dəfə yaz, operatorlar bir kliklə seçir. AI qaralaması balansdan az məbləğ çıxır."), t("İşçi saatlarını və saat qurşağını təyin et: kənarda canlı operator düyməsi gizlənir, ziyarətçiyə əlaqə forması çıxır."), t("Söhbət bitəndə ziyarətçi 1-5 ulduzla qiymət verir, orta qiyməti paneldə görürsən.")]}
-        phone={<DeskMock />} />
+        visual={<DeskMock />} />
 
       <Block id="proaktiv" eyebrow={t("Proaktiv mesajlar")} title={t("Ziyarətçi yazmamış, çat özü təklif göstərir")}
         body={t("Məhsul səhifəsində 20 saniyə qalan ziyarətçiyə çat düyməsinin yanında qısa təklif çıxır. Mətni, gözləmə vaxtını və hansı səhifələrdə göstəriləcəyini sən seçirsən.")}
         points={[t("Mətn sənin yazdığındır, ona görə AI xərci yoxdur."), t("Ən çox 5 qayda: hər biri üçün gözləmə vaxtı və səhifə şablonu (məs. /products/*)."), t("Eyni ziyarətçiyə bir sessiyada hər mesaj yalnız bir dəfə göstərilir."), t("Səbət tərk edilib kimi öz şərtin üçün saytın skriptindən bir sətirlə çağıra bilərsən.")]}
-        phone={<ProactiveMock />} />
+        visual={<ProactiveMock />} />
 
       <Block id="kanallar" tint flip eyebrow={t("Telegram və WhatsApp")} title={t("Müştəri yazsa da, səsli mesaj göndərsə də cavab alır")}
         body={t("Öz Telegram botunu bir tokenlə, WhatsApp nömrəni QR kodla qoşursan. Müştəri orada yazanda və ya səsli mesaj göndərəndə köməkçi saytdakı çatla eyni bilik bazasından cavab verir, tapmasa operatora yönləndirir.")}
         points={[t("Səsli mesaj (60 saniyəyə qədər) mətnə çevrilir və adi sual kimi cavablandırılır. Səs heç yerdə saxlanmır."), t("Telegram: BotFather-dən aldığın tokeni yapışdırmaq kifayətdir."), t("WhatsApp QR ilə qoşulur: bu, rəsmi API deyil və nömrənin bloklanma riski var, ona görə ayrıca iş nömrəsi məsləhətdir."), t("Cavab tapılmayanda köməkçi telefon və ya e-poçt istəyir, operator həmin söhbətə paneldən qoşulub cavab verə bilər."), t("Qrup yazışmalarına cavab vermir, sifariş və ödəniş kimi müştəri məlumatı bu kanallarda açılmır.")]}
-        phone={<PhoneChat title="Telegram" subtitle="@magaza_bot" label={t("Nümunə söhbət: Telegram-da yazılı sual və səsli mesaj")} messages={tg} />} />
+        visual={<ChannelsVisual />} />
 
       <Block id="diller" eyebrow={t("İstənilən dildə")} title={t("Ziyarətçi hansı dildə yazırsa, o dildə cavab alır")}
         body={t("Sənədlərin Azərbaycan dilindədirsə belə, rus, ingilis və ya başqa dildə gələn suala həmin dildə cavab verir. Ayrıca tərcümə hazırlamaq lazım deyil.")}
         points={[t("Çat pəncərəsi və panel Azərbaycan, ingilis, rus və türk dillərindədir."), t("Kataloqdakı ad və dəyərlər (rəng, şəhər, marka) ziyarətçinin dilində də başa düşülür.")]}
-        phone={<PhoneChat title="Assistant" subtitle="AZ · EN · RU · TR" label={t("Nümunə söhbət: rus və ingilis dilində suallar")} messages={langs} />} />
+        visual={<LanguagesVisual />} />
 
       <section id="statistika" className="scroll-mt-20 bg-[var(--l-mist)] py-16 lg:py-24">
         <div className={`${wrap} grid items-center gap-12 lg:grid-cols-2 lg:gap-20`}>

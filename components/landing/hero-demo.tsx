@@ -47,7 +47,7 @@ export function HeroDemo() {
   return (
     <div className="relative">
       <div className="absolute inset-x-4 -bottom-4 top-6 rounded-[2rem] bg-[var(--l-mist)]" aria-hidden />
-      <div className="l-float relative mx-auto flex h-[38rem] sm:h-[40rem] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-20px_rgba(12,42,37,.35)]" role="img" aria-label={t("Nümunə söhbət: ziyarətçi sual yazır, köməkçi uyğun variantları tapır, suala cavab verir və ya operatora yönləndirir")}>
+      <div className="relative mx-auto flex h-[38rem] sm:h-[40rem] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-20px_rgba(12,42,37,.35)]" role="img" aria-label={t("Nümunə söhbət: ziyarətçi sual yazır, köməkçi uyğun variantları tapır, suala cavab verir və ya operatora yönləndirir")}>
         <div className="flex items-center gap-3 bg-[var(--l-teal)] px-4 py-3.5 text-white">
           <span className="grid size-9 place-items-center rounded-full bg-white/15"><Sparkles size={18} aria-hidden /></span>
           <div className="leading-tight"><p className="text-sm font-semibold">{t("Köməkçi")}</p><p className="text-xs text-white/75">{t("Axtarır, cavab verir, lazım olsa operatora yönləndirir")}</p></div>
