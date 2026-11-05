@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 import { TeamCard } from "./team-card";
+import { SessionsCard, TwoFactorCard } from "@/components/two-factor";
 
 const PROFILE_DEFAULTS: Profile = { language: "az", tone: "dostcasına", maxResults: 5, extraInstructions: "", logQueries: true, generalKnowledge: true };
 
@@ -142,6 +143,11 @@ export default function SettingsPage() {
 
       <Section title={t("Hesab")} description={t("Daxil olduğun hesab.")}>
         <Card><CardContent className="text-sm"><p>{me.email}</p></CardContent></Card>
+      </Section>
+
+      <Section title={t("Təhlükəsizlik")} description={t("Girişi qoru və açıq qalan sessiyaları bağla.")}>
+        <TwoFactorCard me={me} onChange={refresh} />
+        <SessionsCard />
       </Section>
 
       {!tenant ? (

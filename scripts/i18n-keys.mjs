@@ -156,6 +156,23 @@ const EXTRA = [
   "Ziyarətçi hələ yazmayıb",
   "Balans bitib, AI qaralaması mümkün deyil",
   "AI qaralama hazırlaya bilmədi, bir az sonra yenidən cəhd et",
+  // Admin: dayandırma, iki addımlı giriş (serverin statik mesajları) və DangerAction etiketi
+  "2FA-nı sıfırla",
+  "Hesab müvəqqəti dayandırılıb",
+  "Səbəbi yaz (sahibə email ilə göndəriləcək)",
+  "Admin panelə girmək üçün əvvəlcə iki addımlı girişi quraşdır",
+  "Kod yanlışdır. Telefonun saatının düzgün olduğunu yoxla.",
+  "Kod yanlışdır",
+  "Giriş vaxtı keçib, yenidən daxil ol",
+  "Çox yanlış cəhd oldu. Yenidən daxil ol.",
+  "İki addımlı giriş artıq aktivdir",
+  "Quraşdırmanı yenidən başla",
+  "Admin hesabı üçün iki addımlı giriş məcburidir",
+  "İki addımlı giriş aktiv deyil",
+  "Öz sessiyalarını Ayarlar səhifəsindən bağla",
+  "Öz iki addımlı girişini burada sıfırlaya bilməzsən",
+  "Əsas adminin iki addımlı girişini yalnız əsas admin sıfırlaya bilər",
+  "Serverdə CHANNEL_SECRET_KEY təyin olunmayıb: iki addımlı giriş qurula bilməz",
 ];
 
 function walk(d, out = []) {

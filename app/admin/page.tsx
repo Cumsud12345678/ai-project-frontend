@@ -72,9 +72,13 @@ export default function AdminOverviewPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatTile icon={Users} tone={1} label={t("İstifadəçilər")} value={num(o.users.total)} hint={`${num(o.users.verified)} ${t("təsdiqli")} · ${num(o.users.admins)} ${t("admin")}`} />
           <StatTile icon={UserPlus} tone={4} label={t("Yeni qeydiyyat")} value={<>{num(o.users.last7d)} <span className="text-sm font-normal text-muted-foreground">{t("7 gündə")}</span></>} hint={`${num(o.users.last30d)} ${t("30 gündə")}`} />
-          <StatTile icon={Store} tone={2} label={t("Müştəri saytları")} value={num(o.tenants.total)} hint={`${num(o.tenants.widgetActive7d)} ${t("vidjet son 7 gündə aktiv")}${o.tenants.emptyBalance ? ` · ${num(o.tenants.emptyBalance)} ${t("balansı bitib")}` : ""}`} />
+          <StatTile icon={Store} tone={2} label={t("Müştəri saytları")} value={num(o.tenants.total)} hint={`${num(o.tenants.widgetActive7d)} ${t("vidjet son 7 gündə aktiv")}${o.tenants.emptyBalance ? ` · ${num(o.tenants.emptyBalance)} ${t("balansı bitib")}` : ""}${o.tenants.suspended ? ` · ${num(o.tenants.suspended)} ${t("dayandırılıb")}` : ""}`} />
           <StatTile icon={MessagesSquare} tone={1} label={t("Bu ay sorğu")} value={o.usage ? num(o.usage.thisMonth.requests) : "–"} hint={o.usage ? `${compact(o.usage.thisMonth.tokens, t)} ${t("token")} · ${t("bu gün")} ${num(o.usage.today.requests)}` : t("AI servisi cavab vermir")} />
-          <StatTile icon={Coins} tone={3} label={t("Yüklənmiş balans (cəmi)")} value={<>{num(o.revenueAzn)} <span className="text-sm font-normal text-muted-foreground">AZN</span></>} />
+          <Link href="/admin/finance" className="block rounded-xl focus-visible:outline-2 focus-visible:outline-primary">
+            <StatTile icon={Coins} tone={3} label={t("Daxil olan pul (cəmi)")}
+              value={o.revenueAzn == null ? "–" : <>{num(o.revenueAzn)} <span className="text-sm font-normal text-muted-foreground">AZN</span></>}
+              hint={o.revenueAzn == null ? t("AI servisi cavab vermir") : `${t("bu ay")} ${num(o.revenueMonthAzn ?? 0)} · ${t("mənfəət")} ${num(o.monthProfitAzn ?? 0)} AZN`} />
+          </Link>
           <Link href="/admin/errors" className="block rounded-xl focus-visible:outline-2 focus-visible:outline-primary">
             <StatTile icon={Bug} tone={5} label={t("Xətalar (24 saat)")} value={num(o.errors.last24h)} hint={`${num(o.errors.last7d)} ${t("son 7 gündə")}`} />
           </Link>

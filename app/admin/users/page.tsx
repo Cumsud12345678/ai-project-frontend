@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { adminBillingRequests, adminBillingSettings, adminDeleteUser, adminSetBranding, adminResolveRequest, adminRotateKey, adminSetRole, adminTenantBilling, adminTopup, adminUsage, adminUsers, type AdminTopupRequest, type AdminUser, type Billing, type Usage } from "@/lib/api";
+import { Ban, CircleCheck, LogOut, ShieldCheck } from "lucide-react";
+import { adminBillingRequests, adminBillingSettings, adminDeleteUser, adminResetTwoFactor, adminRevokeSessions, adminSetBranding, adminResolveRequest, adminRotateKey, adminSetRole, adminSuspend, adminTenantBilling, adminTopup, adminUnsuspend, adminUsage, adminUsers, type AdminTopupRequest, type AdminUser, type Billing, type Usage } from "@/lib/api";
 import { DangerAction } from "@/components/danger-action";
 import { RotateKey } from "@/components/rotate-key";
 import { UserListSkeleton } from "@/components/skeletons";
@@ -102,6 +103,38 @@ function TopupRequests({ onResolved }: { onResolved: () => void }) {
   );
 }
 
+/** Müştərini dayandırmaq (səbəblə, sahibə email gedir) və ya bərpa etmək. Hesab və məlumat silinmir. */
+function SuspendAdmin({ tenant, onChange }: { tenant: NonNullable<AdminUser["tenant"]>; onChange: () => void }) {
+  const { t, date: when } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    setBusy(true);
+    try { await fn(); toast.success(ok); setOpen(false); setReason(""); onChange(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  if (tenant.suspended) return (
+    <div className="flex flex-col gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+      <p className="flex items-center gap-2 font-medium text-destructive"><Ban size={15} aria-hidden />{t("Dayandırılıb")} · {when(tenant.suspended.at)}</p>
+      <p><span className="text-muted-foreground">{t("Səbəb:")}</span> {tenant.suspended.reason}</p>
+      <p className="text-xs text-muted-foreground">{t("Kim:")} {tenant.suspended.by}</p>
+      <div><Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => adminUnsuspend(tenant.tenantId), t("{name} bərpa olundu.", { name: tenant.businessName }))}><CircleCheck size={14} aria-hidden />{t("Bərpa et")}</Button></div>
+    </div>
+  );
+  if (!open) return <div><Button size="sm" variant="outline" onClick={() => setOpen(true)}><Ban size={14} aria-hidden />{t("Dayandır")}</Button></div>;
+  return (
+    <form className="flex flex-col gap-2 rounded-lg border border-border p-3" onSubmit={(e) => { e.preventDefault(); void run(() => adminSuspend(tenant.tenantId, reason.trim()), t("{name} dayandırıldı.", { name: tenant.businessName })); }}>
+      <p className="text-sm">{t("Vidjet saytda görünməyəcək, Telegram və WhatsApp cavab verməyəcək, API sorğuları dayanacaq. Hesab, məlumat və balans silinmir.")}</p>
+      <Label htmlFor={`susp-${tenant.tenantId}`}>{t("Səbəb (sahibə email ilə göndəriləcək)")}</Label>
+      <Input id={`susp-${tenant.tenantId}`} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder={t("məs. ödəniş gecikir, spam şikayəti")} autoFocus />
+      <div className="flex gap-2">
+        <Button size="sm" variant="destructive" disabled={busy || reason.trim().length < 3}>{t("Dayandır")}</Button>
+        <Button size="sm" type="button" variant="outline" onClick={() => setOpen(false)}>{t("İmtina")}</Button>
+      </div>
+    </form>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number | string }) {
   return <div className="rounded-lg border border-border bg-card px-4 py-3"><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-semibold tabular-nums">{value}</p></div>;
 }
@@ -112,14 +145,18 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "tenants" | "unverified" | "admins" | "lowbal">("all");
+  const [filter, setFilter] = useState<"all" | "tenants" | "unverified" | "admins" | "lowbal" | "suspended">("all");
   const reload = () => adminUsers().then((r) => setUsers(r.users)).catch((e: Error) => setError(e.message));
-  useEffect(() => { void reload(); }, []);
+  useEffect(() => {
+    void reload();
+    // Maliyyə səhifəsindən gələn keçid: ?q=<müştəri ID>
+    try { const q0 = new URLSearchParams(window.location.search).get("q"); if (q0) setQ(q0); } catch { /* ünvan oxunmadı */ }
+  }, []);
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!users) return users;
-    const byFilter = users.filter((u) => filter === "all" || (filter === "tenants" && u.tenant) || (filter === "unverified" && !u.verified) || (filter === "admins" && u.isAdmin) || (filter === "lowbal" && u.tenant?.balance && u.tenant.balance.totalAzn <= 0));
+    const byFilter = users.filter((u) => filter === "all" || (filter === "tenants" && u.tenant) || (filter === "unverified" && !u.verified) || (filter === "admins" && u.isAdmin) || (filter === "lowbal" && u.tenant?.balance && u.tenant.balance.totalAzn <= 0) || (filter === "suspended" && u.tenant?.suspended));
     if (!needle) return byFilter;
     return byFilter.filter((u) => [u.email, u.tenant?.businessName, u.tenant?.domain, u.tenant?.tenantId].some((v) => v?.toLowerCase().includes(needle)));
   }, [users, q, filter]);
@@ -165,7 +202,7 @@ export default function AdminPage() {
           <Label htmlFor="q">{t("Axtar")}</Label>
           <Input id="q" type="search" placeholder={t("Email, sayt adı, domen və ya müştəri ID")} value={q} onChange={(e) => setQ(e.target.value)} className="w-80 max-w-full" disabled={!users} />
         </div>
-        <Segmented value={filter} onChange={setFilter} label={t("Süzgəc")} options={[{ value: "all", label: t("Hamısı") }, { value: "tenants", label: t("Saytı olanlar") }, { value: "unverified", label: t("Təsdiqlənməyən") }, { value: "lowbal", label: t("Balansı bitən") }, { value: "admins", label: t("Adminlər") }]} />
+        <Segmented value={filter} onChange={setFilter} label={t("Süzgəc")} options={[{ value: "all", label: t("Hamısı") }, { value: "tenants", label: t("Saytı olanlar") }, { value: "unverified", label: t("Təsdiqlənməyən") }, { value: "lowbal", label: t("Balansı bitən") }, { value: "suspended", label: t("Dayandırılan") }, { value: "admins", label: t("Adminlər") }]} />
         <a href="/api/portal/admin/users.csv" download className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium hover:bg-muted">{t("CSV yüklə")}</a>
       </div>
 
@@ -183,6 +220,8 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-2">
                 {u.isAdmin && <Badge>{u.isOwner ? t("Əsas admin") : t("Admin")}</Badge>}
+                {u.twoFactor && <Badge className="gap-1 bg-chart-2/10 text-chart-2"><ShieldCheck size={12} aria-hidden />2FA</Badge>}
+                {u.tenant?.suspended && <Badge className="bg-destructive/10 text-destructive">{t("Dayandırılıb")}</Badge>}
                 {!u.verified && <Badge className="bg-amber/15 text-amber">{t("Email təsdiqlənməyib")}</Badge>}
               </div>
             </div>
@@ -199,6 +238,7 @@ export default function AdminPage() {
                 <UsageLine tenantId={u.tenant.tenantId} />
                 <BillingAdmin tenantId={u.tenant.tenantId} onChange={reload} />
                 <BrandingAdmin tenantId={u.tenant.tenantId} removed={Boolean(u.tenant.brandRemoved)} onChange={reload} />
+                <SuspendAdmin tenant={u.tenant} onChange={reload} />
               </>
             ) : (
               <p className="text-sm text-muted-foreground">{t("Elan mənbəyi hələ qoşulmayıb.")}</p>
@@ -211,6 +251,18 @@ export default function AdminPage() {
                   {u.isAdmin ? t("Adminlikdən çıxar") : t("Admin et")}
                 </Button>
               </div>
+            )}
+            {u.email !== me.email && (
+              <div>
+                <Button size="sm" variant="outline" onClick={async () => { try { await adminRevokeSessions(u.id); toast.success(t("{email} bütün cihazlardan çıxarıldı.", { email: u.email })); } catch (e) { toast.error((e as Error).message); } }}>
+                  <LogOut size={14} aria-hidden />{t("Bütün cihazlardan çıxar")}
+                </Button>
+              </div>
+            )}
+            {u.twoFactor && u.email !== me.email && (!u.isOwner || me.role === "admin") && (
+              <DangerAction label="2FA-nı sıfırla" confirm={{ kind: "text", expected: u.email, hint: t("Təsdiqləmək üçün emaili yaz: {email}", { email: u.email }) }}
+                warning={t("{email} iki addımlı girişi yenidən quraşdırmalı olacaq. Bunu yalnız istifadəçinin kimliyinə əmin olanda et (telefon itib, ehtiyat kodlar yoxdur).", { email: u.email })}
+                onConfirm={async () => { await adminResetTwoFactor(u.id); toast.success(t("{email} üçün 2FA sıfırlandı.", { email: u.email })); await reload(); }} />
             )}
             {!u.isAdmin && u.email !== me.email && (
               <DangerAction label="İstifadəçini sil" confirm={{ kind: "text", expected: u.email, hint: t("Silməyi təsdiqləmək üçün emaili yaz: {email}", { email: u.email }) }}

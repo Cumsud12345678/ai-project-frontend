@@ -38,10 +38,13 @@ export type WidgetSettings = {
 
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string; brandRemoved?: boolean; brandName?: string };
 
-export type Me = { email: string; role: "user" | "admin" };
+export type TwoFactorStatus = { enabled: boolean; required: boolean; setupNeeded: boolean; backupLeft: number };
+export type Me = { email: string; role: "user" | "admin"; twoFactor?: TwoFactorStatus };
 export type TenantInfo = {
   tenantId: string; businessName: string; domain: string; config: ConfigJson;
   createdAt: string; updatedAt: string; keyRotatedAt: string | null;
+  /** Admin hesabı dayandırıbsa: vidjet və kanallar işləmir */
+  suspended?: { at: string; reason: string } | null;
 };
 export type TenantResponse = { tenant: TenantInfo | null; advisorUrl: string; role?: "owner" | "operator" };
 
@@ -57,8 +60,8 @@ export type ChatMessage = { role: "user" | "model"; text: string; listings?: Lis
 export type TestResult = { ok: boolean; sampleCount: number; sampleListings: Listing[]; supportedFilters: string[]; debug?: { dropped?: string[]; rawCount?: number } };
 
 export type AdminUser = {
-  id: string; email: string; verified: boolean; isAdmin: boolean; isOwner?: boolean; createdAt: string;
-  tenant: { mode?: Mode; balance?: { totalAzn: number; paidAzn: number; spentAzn: number } | null; tenantId: string; businessName: string; domain: string; createdAt: string; keyRotatedAt: string | null; brandRemoved?: boolean } | null;
+  id: string; email: string; verified: boolean; isAdmin: boolean; isOwner?: boolean; createdAt: string; twoFactor?: boolean;
+  tenant: { mode?: Mode; balance?: { totalAzn: number; paidAzn: number; spentAzn: number } | null; tenantId: string; businessName: string; domain: string; createdAt: string; keyRotatedAt: string | null; brandRemoved?: boolean; suspended?: { at: string; by: string; reason: string } | null } | null;
 };
 
 /** Serverin statik xəta mesajları lüğətdə varsa, panelin dilinə çevrilir; yoxdursa olduğu kimi qalır. */
@@ -107,7 +110,14 @@ export const disconnectWhatsApp = () => call<{ ok: true }>("/tenant/channels/wha
 export const register = (email: string, password: string) => post<{ ok: true }>("/auth/register", { email, password });
 export const verify = (email: string, code: string) => post<Me>("/auth/verify", { email, code });
 export const resend = (email: string) => post<{ ok: true }>("/auth/resend", { email });
-export const login = (email: string, password: string) => post<Me>("/auth/login", { email, password });
+/** İki addımlı giriş aktivdirsə sessiya açılmır: { twoFactor: true, ticket } qayıdır, kod loginTwoFactor ilə göndərilir. */
+export const login = (email: string, password: string) => post<Me | { twoFactor: true; ticket: string }>("/auth/login", { email, password });
+export const loginTwoFactor = (email: string, ticket: string, code: string) => post<Me>("/auth/2fa/login", { email, ticket, code });
+export const twoFactorSetup = (password: string) => post<{ secret: string; uri: string; qr: string }>("/auth/2fa/setup", { password });
+export const twoFactorEnable = (code: string) => post<{ ok: true; backupCodes: string[]; me: Me }>("/auth/2fa/enable", { code });
+export const twoFactorDisable = (password: string, code: string) => post<{ ok: true }>("/auth/2fa/disable", { password, code });
+export const twoFactorBackupCodes = (code: string) => post<{ backupCodes: string[] }>("/auth/2fa/backup-codes", { code });
+export const revokeOtherSessions = () => post<{ ok: true }>("/auth/sessions/revoke-others");
 export const logout = () => post<{ ok: true }>("/auth/logout");
 export const forgot = (email: string) => post<{ ok: true }>("/auth/forgot", { email });
 export const resetPassword = (email: string, code: string, password: string) => post<{ ok: true }>("/auth/reset", { email, code, password });
@@ -156,12 +166,30 @@ export const adminUsage = (tenantId: string) => call<Usage>(`/admin/tenants/${te
 export const adminRotateKey = (tenantId: string) => post<{ apiKey: string }>(`/admin/tenants/${tenantId}/rotate-key`);
 export const adminSetRole = (id: string, role: "admin" | "user") => call<{ ok: true; isAdmin: boolean }>(`/admin/users/${id}/role`, { method: "PATCH", body: { role } });
 export const adminDeleteUser = (id: string) => call<{ ok: true }>(`/admin/users/${id}`, { method: "DELETE" });
+export const adminRevokeSessions = (id: string) => post<{ ok: true }>(`/admin/users/${id}/revoke-sessions`);
+export const adminResetTwoFactor = (id: string) => post<{ ok: true }>(`/admin/users/${id}/reset-2fa`);
+export const adminSuspend = (tenantId: string, reason: string) => post<{ ok: true }>(`/admin/tenants/${tenantId}/suspend`, { reason });
+export const adminUnsuspend = (tenantId: string) => post<{ ok: true }>(`/admin/tenants/${tenantId}/unsuspend`);
+
+export type FinanceMonth = {
+  month: string; cashIn: { paidAzn: number; manualAzn: number; adjustAzn: number; totalAzn: number };
+  billedAzn: number; freeAzn: number; revenueAzn: number; costAzn: number; profitAzn: number; marginPct: number | null; requests: number;
+};
+export type FinanceModel = { model: string; provider: "anthropic" | "google" | "other"; costAzn: number; calls: number; tokens: number; months: Record<string, number> };
+export type FinanceTenant = { tenantId: string; businessName: string; domain: string; email: string; suspended: boolean; requests: number; billedAzn: number; freeAzn: number; revenueAzn: number; costAzn: number; profitAzn: number; markup: number; customMarkup: boolean; balanceAzn: number };
+export type AdminFinance = {
+  months: FinanceMonth[]; models: FinanceModel[]; tenants: FinanceTenant[];
+  totals: { cashInAzn: number; cashInMonthAzn: number; outstandingPaidAzn: number; creditUsedAzn: number; defaultMarkup: number; usdAzn: number };
+};
+export const adminFinance = (months = 6) => call<AdminFinance>(`/admin/finance?months=${months}`);
 
 export type AdminOverview = {
   users: { total: number; verified: number; admins: number; last7d: number; last30d: number };
-  tenants: { total: number; modes: Record<string, number>; widgetActive7d: number; emptyBalance: number };
+  tenants: { total: number; modes: Record<string, number>; widgetActive7d: number; emptyBalance: number; suspended?: number };
   usage: { today: UsagePoint & { date: string }; thisMonth: UsagePoint & { month: string }; lastMonth: UsagePoint & { month: string } } | null;
-  pendingTopups: number; revenueAzn: number;
+  pendingTopups: number;
+  /** Balansa daxil olan real pul (cəmi). AI servisi cavab verməyəndə null. */
+  revenueAzn: number | null; revenueMonthAzn?: number | null; outstandingPaidAzn?: number | null; monthProfitAzn?: number | null;
   errors: { last24h: number; last7d: number };
   signups: { date: string; users: number }[];
   topTenants: { tenantId: string; businessName: string; requests: number; tokens: number }[];

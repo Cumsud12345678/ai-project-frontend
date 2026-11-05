@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Info, Megaphone, X } from "lucide-react";
 import { getAnnouncement } from "@/lib/api";
+import { useSession } from "@/components/session";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -37,4 +38,18 @@ export function AnnouncementBanner() {
   }, []);
   if (!a) return null;
   return <div className="mb-5"><AnnouncementView {...a} onClose={() => { try { sessionStorage.setItem("ann", a.text); } catch { /* yaddaş bağlıdır */ } setA(null); }} /></div>;
+}
+
+/** Admin hesabı dayandırıbsa sahib hər səhifədə görür (bağlanmır). */
+export function SuspendedBanner() {
+  const t = useT();
+  const { tenant, isOperator } = useSession();
+  if (!tenant?.suspended) return null;
+  return (
+    <div className="mb-5">
+      <AnnouncementView level="critical" text={isOperator
+        ? t("Bu hesab müvəqqəti dayandırılıb: vidjet və kanallar cavab vermir.")
+        : t("Hesabın müvəqqəti dayandırılıb: vidjet saytda görünmür, Telegram və WhatsApp cavab vermir. Səbəb: {reason}. Məlumatların və balansın silinməyib, sual üçün dəstəyə yaz.", { reason: tenant.suspended.reason })} />
+    </div>
+  );
 }

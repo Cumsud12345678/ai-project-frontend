@@ -2,15 +2,39 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bug, LayoutDashboard, LogOut, Megaphone, ScrollText, Shield, Users } from "lucide-react";
+import { Bug, Coins, LayoutDashboard, LogOut, Megaphone, ScrollText, Shield, Users } from "lucide-react";
 import { SessionProvider, useSession } from "@/components/session";
 import { adminOverview } from "@/lib/api";
 import { LangSwitch, useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { TwoFactorCard } from "@/components/two-factor";
+
+/** ADMIN_2FA=required olanda 2FA qurmamış admin panelin əvəzinə bunu görür. */
+function TwoFactorGate() {
+  const { me, refresh, signOut } = useSession();
+  const t = useT();
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-5 px-5 py-10">
+      <div className="flex items-center gap-3">
+        <span aria-hidden className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground"><Shield size={20} /></span>
+        <div>
+          <h1 className="text-xl font-semibold">{t("Admin panel üçün iki addımlı giriş lazımdır")}</h1>
+          <p className="text-sm text-muted-foreground">{t("Admin hesabı balansları və istifadəçiləri idarə edir. Davam etmək üçün authenticator tətbiqini qoş.")}</p>
+        </div>
+      </div>
+      <TwoFactorCard me={me} onChange={refresh} />
+      <div className="flex gap-4 text-sm">
+        <Link href="/dashboard" className="text-muted-foreground hover:underline">← {t("Panelə qayıt")}</Link>
+        <button type="button" onClick={signOut} className="cursor-pointer text-muted-foreground hover:underline">{t("Çıxış")}</button>
+      </div>
+    </main>
+  );
+}
 
 const tabs = [
   { href: "/admin", label: "Ümumi baxış", icon: LayoutDashboard },
   { href: "/admin/users", label: "İstifadəçilər", icon: Users },
+  { href: "/admin/finance", label: "Maliyyə", icon: Coins },
   { href: "/admin/errors", label: "Xətalar", icon: Bug },
   { href: "/admin/audit", label: "Audit jurnalı", icon: ScrollText },
   { href: "/admin/announcement", label: "Elan", icon: Megaphone },
@@ -76,6 +100,11 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Gate({ children }: { children: React.ReactNode }) {
+  const { me } = useSession();
+  return me.twoFactor?.setupNeeded ? <TwoFactorGate /> : <Shell>{children}</Shell>;
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <SessionProvider adminOnly><Shell>{children}</Shell></SessionProvider>;
+  return <SessionProvider adminOnly><Gate>{children}</Gate></SessionProvider>;
 }
