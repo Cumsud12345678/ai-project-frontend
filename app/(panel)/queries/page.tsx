@@ -60,8 +60,8 @@ function Queries() {
   useEffect(() => {
     let live = true;
     getQueryStats(days).then((s) => live && setStats(s)).catch((e: Error) => live && setError(e.message));
-    return () => { live = false; };
     getFunnel(days).then((f) => live && setFunnel(f)).catch(() => live && setFunnel(null));
+    return () => { live = false; };
   }, [days]);
   useEffect(() => { getReport().then((r) => setReportOn(r.monthly)).catch(() => setReportOn(null)); }, []);
 
