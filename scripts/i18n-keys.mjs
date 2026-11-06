@@ -173,6 +173,13 @@ const EXTRA = [
   "Öz iki addımlı girişini burada sıfırlaya bilməzsən",
   "Əsas adminin iki addımlı girişini yalnız əsas admin sıfırlaya bilər",
   "Serverdə CHANNEL_SECRET_KEY təyin olunmayıb: iki addımlı giriş qurula bilməz",
+  // Admin: xəbərdarlıqlar, ödənişlər, AI açarı (serverin statik mesajları)
+  "Böyük məbləğ: təsdiq lazımdır",
+  "Səbəbi yaz",
+  "Telegram bildirişləri serverdə qoşulmayıb (NOTIFY_TELEGRAM_TOKEN)",
+  "AI müvəqqəti dayandırılıb",
+  "Gündəlik xərc limitinə çatılıb",
+  "Gündəlik limit 0 ilə 10000 arasında olmalıdır",
 ];
 
 function walk(d, out = []) {

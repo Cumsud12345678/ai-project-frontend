@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Ban, CircleCheck, LogOut, ShieldCheck } from "lucide-react";
-import { adminBillingRequests, adminBillingSettings, adminDeleteUser, adminResetTwoFactor, adminRevokeSessions, adminSetBranding, adminResolveRequest, adminRotateKey, adminSetRole, adminSuspend, adminTenantBilling, adminTopup, adminUnsuspend, adminUsage, adminUsers, type AdminTopupRequest, type AdminUser, type Billing, type Usage } from "@/lib/api";
+import { adminBillingSettings, adminDeleteUser, adminResetTwoFactor, adminRevokeSessions, adminSetBranding, adminRotateKey, adminSetRole, adminSuspend, adminTenantBilling, adminTopup, adminUnsuspend, adminUsage, adminUsers, type AdminUser, type AdminUsersPage, type Billing, type Usage, type UserFilter } from "@/lib/api";
 import { DangerAction } from "@/components/danger-action";
 import { RotateKey } from "@/components/rotate-key";
 import { UserListSkeleton } from "@/components/skeletons";
@@ -42,12 +42,22 @@ function BillingAdmin({ tenantId, onChange }: { tenantId: string; onChange: () =
   const [note, setNote] = useState("");
   const [markup, setMarkup] = useState("");
   const [credit, setCredit] = useState("");
+  const [daily, setDaily] = useState("");
   const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const load = async () => {
     try {
       const r = await adminTenantBilling(tenantId);
       setB(r); setMarkup(r.admin?.markup != null ? String(r.admin.markup) : ""); setCredit(String(r.admin?.creditLimitAzn ?? 0));
+      setDaily(r.admin?.dailyLimitAzn != null ? String(r.admin.dailyLimitAzn) : "");
     } catch (e) { toast.error((e as Error).message); }
+  };
+  const num = (s: string) => Number(s.replace(",", "."));
+  // 100 AZN və böyük məbləğ: səhv rəqəm pula başa gəlir, ikinci təsdiq istənir (server də yoxlayır)
+  const apply = async (confirmLarge: boolean) => {
+    const v = num(amount);
+    if (Math.abs(v) >= 100 && !confirmLarge) { setConfirming(true); return; }
+    try { await adminTopup(tenantId, v, note, confirmLarge); toast.success(t("Balans yeniləndi.")); setAmount(""); setNote(""); setConfirming(false); await load(); onChange(); } catch (e) { toast.error((e as Error).message); }
   };
   if (!open) return <div><Button size="sm" variant="outline" onClick={() => { setOpen(true); void load(); }}>{t("Balansı idarə et")}</Button></div>;
   if (!b) return <Skeleton className="h-5 w-64" />;
@@ -58,13 +68,25 @@ function BillingAdmin({ tenantId, onChange }: { tenantId: string; onChange: () =
       <div className="flex flex-wrap items-end gap-2">
         <div><Label htmlFor={`a-${tenantId}`}>{t("Məbləğ (AZN, mənfi = çıx)")}</Label><Input id={`a-${tenantId}`} value={amount} onChange={(e) => setAmount(e.target.value)} className="w-32" inputMode="decimal" /></div>
         <div><Label htmlFor={`n-${tenantId}`}>{t("Qeyd")}</Label><Input id={`n-${tenantId}`} value={note} onChange={(e) => setNote(e.target.value)} className="w-48" /></div>
-        <Button size="sm" disabled={!amount.trim()} onClick={async () => { try { await adminTopup(tenantId, Number(amount.replace(",", ".")), note); toast.success(t("Balans yeniləndi.")); setAmount(""); setNote(""); await load(); onChange(); } catch (e) { toast.error((e as Error).message); } }}>{t("Tətbiq et")}</Button>
+        <Button size="sm" disabled={!amount.trim() || confirming} onClick={() => apply(false)}>{t("Tətbiq et")}</Button>
       </div>
+      {confirming && (
+        <div role="alert" className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2.5">
+          <span className="flex-1">{num(amount) < 0 ? t("Balansdan {n} AZN çıxılacaq. Əminsən?", { n: Math.abs(num(amount)).toFixed(2) }) : t("Balansa {n} AZN əlavə olunacaq. Əminsən?", { n: num(amount).toFixed(2) })}</span>
+          <Button size="sm" variant="destructive" onClick={() => apply(true)}>{t("Bəli, tətbiq et")}</Button>
+          <Button size="sm" variant="outline" onClick={() => setConfirming(false)}>{t("İmtina")}</Button>
+        </div>
+      )}
       <div className="flex flex-wrap items-end gap-2">
         <div><Label htmlFor={`m-${tenantId}`}>{t("Vuruq (boş = ümumi {m})", { m: a?.defaultMarkup ?? 1.5 })}</Label><Input id={`m-${tenantId}`} value={markup} onChange={(e) => setMarkup(e.target.value)} className="w-32" inputMode="decimal" /></div>
         <div><Label htmlFor={`c-${tenantId}`}>{t("Kredit limiti (AZN)")}</Label><Input id={`c-${tenantId}`} value={credit} onChange={(e) => setCredit(e.target.value)} className="w-32" inputMode="decimal" /></div>
-        <Button size="sm" variant="outline" onClick={async () => { try { await adminBillingSettings(tenantId, { markup: markup.trim() ? Number(markup.replace(",", ".")) : null, creditLimitAzn: Number(credit.replace(",", ".")) || 0 }); toast.success(t("Ayarlar yadda saxlandı.")); await load(); } catch (e) { toast.error((e as Error).message); } }}>{t("Yadda saxla")}</Button>
+        <div>
+          <Label htmlFor={`d-${tenantId}`}>{a?.defaultDailyLimitAzn ? t("Gündəlik limit (boş = ümumi {m} AZN, 0 = yoxdur)", { m: a.defaultDailyLimitAzn }) : t("Gündəlik limit (AZN, boş və ya 0 = yoxdur)")}</Label>
+          <Input id={`d-${tenantId}`} value={daily} onChange={(e) => setDaily(e.target.value)} className="w-32" inputMode="decimal" />
+        </div>
+        <Button size="sm" variant="outline" onClick={async () => { try { await adminBillingSettings(tenantId, { markup: markup.trim() ? num(markup) : null, creditLimitAzn: num(credit) || 0, dailyLimitAzn: daily.trim() ? num(daily) : null }); toast.success(t("Ayarlar yadda saxlandı.")); await load(); } catch (e) { toast.error((e as Error).message); } }}>{t("Yadda saxla")}</Button>
       </div>
+      {a?.todayAzn !== undefined && <p className="text-xs text-muted-foreground tabular-nums">{t("Bu gün xərclənib: {n} AZN", { n: a.todayAzn.toFixed(2) })}</p>}
     </div>
   );
 }
@@ -76,30 +98,6 @@ function BrandingAdmin({ tenantId, removed, onChange }: { tenantId: string; remo
       <span>{t("Vidjetdə brend yazısı")}: <strong>{removed ? t("silinib") : t("görünür")}</strong></span>
       <Button size="sm" variant="outline" onClick={async () => { try { await adminSetBranding(tenantId, !removed); toast.success(t("Ayarlar yadda saxlandı.")); onChange(); } catch (e) { toast.error((e as Error).message); } }}>{removed ? t("Yazını qaytar") : t("Yazını sil")}</Button>
     </div>
-  );
-}
-
-function TopupRequests({ onResolved }: { onResolved: () => void }) {
-  const { t, short } = useI18n();
-  const [rows, setRows] = useState<AdminTopupRequest[] | null>(null);
-  const load = () => adminBillingRequests("pending").then((r) => setRows(r.requests)).catch(() => setRows([]));
-  useEffect(() => { void load(); }, []);
-  if (!rows?.length) return null;
-  const act = async (id: string, action: "approve" | "reject") => {
-    try { await adminResolveRequest(id, action); toast.success(action === "approve" ? t("Təsdiqləndi, balans yükləndi.") : t("Rədd edildi.")); await load(); onResolved(); } catch (e) { toast.error((e as Error).message); }
-  };
-  return (
-    <section className="rounded-lg border border-amber/50 bg-amber/10 p-4">
-      <h2 className="font-medium">{t("Gözləyən yükləmə sorğuları")}</h2>
-      <ul className="mt-2 flex flex-col gap-2 text-sm">
-        {rows.map((r) => (
-          <li key={r.id} className="flex flex-wrap items-center justify-between gap-2">
-            <span><strong className="tabular-nums">{r.amountAzn.toFixed(2)} AZN</strong> · {r.businessName} ({r.email}) · {short(r.at)}</span>
-            <span className="flex gap-2"><Button size="sm" onClick={() => act(r.id, "approve")}>{t("Ödəniş alındı, təsdiqlə")}</Button><Button size="sm" variant="outline" onClick={() => act(r.id, "reject")}>{t("Rədd et")}</Button></span>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 
@@ -142,24 +140,21 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 export default function AdminPage() {
   const { me } = useSession();
   const { t, date: when } = useI18n();
-  const [users, setUsers] = useState<AdminUser[] | null>(null);
+  const [data, setData] = useState<AdminUsersPage | null>(null);
   const [error, setError] = useState("");
+  // Maliyyə/Ödənişlər səhifəsindən gələn keçid: ?q=<müştəri ID>
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "tenants" | "unverified" | "admins" | "lowbal" | "suspended">("all");
-  const reload = () => adminUsers().then((r) => setUsers(r.users)).catch((e: Error) => setError(e.message));
-  useEffect(() => {
-    void reload();
-    // Maliyyə səhifəsindən gələn keçid: ?q=<müştəri ID>
-    try { const q0 = new URLSearchParams(window.location.search).get("q"); if (q0) setQ(q0); } catch { /* ünvan oxunmadı */ }
-  }, []);
-
-  const shown = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!users) return users;
-    const byFilter = users.filter((u) => filter === "all" || (filter === "tenants" && u.tenant) || (filter === "unverified" && !u.verified) || (filter === "admins" && u.isAdmin) || (filter === "lowbal" && u.tenant?.balance && u.tenant.balance.totalAzn <= 0) || (filter === "suspended" && u.tenant?.suspended));
-    if (!needle) return byFilter;
-    return byFilter.filter((u) => [u.email, u.tenant?.businessName, u.tenant?.domain, u.tenant?.tenantId].some((v) => v?.toLowerCase().includes(needle)));
-  }, [users, q, filter]);
+  const [debounced, setDebounced] = useState("");
+  useEffect(() => { try { const q0 = new URLSearchParams(window.location.search).get("q"); if (q0) { setQ(q0); setDebounced(q0); } } catch { /* ünvan oxunmadı */ } }, []);
+  const [filter, setFilter] = useState<UserFilter>("all");
+  const [page, setPage] = useState(1);
+  useEffect(() => { const id = setTimeout(() => setDebounced(q.trim()), 300); return () => clearTimeout(id); }, [q]);
+  useEffect(() => { setPage(1); }, [debounced, filter]);
+  const reload = useCallback(() => adminUsers({ q: debounced, filter, page, limit: 25 }).then((r) => { setData(r); setError(""); }).catch((e: Error) => setError(e.message)), [debounced, filter, page]);
+  useEffect(() => { void reload(); }, [reload]);
+  const users = data?.users ?? null;
+  const shown = users;
+  const setUsers = (fn: (list: AdminUser[] | null) => AdminUser[] | null) => setData((d) => (d ? { ...d, users: fn(d.users) ?? [] } : d));
 
   async function remove(u: AdminUser) {
     await adminDeleteUser(u.id);
@@ -186,21 +181,19 @@ export default function AdminPage() {
         <p className="text-sm text-muted-foreground">{t("Hesabları, elan mənbələrini və istifadəni idarə et.")}</p>
       </header>
 
-      {users && (
+      {data && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label={t("Hesab")} value={users.length} />
-          <Stat label={t("Aktiv elan mənbəyi")} value={users.filter((u) => u.tenant).length} />
-          <Stat label={t("Email təsdiqli")} value={users.filter((u) => u.verified).length} />
-          <Stat label={t("Təsdiqlənməyən")} value={users.filter((u) => !u.verified).length} />
+          <Stat label={t("Hesab")} value={data.counts.users} />
+          <Stat label={t("Aktiv elan mənbəyi")} value={data.counts.tenants} />
+          <Stat label={t("Email təsdiqli")} value={data.counts.verified} />
+          <Stat label={t("Təsdiqlənməyən")} value={data.counts.unverified} />
         </div>
       )}
-
-      <TopupRequests onResolved={reload} />
 
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <Label htmlFor="q">{t("Axtar")}</Label>
-          <Input id="q" type="search" placeholder={t("Email, sayt adı, domen və ya müştəri ID")} value={q} onChange={(e) => setQ(e.target.value)} className="w-80 max-w-full" disabled={!users} />
+          <Input id="q" type="search" placeholder={t("Email, sayt adı, domen və ya müştəri ID")} value={q} onChange={(e) => setQ(e.target.value)} className="w-80 max-w-full" />
         </div>
         <Segmented value={filter} onChange={setFilter} label={t("Süzgəc")} options={[{ value: "all", label: t("Hamısı") }, { value: "tenants", label: t("Saytı olanlar") }, { value: "unverified", label: t("Təsdiqlənməyən") }, { value: "lowbal", label: t("Balansı bitən") }, { value: "suspended", label: t("Dayandırılan") }, { value: "admins", label: t("Adminlər") }]} />
         <a href="/api/portal/admin/users.csv" download className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium hover:bg-muted">{t("CSV yüklə")}</a>
@@ -208,8 +201,8 @@ export default function AdminPage() {
 
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {!users && !error && <UserListSkeleton />}
-      {users?.length === 0 && <p className="text-sm text-muted-foreground">{t("Hələ heç kim qeydiyyatdan keçməyib.")}</p>}
-      {users && users.length > 0 && shown?.length === 0 && <p className="text-sm text-muted-foreground">{t("“{q}” üzrə nəticə yoxdur.", { q })}</p>}
+      {users?.length === 0 && !debounced && filter === "all" && <p className="text-sm text-muted-foreground">{t("Hələ heç kim qeydiyyatdan keçməyib.")}</p>}
+      {users?.length === 0 && (debounced || filter !== "all") && <p className="text-sm text-muted-foreground">{debounced ? t("“{q}” üzrə nəticə yoxdur.", { q: debounced }) : t("Bu süzgəcə uyğun hesab yoxdur.")}</p>}
       <ul className="flex flex-col gap-3">
         {shown?.map((u) => (
           <li key={u.id} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
@@ -273,6 +266,15 @@ export default function AdminPage() {
           </li>
         ))}
       </ul>
+      {data && data.pages > 1 && (
+        <nav aria-label={t("Səhifələr")} className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground tabular-nums">{t("{from}–{to} / {total}", { from: (data.page - 1) * data.limit + 1, to: Math.min(data.total, data.page * data.limit), total: data.total })}</span>
+          <span className="flex gap-2">
+            <Button size="sm" variant="outline" disabled={data.page <= 1} onClick={() => { setPage((n) => n - 1); window.scrollTo({ top: 0 }); }}>← {t("Əvvəlki")}</Button>
+            <Button size="sm" variant="outline" disabled={data.page >= data.pages} onClick={() => { setPage((n) => n + 1); window.scrollTo({ top: 0 }); }}>{t("Növbəti")} →</Button>
+          </span>
+        </nav>
+      )}
     </div>
   );
 }

@@ -154,7 +154,11 @@ export const chat = (message: string, history: ChatMessage[]) =>
   post<{ answer: string; listings: Listing[]; sources?: Source[]; unanswered?: boolean; usage?: { tokens: number }; billing?: { billedAzn?: number; balanceAzn?: number } }>("/tenant/chat", { message, history: history.map(({ role, text }) => ({ role, text })) });
 
 // Admin
-export const adminUsers = () => call<{ users: AdminUser[] }>("/admin/users");
+export type UserFilter = "all" | "tenants" | "unverified" | "admins" | "lowbal" | "suspended";
+export type AdminUsersPage = { users: AdminUser[]; total: number; page: number; limit: number; pages: number; counts: { users: number; tenants: number; verified: number; unverified: number } };
+/** Axtarış, süzgəc və səhifələmə serverdə */
+export const adminUsers = (q: { q?: string; filter?: UserFilter; page?: number; limit?: number } = {}) =>
+  call<AdminUsersPage>(`/admin/users?${new URLSearchParams(Object.entries({ q: q.q ?? "", filter: q.filter ?? "all", page: String(q.page ?? 1), limit: String(q.limit ?? 25) }).filter(([, v]) => v))}`);
 export type UsagePoint = { requests: number; tokens: number };
 export type UsageSummary = {
   today: UsagePoint & { date: string }; thisMonth: UsagePoint & { month: string }; lastMonth: UsagePoint & { month: string };
@@ -190,6 +194,7 @@ export type AdminOverview = {
   pendingTopups: number;
   /** Balansa daxil olan real pul (cəmi). AI servisi cavab verməyəndə null. */
   revenueAzn: number | null; revenueMonthAzn?: number | null; outstandingPaidAzn?: number | null; monthProfitAzn?: number | null;
+  aiControl?: { paused: boolean; reason?: string; by?: string; at?: string } | null;
   errors: { last24h: number; last7d: number };
   signups: { date: string; users: number }[];
   topTenants: { tenantId: string; businessName: string; requests: number; tokens: number }[];
@@ -211,7 +216,45 @@ export const adminErrors = (q: { range: string; source?: string; q?: string }) =
 };
 export const adminDeleteErrors = (fingerprint?: string) => call<{ ok: true; deleted: number }>(`/admin/errors${fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : ""}`, { method: "DELETE" });
 export type AuditItem = { id: string; at: string; actor: string; action: string; target?: string; detail?: string };
-export const adminAudit = () => call<{ items: AuditItem[] }>("/admin/audit");
+export const adminAudit = (q: { action?: string; actor?: string; q?: string; before?: string } = {}) =>
+  call<{ items: AuditItem[]; nextBefore: string | null }>(`/admin/audit?${new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][])}`);
+
+// Ödənişlər
+export type PaymentFilters = { status?: string; kind?: string; tenant?: string; from?: string; to?: string; before?: string };
+type TenantMatch = { tenantId: string; businessName: string; domain: string };
+export type PaymentRequestRow = TopupRequest & { businessName: string; domain: string; email: string; resolvedAt?: string; resolvedBy?: string };
+export type LedgerRow = { id: string; tenantId: string; at: string; kind: "payment" | "manual" | "adjust"; type: string; amountAzn: number; note: string; by: string; businessName: string; domain: string; email: string };
+const pq = (f: PaymentFilters) => new URLSearchParams(Object.entries(f).filter(([, v]) => v) as [string, string][]);
+export const adminPaymentRequests = (f: PaymentFilters) => call<{ requests: PaymentRequestRow[]; nextBefore: string | null; tenant: TenantMatch | null; matches: TenantMatch[] }>(`/admin/payments/requests?${pq(f)}`);
+export const adminLedger = (f: PaymentFilters) => call<{ entries: LedgerRow[]; nextBefore: string | null; tenant: TenantMatch | null; matches: TenantMatch[] }>(`/admin/payments/ledger?${pq(f)}`);
+export const adminLedgerCsvUrl = (f: PaymentFilters) => `/api/portal/admin/payments/ledger.csv?${pq({ ...f, before: "" })}`;
+
+// Kanallar
+export type ChannelRow = {
+  tenantId: string; businessName: string; domain: string; email: string; errors24h: number; problems: ("wa_down" | "wa_connecting" | "errors" | "suspended")[];
+  telegram: { enabled: boolean; bot: string; connectedAt: string; lastAt: string | null; idle: boolean } | null;
+  whatsapp: { enabled: boolean; phone: string | null; connectedAt: string; state: WhatsAppState; error: string | null; lastAt: string | null; idle: boolean } | null;
+};
+export const adminChannels = () => call<{ rows: ChannelRow[]; summary: { telegram: number; whatsapp: number; waOpen: number; problems: number; waCapacity: { used: number; max: number } } }>("/admin/channels");
+
+// Xəbərdarlıqlar və AI açarı
+export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit";
+export type AlertSettings = { email: boolean; telegram: boolean; kinds: Record<AlertKind, boolean>; errorThreshold: number };
+export type AlertsView = {
+  settings: AlertSettings; kinds: AlertKind[];
+  telegram: { available: boolean; bot: string | null; me: { name: string; at: string } | null };
+  recipients: { email: string; telegram: boolean }[]; mailConfigured: boolean;
+  health: { ai: { down: boolean; since: string | null }; db: { down: boolean; since: string | null } };
+  log: { at: string; kind: string; title: string; telegram: number; email: number }[];
+};
+export const adminAlerts = () => call<AlertsView>("/admin/alerts");
+export const adminSaveAlerts = (patch: Partial<Omit<AlertSettings, "kinds">> & { kinds?: Partial<Record<AlertKind, boolean>> }) => call<AlertsView>("/admin/alerts", { method: "PUT", body: patch });
+export const adminAlertsTelegram = () => post<{ url: string; expiresInS: number }>("/admin/alerts/telegram");
+export const adminAlertsTelegramOff = () => call<AlertsView>("/admin/alerts/telegram", { method: "DELETE" });
+export const adminAlertsTest = () => post<{ telegram: number; email: number }>("/admin/alerts/test");
+export type AiControl = { paused: boolean; reason?: string; by?: string; at?: string };
+export const adminAiControl = () => call<AiControl>("/admin/ai-control");
+export const adminSetAiControl = (paused: boolean, reason = "") => call<AiControl>("/admin/ai-control", { method: "PUT", body: { paused, reason } });
 export type Announcement = { text: string; level: "info" | "warn" | "critical"; active: boolean; updatedAt: string; by: string };
 export const adminAnnouncement = () => call<{ announcement: Announcement | null }>("/admin/announcement");
 export const adminSetAnnouncement = (a: { text: string; level: Announcement["level"]; active: boolean }) => call<{ announcement: Announcement }>("/admin/announcement", { method: "PUT", body: a });
@@ -399,7 +442,7 @@ export type Billing = {
   pendingRequests: TopupRequest[];
   days?: { date: string; spentAzn: number; requests: number }[];
   ledger?: { id: string; at: string; type: string; amountAzn: number; note: string }[];
-  admin?: { markup: number | null; defaultMarkup: number; creditLimitAzn: number; costAzn30: number; lifetimeSpentAzn: number };
+  admin?: { markup: number | null; defaultMarkup: number; creditLimitAzn: number; costAzn30: number; lifetimeSpentAzn: number; dailyLimitAzn?: number | null; defaultDailyLimitAzn?: number; todayAzn?: number };
 };
 export const getBilling = () => call<Billing>("/tenant/billing");
 export const requestTopup = (amountAzn: number) => post<{ request: TopupRequest; provider: string; instructions?: string; checkoutUrl?: string }>("/tenant/billing/topup-request", { amountAzn });
@@ -408,9 +451,10 @@ export type AdminTopupRequest = TopupRequest & { businessName: string; domain: s
 export const adminBillingRequests = (status = "pending") => call<{ requests: AdminTopupRequest[] }>(`/admin/billing/requests?status=${status}`);
 export const adminResolveRequest = (id: string, action: "approve" | "reject") => post<{ request: TopupRequest }>(`/admin/billing/requests/${id}/${action}`);
 export const adminTenantBilling = (tenantId: string) => call<Billing>(`/admin/tenants/${tenantId}/billing`);
-export const adminTopup = (tenantId: string, amountAzn: number, note: string) => post<{ balance?: { totalAzn: number } }>(`/admin/tenants/${tenantId}/billing/topup`, { amountAzn, note });
+/** 100 AZN və daha böyük məbləğ üçün confirmLarge=true lazımdır (əks halda CONFIRM_REQUIRED) */
+export const adminTopup = (tenantId: string, amountAzn: number, note: string, confirmLarge = false) => post<{ balance?: { totalAzn: number } }>(`/admin/tenants/${tenantId}/billing/topup`, { amountAzn, note, ...(confirmLarge && { confirmLarge: true }) });
 export const adminSetBranding = (tenantId: string, removed: boolean) => call<{ ok: true; brandRemoved: boolean }>(`/admin/tenants/${tenantId}/branding`, { method: "PATCH", body: { removed } });
-export const adminBillingSettings = (tenantId: string, patch: { markup?: number | null; creditLimitAzn?: number }) => call<unknown>(`/admin/tenants/${tenantId}/billing/settings`, { method: "PATCH", body: patch });
+export const adminBillingSettings = (tenantId: string, patch: { markup?: number | null; creditLimitAzn?: number; dailyLimitAzn?: number | null }) => call<unknown>(`/admin/tenants/${tenantId}/billing/settings`, { method: "PATCH", body: patch });
 
 // Əməliyyatlar (yazma): AI istifadəçinin təsdiqi ilə sənin API-ndə əməliyyat icra edir
 export type ActionParam = { name: string; type: "string" | "number" | "integer" | "boolean" | "enum"; description: string; required?: boolean; enum?: string[]; maxLength?: number; min?: number; max?: number };

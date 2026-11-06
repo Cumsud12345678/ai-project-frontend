@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bug, Coins, LayoutDashboard, LogOut, Megaphone, ScrollText, Shield, Users } from "lucide-react";
+import { Bug, Coins, LayoutDashboard, LogOut, Megaphone, MessagesSquare, ReceiptText, ScrollText, Settings, Shield, Users } from "lucide-react";
 import { SessionProvider, useSession } from "@/components/session";
 import { adminOverview } from "@/lib/api";
 import { LangSwitch, useT } from "@/lib/i18n";
@@ -34,10 +34,13 @@ function TwoFactorGate() {
 const tabs = [
   { href: "/admin", label: "Ümumi baxış", icon: LayoutDashboard },
   { href: "/admin/users", label: "İstifadəçilər", icon: Users },
+  { href: "/admin/payments", label: "Ödənişlər", icon: ReceiptText },
   { href: "/admin/finance", label: "Maliyyə", icon: Coins },
+  { href: "/admin/channels", label: "Kanallar", icon: MessagesSquare },
   { href: "/admin/errors", label: "Xətalar", icon: Bug },
   { href: "/admin/audit", label: "Audit jurnalı", icon: ScrollText },
   { href: "/admin/announcement", label: "Elan", icon: Megaphone },
+  { href: "/admin/settings", label: "Ayarlar", icon: Settings },
 ];
 
 /** Yan menyu (kompüter) və üfüqi sürüşən menyu (telefon). Xətalar bölməsində son 24 saatın sayı qırmızı nişanla görünür. */

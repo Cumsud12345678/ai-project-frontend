@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Bug, CircleCheck, CircleX, Coins, Hourglass, MessagesSquare, RefreshCw, UserPlus, Users, Store } from "lucide-react";
+import { Bug, CircleCheck, CircleX, Coins, Hourglass, MessagesSquare, PauseCircle, RefreshCw, UserPlus, Users, Store } from "lucide-react";
 import { adminHealth, adminOverview, type AdminHealth, type AdminOverview } from "@/lib/api";
 import { AdminUsage } from "@/components/admin-usage";
 import { TrendChart, compact } from "@/components/charts";
@@ -60,8 +60,15 @@ export default function AdminOverviewPage() {
       </header>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
+      {o?.aiControl?.paused && (
+        <Link href="/admin/settings" role="alert" className="flex items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm hover:bg-destructive/15">
+          <PauseCircle size={18} className="text-destructive" aria-hidden />
+          <span className="flex-1"><strong>{t("AI bütün müştərilər üçün dayandırılıb")}</strong>{o.aiControl.reason && ` · ${o.aiControl.reason}`}</span>
+          <span className="text-primary">{t("Ayarlar")} →</span>
+        </Link>
+      )}
       {o && o.pendingTopups > 0 && (
-        <Link href="/admin/users" className="flex items-center gap-3 rounded-xl border border-amber/40 bg-amber/10 px-4 py-3 text-sm hover:bg-amber/15">
+        <Link href="/admin/payments" className="flex items-center gap-3 rounded-xl border border-amber/40 bg-amber/10 px-4 py-3 text-sm hover:bg-amber/15">
           <Hourglass size={18} className="text-amber" aria-hidden />
           <span className="flex-1"><strong>{t("{n} yükləmə sorğusu təsdiq gözləyir", { n: o.pendingTopups })}</strong></span>
           <span className="text-primary">{t("Bax")} →</span>
