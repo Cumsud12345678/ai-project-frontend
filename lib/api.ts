@@ -39,7 +39,7 @@ export type WidgetSettings = {
 export type WidgetResponse = { widget: WidgetSettings; scriptUrl: string; domain: string; brandRemoved?: boolean; brandName?: string };
 
 export type TwoFactorStatus = { enabled: boolean; required: boolean; setupNeeded: boolean; backupLeft: number };
-export type Me = { email: string; role: "user" | "admin"; twoFactor?: TwoFactorStatus };
+export type Me = { email: string; role: "user" | "admin"; twoFactor?: TwoFactorStatus; partner?: { code: string; active: boolean } | null };
 export type TenantInfo = {
   tenantId: string; businessName: string; domain: string; config: ConfigJson;
   createdAt: string; updatedAt: string; keyRotatedAt: string | null;
@@ -107,7 +107,30 @@ export const patchWhatsApp = (patch: { enabled?: boolean; pauseOnOwnReply?: bool
 export const disconnectWhatsApp = () => call<{ ok: true }>("/tenant/channels/whatsapp", { method: "DELETE" });
 
 // Hesab
-export const register = (email: string, password: string) => post<{ ok: true }>("/auth/register", { email, password });
+/** ref: partnyor kodu; refSource=link: linkdən gəlib (səhv kod xəta vermir), code: istifadəçi özü yazıb */
+export const register = (email: string, password: string, ref?: { code: string; source: "link" | "code" }) =>
+  post<{ ok: true }>("/auth/register", { email, password, ...(ref?.code && { ref: ref.code, refSource: ref.source }) });
+export const checkRefCode = (code: string) => call<{ valid: boolean; code: string; bonusPct: number; bonusCapAzn: number }>(`/auth/ref/${encodeURIComponent(code)}`);
+
+// Partnyor proqramı
+export type PartnerTotals = { earned: number; adjust: number; paidOut: number; balance: number };
+export type PartnerCustomer = { id: string; email: string; joinedAt: string; source: "link" | "code" | "admin"; until: string; active: boolean; site: { businessName: string; domain: string; tenantId?: string } | null; paidAzn: number; earnedAzn: number; bonus: boolean };
+export type PartnerEntry = { id: string; kind: "commission" | "adjust" | "payout"; amountAzn: number; at: string; baseAzn?: number | null; rate?: number | null; note?: string; by?: string };
+export type MyPartner = {
+  partner: { code: string; rate: number; active: boolean; since: string }; link: string;
+  settings: { months: number; bonusPct: number; bonusCapAzn: number }; totals: PartnerTotals; customers: PartnerCustomer[]; entries: PartnerEntry[];
+};
+export const getMyPartner = () => call<MyPartner>("/partner");
+export type PartnerSettings = { defaultRate: number; bonusPct: number; bonusCapAzn: number; months: number };
+export type AdminPartner = { id: string; email: string; code: string; rate: number; active: boolean; since: string; note: string; customers: number; totals: PartnerTotals };
+export const adminPartners = () => call<{ settings: PartnerSettings; partners: AdminPartner[] }>("/admin/partners");
+export const adminPartner = (id: string) => call<{ partner: AdminPartner; customers: PartnerCustomer[]; entries: PartnerEntry[] }>(`/admin/partners/${id}`);
+export const adminCreatePartner = (body: { email: string; code?: string; rate?: number; note?: string }) => post<{ ok: true; id: string; code: string }>("/admin/partners", body);
+export const adminUpdatePartner = (id: string, patch: { code?: string; rate?: number; active?: boolean; note?: string }) => call<{ ok: true }>(`/admin/partners/${id}`, { method: "PATCH", body: patch });
+export const adminPartnerEntry = (id: string, body: { kind: "adjust" | "payout"; amountAzn: number; note: string }) => post<{ ok: true; totals: PartnerTotals }>(`/admin/partners/${id}/entries`, body);
+export const adminPartnerReferral = (body: { email: string; code: string; countPast?: boolean }) => post<{ ok: true }>("/admin/partners/referrals", body);
+export const adminPartnerSettings = (s: Partial<PartnerSettings>) => call<PartnerSettings>("/admin/partners/settings", { method: "PUT", body: s });
+export const adminPartnerSync = () => post<{ ok: true }>("/admin/partners/sync");
 export const verify = (email: string, code: string) => post<Me>("/auth/verify", { email, code });
 export const resend = (email: string) => post<{ ok: true }>("/auth/resend", { email });
 /** İki addımlı giriş aktivdirsə sessiya açılmır: { twoFactor: true, ticket } qayıdır, kod loginTwoFactor ilə göndərilir. */

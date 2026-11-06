@@ -180,6 +180,20 @@ const EXTRA = [
   "AI müvəqqəti dayandırılıb",
   "Gündəlik xərc limitinə çatılıb",
   "Gündəlik limit 0 ilə 10000 arasında olmalıdır",
+  // Partnyor proqramı (serverin statik mesajları)
+  "Promo kod tapılmadı",
+  "Partnyor deyilsən",
+  "Faiz 1 ilə 50 arasında olmalıdır",
+  "Kod 3–20 simvol olmalıdır: hərf, rəqəm, - və _",
+  "Bu kod artıq istifadə olunur",
+  "Partnyor tapılmadı",
+  "Bu e-poçtla təsdiqlənmiş hesab tapılmadı. Partnyor əvvəlcə qeydiyyatdan keçməlidir.",
+  "Bu istifadəçi artıq partnyordur",
+  "Düzəlişin səbəbini yaz",
+  "Ödəniş balansdan çox ola bilməz",
+  "Müştəri tapılmadı",
+  "Bu kodla partnyor yoxdur",
+  "Partnyor özünü gətirə bilməz",
 ];
 
 function walk(d, out = []) {

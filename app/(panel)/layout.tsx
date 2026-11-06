@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Gauge, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Send, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X, Zap } from "lucide-react";
+import { BookOpen, Gauge, HandCoins, Inbox, MessageSquare, MessagesSquare, List, Plug, Code, Send, Settings, LogOut, Menu, Shield, Rocket, ShieldCheck, Wallet, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLiveCount } from "@/lib/api";
 import { AnnouncementBanner, SuspendedBanner } from "@/components/announcement-banner";
@@ -56,6 +56,12 @@ function SidebarContent({ onNavigate, waiting = 0 }: { onNavigate?: () => void; 
             </Link>
           );
         })}
+        {me.partner && !isOperator && (
+          <Link href="/partner" onClick={onNavigate} aria-current={pathname.startsWith("/partner") ? "page" : undefined}
+            className={cn("flex items-center gap-3 whitespace-nowrap rounded-md border-l-2 px-3 py-2.5 text-sm transition-colors", pathname.startsWith("/partner") ? "border-white bg-sidebar-accent font-medium text-white" : "border-transparent text-sidebar-muted hover:bg-sidebar-accent hover:text-white")}>
+            <HandCoins size={16} aria-hidden /> {t("Partnyor")}
+          </Link>
+        )}
         {me.role === "admin" && (
           <Link href="/admin" onClick={onNavigate} className="flex items-center gap-3 whitespace-nowrap rounded-md border-l-2 border-transparent px-3 py-2.5 text-sm text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-white">
             <Shield size={16} aria-hidden /> {t("Admin")}

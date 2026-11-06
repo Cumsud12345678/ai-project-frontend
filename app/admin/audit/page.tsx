@@ -26,8 +26,10 @@ export default function AdminAuditPage() {
     "announcement.delete": t("Elan silindi"), "users.export": t("İstifadəçi siyahısı yükləndi"),
     "tenant.suspend": t("Müştəri dayandırıldı"), "tenant.unsuspend": t("Müştəri bərpa olundu"), "user.revoke_sessions": t("İstifadəçi cihazlardan çıxarıldı"), "user.reset_2fa": t("2FA sıfırlandı"),
     "branding.set": t("Brend yazısı dəyişdi"), "alerts.settings": t("Xəbərdarlıq ayarları dəyişdi"), "ai.pause": t("AI dayandırıldı"), "ai.resume": t("AI yenidən açıldı"), "payments.export": t("Ödənişlər yükləndi"),
+    "partner.create": t("Partnyor əlavə olundu"), "partner.update": t("Partnyor dəyişdi"), "partner.payout": t("Partnyora ödəniş"), "partner.adjust": t("Partnyor balansı düzəldildi"),
+    "partner.attach": t("Müştəri partnyora bağlandı"), "partner.detach": t("Müştəri partnyordan ayrıldı"), "partner.settings": t("Partnyor qaydaları dəyişdi"),
   };
-  const groups: [string, string][] = [["", t("Hamısı")], ["billing", t("Balans")], ["tenant", t("Müştəri")], ["user", t("İstifadəçi")], ["ai", "AI"], ["alerts", t("Xəbərdarlıq")], ["announcement", t("Elan")], ["errors", t("Xətalar")]];
+  const groups: [string, string][] = [["", t("Hamısı")], ["billing", t("Balans")], ["tenant", t("Müştəri")], ["user", t("İstifadəçi")], ["ai", "AI"], ["partner", t("Partnyor")], ["alerts", t("Xəbərdarlıq")], ["announcement", t("Elan")], ["errors", t("Xətalar")]];
 
   const load = useCallback(async (before?: string) => {
     setBusy(true);

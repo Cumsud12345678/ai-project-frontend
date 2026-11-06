@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bug, Coins, LayoutDashboard, LogOut, Megaphone, MessagesSquare, ReceiptText, ScrollText, Settings, Shield, Users } from "lucide-react";
+import { Bug, Coins, HandCoins, LayoutDashboard, LogOut, Megaphone, MessagesSquare, ReceiptText, ScrollText, Settings, Shield, Users } from "lucide-react";
 import { SessionProvider, useSession } from "@/components/session";
 import { adminOverview } from "@/lib/api";
 import { LangSwitch, useT } from "@/lib/i18n";
@@ -36,6 +36,7 @@ const tabs = [
   { href: "/admin/users", label: "İstifadəçilər", icon: Users },
   { href: "/admin/payments", label: "Ödənişlər", icon: ReceiptText },
   { href: "/admin/finance", label: "Maliyyə", icon: Coins },
+  { href: "/admin/partners", label: "Partnyorlar", icon: HandCoins },
   { href: "/admin/channels", label: "Kanallar", icon: MessagesSquare },
   { href: "/admin/errors", label: "Xətalar", icon: Bug },
   { href: "/admin/audit", label: "Audit jurnalı", icon: ScrollText },
