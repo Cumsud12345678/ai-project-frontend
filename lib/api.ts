@@ -305,7 +305,8 @@ export const getQueryStats = (days: number) => call<QueryStats>(`/tenant/queries
 // Söhbət tarixçəsi, konversiya, ixrac, aylıq hesabat
 export type ConversationRow = { sid: string; startedAt: string; lastAt: string; messages: number; first: string; unanswered: number; costAzn: number };
 export type ConversationList = { enabled: boolean; hasMore: boolean; nextCursor: string | null; conversations: ConversationRow[] };
-export type ConversationMsg = { id: string; at: string; message: string; answer: string | null; results: number; error: boolean; costAzn: number | null };
+export type ConvListing = { id?: string; title: string; price?: number; currency?: string; url?: string; image?: string };
+export type ConversationMsg = { id: string; at: string; message: string; answer: string | null; results: number; error: boolean; costAzn: number | null; listings?: ConvListing[]; confirm?: { title: string; summary: string }; clicks?: { id: string; title: string; at: string }[] };
 export const getConversations = (q: { days?: number; limit?: number; before?: string | null }) => {
   const p = new URLSearchParams();
   if (q.before) p.set("before", q.before);
@@ -387,11 +388,14 @@ export const kbRefresh = (id: string) => post<{ source: KbSource }>(`/tenant/kb/
 export const kbDelete = (id: string) => call<{ ok: true }>(`/tenant/kb/sources/${id}`, { method: "DELETE" });
 
 export type UnansweredRow = { id: string; at: string; message: string; reason?: string };
-export type LeadRow = { id: string; at: string; name: string; contact: string; question: string; conversation?: { role: "user" | "model"; text: string }[]; handled: boolean };
+export type LeadStatus = "new" | "open" | "pending" | "solved";
+export type LeadRow = { id: string; at: string; name: string; contact: string; question: string; conversation?: { role: "user" | "model"; text: string }[]; handled: boolean;
+  status?: LeadStatus; priority?: "low" | "normal" | "high"; assignee?: { id?: string; name: string } | null; notes?: { by: string; at: string; text: string }[]; history?: { by: string; at: string; e: string }[]; updatedAt?: string };
 export const getUnanswered = () => call<{ total: number; items: UnansweredRow[] }>("/tenant/kb/unanswered");
 export const deleteUnanswered = (id: string) => call<{ ok: true }>(`/tenant/kb/unanswered/${id}`, { method: "DELETE" });
 export const getLeads = () => call<{ total: number; open: number; items: LeadRow[] }>("/tenant/kb/leads");
 export const setLeadHandled = (id: string, handled: boolean) => call<{ lead: LeadRow }>(`/tenant/kb/leads/${id}`, { method: "PATCH", body: { handled } });
+export const updateLead = (id: string, patch: { status?: LeadStatus; priority?: "low" | "normal" | "high"; assignee?: { id?: string; name: string } | null; note?: string }) => call<{ lead: LeadRow }>(`/tenant/kb/leads/${id}`, { method: "PATCH", body: patch });
 export const deleteLead = (id: string) => call<{ ok: true }>(`/tenant/kb/leads/${id}`, { method: "DELETE" });
 
 // İlk səhifə: quraşdırma, diqqət tələb edənlər, keyfiyyət
@@ -409,11 +413,13 @@ export type Overview = {
 export const getOverview = () => call<Overview>("/tenant/overview");
 
 // Canlı operator söhbəti və cavablara rəy
-export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string; /** ziyarətçinin göndərdiyi şəkil */ file?: { id: string; mime: string } };
+export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string; /** göndərilən fayl: ziyarətçinin şəkli və ya operatorun şəkli/PDF-i */ file?: { id: string; mime: string; name?: string } };
 export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
 export type LiveNote = { text: string; by: string; at: string };
 export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; tags?: string[]; csat?: number | null; notes?: number; last: LiveMsg | null };
-export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[] };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[]; visitor?: VisitorInfo | null; blocked?: boolean };
+/** Brauzerin bildirdiyi ziyarətçi məlumatı */
+export type VisitorInfo = { tz?: string; lang?: string; mobile?: boolean; first?: number; visits?: number; ref?: string };
 export type LivePrevious = { id: string; createdAt: string; status: "open" | "closed"; count: number; tags: string[]; csat: number | null; first: string };
 export const claimLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/claim`);
 export const releaseLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/release`);
@@ -428,7 +434,18 @@ export const saveLeadTarget = (kind: "bitrix" | "webhook", url: string) => call<
 export const deleteLeadTarget = (kind: "bitrix" | "webhook") => call<LeadForwardView>(`/tenant/lead-forward/${kind}`, { method: "DELETE" });
 export const testLeadForward = () => post<{ results: Partial<Record<"telegram" | "bitrix" | "webhook", string>> }>("/tenant/lead-forward/test");
 /** "İndi saytda kim var": vidjet açıq olan ziyarətçilər (yalnız yaddaşda, 45 saniyə xəbər gəlməsə düşür) */
-export type SiteVisitor = { pid: string; path: string; title: string; ref: string; lang: string; mobile: boolean; chat: "none" | "ai" | "live"; since: number; seen: number; pages: number; invited: boolean };
+export type SiteVisitor = { pid: string; path: string; title: string; ref: string; lang: string; mobile: boolean; chat: "none" | "ai" | "live"; since: number; seen: number; pages: number; invited: boolean; /** AI söhbətinin ID-si (ziyarətçi AI ilə yazışırsa) */ sid?: string; /** saytı başqa vərəqdə açıq saxlayıb */ hidden?: boolean; tz?: string; first?: number; visits?: number };
+// Bloklama (spam, təhqir)
+export type BlockItem = { key: string; label: string; at: string; by: string };
+export const getBlocks = () => call<{ items: BlockItem[] }>("/tenant/blocks");
+export const blockLive = (chatId: string) => post<{ ok: true }>(`/tenant/live/${encodeURIComponent(chatId)}/block`);
+export const blockVisitor = (pid: string) => post<{ ok: true }>(`/tenant/visitors/${pid}/block`);
+export const unblock = (key: string) => call<{ ok: true }>(`/tenant/blocks/${encodeURIComponent(key)}`, { method: "DELETE" });
+// Müştərilər: söhbətlər və müraciətlər bir kartda
+export type Customer = { id: string; name: string; contacts: string[]; channels: ("site" | "telegram" | "whatsapp" | "form")[]; firstAt: string; lastAt: string; tags: string[]; blocked: boolean; csat: number | null;
+  chats: { id: string; status: "open" | "closed"; channel: "site" | "telegram" | "whatsapp"; createdAt: string; count: number; first: string; tags: string[]; csat: number | null; assignee: string | null }[];
+  leads: { id: string; at: string; status: string; question: string }[]; visitor: VisitorInfo | null };
+export const getCustomers = (q = "") => call<{ items: Customer[] }>(`/tenant/customers${q ? `?q=${encodeURIComponent(q)}` : ""}`);
 export const getVisitors = () => call<{ enabled: boolean; items: SiteVisitor[] }>("/tenant/visitors");
 export const inviteVisitor = (pid: string, text: string) => post<{ id: string }>(`/tenant/visitors/${pid}/invite`, { text });
 /** Canlı söhbətdə ziyarətçinin göndərdiyi şəkil (panel proksisi ilə, sessiya cookie-si gedir) */
@@ -449,6 +466,8 @@ export const unlinkTelegramNotify = () => call<NotifyView>("/tenant/notify/teleg
 export const getLiveList = (status: "open" | "closed") => call<{ items: LiveItem[]; csat?: { count: number; avg: number | null } }>(`/tenant/live?status=${status}`);
 export const getLiveChat = (id: string) => call<{ chat: LiveChat }>(`/tenant/live/${id}`);
 export const sendLive = (id: string, text: string) => post<{ total: number }>(`/tenant/live/${id}/messages`, { text });
+/** Operatorun faylı: şəkil (2 MB) və ya PDF (4 MB), base64; text istəyə bağlı izahdır */
+export const sendLiveFile = (id: string, f: { data: string; name: string; text?: string }) => post<{ total: number }>(`/tenant/live/${id}/files`, f);
 export const closeLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/close`);
 export type FeedbackSummary = { days: number; up: number; down: number; bad: { at: string; question: string; answer: string }[] };
 export const getFeedback = (days = 30) => call<FeedbackSummary>(`/tenant/feedback?days=${days}`);

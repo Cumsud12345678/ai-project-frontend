@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
-  Search, Send, Settings, Shield, ShieldCheck, Wallet, X, Zap, type LucideIcon,
+  Search, Send, Settings, Shield, ShieldCheck, Users, Wallet, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Overview } from "@/lib/api";
@@ -25,6 +25,7 @@ const GROUPS: Group[] = [
     { href: "/queries", label: "Sorğular", icon: MessagesSquare },
   ] },
   { id: "inbox", label: "Müraciətlər", icon: Inbox, items: [{ href: "/inbox", label: "Müraciətlər", icon: Inbox }] },
+  { id: "customers", label: "Müştərilər", icon: Users, items: [{ href: "/customers", label: "Müştərilər", icon: Users }] },
   { id: "ai", label: "Köməkçi", icon: Bot, items: [
     { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
     { href: "/knowledge", label: "Bilik bazası", icon: BookOpen },
@@ -58,6 +59,9 @@ function useGroups() {
     })).filter((g) => g.items.length);
   }, [me.partner, tenant, isOperator, mode]);
 }
+
+/** Bu səhifələr çərçivənin içini tam tutur (boşluq və eni məhdudlaşdırılmır) */
+const FULL_BLEED = ["/inbox"];
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -288,6 +292,7 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
   const { me, signOut } = useSession();
   const active = groups.find((g) => g.items.some((i) => isActive(pathname, i.href)))?.id ?? "";
   const activeGroup = groups.find((g) => g.id === active);
+  const bleed = FULL_BLEED.some((p) => isActive(pathname, p));
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -321,8 +326,10 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
         {activeGroup && activeGroup.items.length > 1 && (
           <SectionNav group={activeGroup} signals={signals} className="hidden w-56 shrink-0 overflow-y-auto pr-3 pb-3 md:block" />
         )}
-        <main ref={main} className="min-w-0 flex-1 overflow-y-auto border-border bg-card md:mr-2 md:mb-2 md:rounded-2xl md:border md:shadow-[0_1px_2px_rgba(15,23,42,.04)]">
-          <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">{children}</div>
+        <main ref={main} className={cn("min-w-0 flex-1 border-border bg-card md:mr-2 md:mb-2 md:rounded-2xl md:border md:shadow-[0_1px_2px_rgba(15,23,42,.04)]", bleed ? "flex flex-col overflow-hidden" : "overflow-y-auto")}>
+          {/* Müraciətlər kimi iş səhifələri bütün sahəni tutur (öz sütunları və sürüşməsi var) */}
+          {bleed ? <div className="flex min-h-0 flex-1 flex-col [&>*:last-child]:min-h-0 [&>*:last-child]:flex-1">{children}</div>
+            : <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">{children}</div>}
         </main>
       </div>
 
