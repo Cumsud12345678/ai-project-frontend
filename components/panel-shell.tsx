@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Activity, BarChart3, Bell, Bot, Building2, Globe, Hash, LayoutGrid, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Rocket,
   Search, Send, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
@@ -162,14 +163,23 @@ function TopBar({ signals, onSearch, onMenu, menuRef }: { signals: Signals; onSe
 function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups>; active: string; signals: Signals }) {
   const { t } = useI18n();
   const { me, signOut } = useSession();
-  const [menu, setMenu] = useState(false);
+  // Hesab menyusu: ikon zolağı sürüşən (overflow) olduğu üçün kart orada kəsilirdi və aşağıda sürüşmə yaranırdı.
+  // Ona görə kart body-yə (portal) çıxarılır və düymənin yanında sabit (fixed) yerləşir.
+  const [menu, setMenu] = useState<{ left: number; bottom: number } | null>(null);
   const menuBox = useRef<HTMLDivElement>(null);
+  const menuCard = useRef<HTMLDivElement>(null);
+  const toggleMenu = () => {
+    if (menu) return setMenu(null);
+    const r = menuBox.current?.getBoundingClientRect();
+    if (r) setMenu({ left: r.right + 10, bottom: Math.max(8, window.innerHeight - r.bottom) });
+  };
   useEffect(() => {
     if (!menu) return;
-    const away = (e: PointerEvent) => { if (!menuBox.current?.contains(e.target as Node)) setMenu(false); };
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(false); };
-    document.addEventListener("pointerdown", away); document.addEventListener("keydown", esc);
-    return () => { document.removeEventListener("pointerdown", away); document.removeEventListener("keydown", esc); };
+    const away = (e: PointerEvent) => { const n = e.target as Node; if (!menuBox.current?.contains(n) && !menuCard.current?.contains(n)) setMenu(null); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(null); };
+    const close = () => setMenu(null);
+    document.addEventListener("pointerdown", away); document.addEventListener("keydown", esc); window.addEventListener("resize", close);
+    return () => { document.removeEventListener("pointerdown", away); document.removeEventListener("keydown", esc); window.removeEventListener("resize", close); };
   }, [menu]);
 
   const link = (g: (typeof groups)[number]) => {
@@ -190,7 +200,7 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
   };
 
   return (
-    <nav aria-label={t("Panel")} className="hidden w-[84px] shrink-0 flex-col items-center gap-1 overflow-y-auto px-1.5 pb-3 md:flex">
+    <nav aria-label={t("Panel")} className="no-scrollbar hidden w-[84px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden px-1.5 pb-3 md:flex">
       {groups.filter((g) => !g.bottom).map(link)}
       <div className="mt-auto flex w-full flex-col items-center gap-1 pt-3">
         {me.role === "admin" && (
@@ -200,16 +210,22 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
         )}
         {groups.filter((g) => g.bottom).map(link)}
         <div ref={menuBox} className="relative mt-1">
-          <button type="button" onClick={() => setMenu((v) => !v)} aria-haspopup="menu" aria-expanded={menu} aria-label={t("Hesab menyusu")}
+          <button type="button" onClick={toggleMenu} aria-haspopup="menu" aria-expanded={!!menu} aria-label={t("Hesab menyusu")}
             className="grid size-10 cursor-pointer place-items-center rounded-full bg-foreground text-sm font-semibold text-background ring-2 ring-transparent transition hover:ring-border">
             {me.email.charAt(0).toUpperCase()}
           </button>
-          {menu && (
-            <div role="menu" className="absolute bottom-0 left-12 z-50 w-60 rounded-xl border border-border bg-card p-1.5 shadow-lg">
-              <p className="truncate px-2.5 py-2 text-xs text-muted-foreground">{me.email}</p>
-              <Link role="menuitem" href="/settings" onClick={() => setMenu(false)} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"><Settings size={15} aria-hidden />{t("Ayarlar")}</Link>
+          {menu && createPortal(
+            <div ref={menuCard} role="menu" style={{ left: menu.left, bottom: menu.bottom }} className="fixed z-[60] w-64 rounded-xl border border-border bg-card p-1.5 shadow-lg">
+              <div className="flex items-center gap-2.5 px-2.5 py-2">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground text-xs font-semibold text-background">{me.email.charAt(0).toUpperCase()}</span>
+                <span className="min-w-0 truncate text-sm font-medium">{me.email}</span>
+              </div>
+              <div className="my-1 h-px bg-border" />
+              <Link role="menuitem" href="/settings" onClick={() => setMenu(null)} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"><Settings size={15} aria-hidden />{t("Ayarlar")}</Link>
+              <Link role="menuitem" href="/settings/notifications" onClick={() => setMenu(null)} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"><Bell size={15} aria-hidden />{t("Bildirişlər")}</Link>
+              <div className="my-1 h-px bg-border" />
               <button role="menuitem" type="button" onClick={signOut} className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-muted"><LogOut size={15} aria-hidden />{t("Çıxış")}</button>
-            </div>
+            </div>, document.body,
           )}
         </div>
       </div>

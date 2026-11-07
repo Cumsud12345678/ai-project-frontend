@@ -2824,4 +2824,6 @@ export const ru: Record<string, string> = {
   "İş saatları": "Часы работы",
   "Instagram": "Instagram",
   "Facebook": "Facebook",
+  "Linki və ya kodu paylaş: video, story, söhbət.": "Поделитесь ссылкой или кодом: видео, сторис, переписка.",
+  "{m} ay ərzində onun hər real ödənişindən {r}% qazanırsan.": "В течение {m} мес. вы получаете {r}% с каждого их реального платежа.",
 };

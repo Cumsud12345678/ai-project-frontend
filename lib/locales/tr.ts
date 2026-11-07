@@ -2824,4 +2824,6 @@ export const tr: Record<string, string> = {
   "İş saatları": "Çalışma saatleri",
   "Instagram": "Instagram",
   "Facebook": "Facebook",
+  "Linki və ya kodu paylaş: video, story, söhbət.": "Linkini veya kodunu paylaş: video, hikâye, sohbet.",
+  "{m} ay ərzində onun hər real ödənişindən {r}% qazanırsan.": "{m} ay boyunca onun her gerçek ödemesinden %{r} kazanırsın.",
 };
