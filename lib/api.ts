@@ -438,6 +438,16 @@ export const linkLeadTelegram = () => post<{ url: string; expiresInS: number }>(
 export const unlinkLeadTelegram = () => call<LeadForwardView>("/tenant/lead-forward/telegram", { method: "DELETE" });
 export const saveLeadTarget = (kind: "bitrix" | "webhook", url: string) => call<LeadForwardView>(`/tenant/lead-forward/${kind}`, { method: "PUT", body: { url } });
 export const deleteLeadTarget = (kind: "bitrix" | "webhook") => call<LeadForwardView>(`/tenant/lead-forward/${kind}`, { method: "DELETE" });
+// Avtomatlaşdırmalar: hadisə → şərt → addımlar
+export type AutoTrigger = "lead" | "bad_rating" | "chat_closed" | "daily";
+export type AutoAction = { type: "telegram" | "email" | "webhook" | "bitrix" } | { type: "ticket"; priority: "normal" | "high" } | { type: "tag"; tag: string };
+export type Automation = { id?: string; name: string; trigger: AutoTrigger; enabled: boolean; actions: AutoAction[];
+  when?: { channel?: "any" | "site" | "telegram" | "whatsapp"; withContact?: boolean; source?: "any" | "csat" | "feedback"; hour?: number };
+  createdAt?: string; lastRun?: { at: string; ok: boolean; error?: string } | null; runs?: number };
+export type AutomationsView = { items: Automation[]; implicit: boolean; connections: LeadForwardView; max: number; tz: string };
+export const getAutomations = () => call<AutomationsView>("/tenant/automations");
+export const saveAutomations = (items: Automation[]) => call<AutomationsView>("/tenant/automations", { method: "PUT", body: { items } });
+export const testAutomation = (item: Automation) => post<{ steps: { type: AutoAction["type"]; ok: boolean; note?: string }[] }>("/tenant/automations/test", { item });
 export const testLeadForward = () => post<{ results: Partial<Record<"telegram" | "bitrix" | "webhook", string>> }>("/tenant/lead-forward/test");
 /** "İndi saytda kim var": vidjet açıq olan ziyarətçilər (yalnız yaddaşda, 45 saniyə xəbər gəlməsə düşür) */
 export type SiteVisitor = { pid: string; path: string; title: string; ref: string; lang: string; mobile: boolean; chat: "none" | "ai" | "live"; since: number; seen: number; pages: number; invited: boolean; /** AI söhbətinin ID-si (ziyarətçi AI ilə yazışırsa) */ sid?: string; /** saytı başqa vərəqdə açıq saxlayıb */ hidden?: boolean; tz?: string; first?: number; visits?: number };

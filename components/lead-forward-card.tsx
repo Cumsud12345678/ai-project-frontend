@@ -12,7 +12,7 @@ const SHEETS_SCRIPT = `function doPost(e) {
   var d = JSON.parse(e.postData.contents);
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
   if (sheet.getLastRow() === 0) sheet.appendRow(["Tarix", "Mənbə", "Ad", "Əlaqə", "Sual", "Səhifə"]);
-  if (d.event === "lead") sheet.appendRow([new Date(), d.source, d.name, d.contact, d.question, d.page]);
+  if (d.event === "lead" || d.event === "chat_closed") sheet.appendRow([new Date(), d.event === "lead" ? d.source : d.channel, d.name, d.contact, d.question || "", d.page || ""]);
   return ContentService.createTextOutput("ok");
 }`;
 
@@ -32,7 +32,7 @@ const Linked = ({ text, onRemove, label }: { text: string; onRemove: () => void;
 );
 
 /** Yeni müraciəti Telegram qrupuna, Bitrix24-ə və ya webhook-a (Google Sheets, Make, Zapier, n8n) ötürmək. Yalnız sahib görür. */
-export function LeadForwardCard() {
+export function LeadForwardCard({ bare, onChange }: { bare?: boolean; onChange?: () => void } = {}) {
   const { t } = useI18n();
   const [v, setV] = useState<LeadForwardView | null>(null);
   const [bitrix, setBitrix] = useState("");
@@ -75,17 +75,18 @@ export function LeadForwardCard() {
     if (r) setResults(r.results);
   }
 
+  useEffect(() => { if (v) onChange?.(); }, [v]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!v) return null;
   const any = Boolean(v.telegram || v.bitrix || v.webhook);
   const res = (k: string) => results?.[k] && (
     <p className={results[k] === "ok" ? "text-xs text-primary" : "text-xs text-destructive"}>{results[k] === "ok" ? t("Sınaq çatdı.") : results[k]}</p>
   );
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4" aria-label={t("Müraciətləri ötür")}>
-      <div>
+    <section className={bare ? "flex flex-col gap-3" : "flex flex-col gap-3 rounded-lg border border-border bg-card p-4"} aria-label={t("Müraciətləri ötür")}>
+      {!bare && <div>
         <h2 className="text-sm font-semibold">{t("Müraciətləri ötür")}</h2>
         <p className="text-xs text-muted-foreground">{t("Yeni müraciət (ad, əlaqə, sual) paneldən və e-poçtdan əlavə, burada seçdiyin yerə də dərhal göndərilsin. Heç bir rəsmi icazə lazım deyil.")}</p>
-      </div>
+      </div>}
 
       {v.telegramAvailable && (
         <Row icon={<Send size={15} aria-hidden className="text-primary" />} title={t("Telegram qrupu")}>

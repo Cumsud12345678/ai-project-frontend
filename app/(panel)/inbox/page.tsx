@@ -10,7 +10,6 @@ import { RequireTenant, useSession } from "@/components/session";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LiveInbox, type LiveFolder } from "@/components/live-inbox";
-import { LeadForwardCard } from "@/components/lead-forward-card";
 import { NotifyBar } from "@/components/notify-bar";
 import { KnowledgeGaps } from "@/components/knowledge-gaps";
 import { FolderPane, Pane, type FolderItem } from "@/components/folder-pane";
@@ -235,7 +234,7 @@ function Inbox() {
   else {
     const want: LeadStatus[] = cur.id === "pending" ? ["pending"] : cur.id === "handled" ? ["solved"] : ["new", "open"];
     const empty = cur.id === "handled" ? t("Həll olunmuş müraciət yoxdur.") : cur.id === "pending" ? t("Gözləmədə müraciət yoxdur. Müştəridən cavab gözlədiyin müraciətləri bu vəziyyətə keçir.") : t("Hələ müraciət yoxdur. Çat cavab tapmayanda istifadəçi telefon və ya e-poçtunu burada qoyur.");
-    content = pane(cur.label, leads ? <>{cur.id === "leads" && <LeadForwardCard />}<Leads rows={leads.items.filter((l) => want.includes(statusOf(l)))} reload={loadForms} empty={empty} /></> : null);
+    content = pane(cur.label, leads ? <>{cur.id === "leads" && <p className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">{t("Müraciətləri Telegram qrupuna, Bitrix24-ə və ya Google Sheets-ə ötürmək indi Avtomatlaşdırmalar bölməsindədir.")} <Link href="/automations" className="font-medium text-foreground underline">{t("Avtomatlaşdırmalara keç")}</Link></p>}<Leads rows={leads.items.filter((l) => want.includes(statusOf(l)))} reload={loadForms} empty={empty} /></> : null);
   }
 
   const banner = <>

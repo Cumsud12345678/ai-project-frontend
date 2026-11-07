@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity, Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
-  Search, Send, Settings, Shield, ShieldCheck, UserRound, Users, Wallet, Wand2, X, Zap, type LucideIcon,
+  Search, Send, Settings, Shield, ShieldCheck, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Overview } from "@/lib/api";
@@ -37,6 +37,7 @@ const GROUPS: Group[] = [
     { href: "/actions", label: "Əməliyyatlar", icon: Zap },
     { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
   ] },
+  { id: "automations", label: "Avtomatika", icon: Workflow, items: [{ href: "/automations", label: "Avtomatlaşdırmalar", icon: Workflow }] },
   { id: "channels", label: "Kanallar", icon: Radio, items: [
     { href: "/embed", label: "Sayt vidjeti", icon: Code },
     { href: "/channels", label: "Telegram və WhatsApp", icon: Send },
