@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { getCanned, saveCanned, saveWidget, type CannedReply, type ProactiveRule, type WidgetResponse, type WorkHours } from "@/lib/api";
+import { getCanned, saveCanned, saveWidget, type CannedReply, type WidgetResponse, type WorkHours } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 
 const DEFAULT_HOURS: WorkHours = { tz: "Asia/Baku", days: [null, ...Array.from({ length: 5 }, () => ({ from: "09:00", to: "18:00" })), null] };
-type Rule = Omit<ProactiveRule, "id"> & { id?: string };
 
 /**
  * Canlı operator (açıq/bağlı, işçi saatları, CSAT) və proaktiv mesajlar.
@@ -24,23 +24,20 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
   const [liveOn, setLiveOn] = useState(Boolean(w.live?.enabled));
   const [csat, setCsat] = useState(w.live?.csat !== false);
   const [hours, setHours] = useState<WorkHours | null>(w.live?.hours ?? null);
-  const [proOn, setProOn] = useState(Boolean(w.proactive?.enabled));
-  const [rules, setRules] = useState<Rule[]>(w.proactive?.rules ?? []);
   const [busy, setBusy] = useState(false);
   // Həftə Bazar ertəsindən başlayır, serverdə indeks 0 = Bazar
   const dayNames = [t("Bazar"), t("Bazar ertəsi"), t("Çərşənbə axşamı"), t("Çərşənbə"), t("Cümə axşamı"), t("Cümə"), t("Şənbə")];
   const order = [1, 2, 3, 4, 5, 6, 0];
 
-  const dirty = liveOn !== Boolean(w.live?.enabled) || csat !== (w.live?.csat !== false) || JSON.stringify(hours) !== JSON.stringify(w.live?.hours ?? null) || proOn !== Boolean(w.proactive?.enabled) || JSON.stringify(rules) !== JSON.stringify(w.proactive?.rules ?? []);
+  const dirty = liveOn !== Boolean(w.live?.enabled) || csat !== (w.live?.csat !== false) || JSON.stringify(hours) !== JSON.stringify(w.live?.hours ?? null);
   const setDay = (i: number, v: { from: string; to: string } | null) => hours && setHours({ ...hours, days: hours.days.map((d, j) => (j === i ? v : d)) });
-  const setRule = (i: number, p: Partial<Rule>) => setRules(rules.map((r, j) => (j === i ? { ...r, ...p } : r)));
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!dirty || busy) return;
     setBusy(true);
     try {
-      onChange(await saveWidget({ live: { enabled: liveOn, csat, hours }, proactive: { enabled: proOn, rules: rules as ProactiveRule[] } }));
+      onChange(await saveWidget({ live: { enabled: liveOn, csat, hours } }));
       toast.success(t("Saxlandı. Dəyişiklik saytda səhifə yenilənəndə görünəcək."));
     } catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); }
@@ -49,8 +46,8 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
   return (
     <Card id="live" className="scroll-mt-20">
       <CardHeader>
-        <CardTitle>{t("Canlı operator və proaktiv mesajlar")}</CardTitle>
-        <CardDescription>{t("Operatorla canlı söhbət, işçi saatları, söhbət sonrası qiymətləndirmə və ziyarətçi yazmamış çatın özü təklif göstərməsi.")}</CardDescription>
+        <CardTitle>{t("Canlı operator")}</CardTitle>
+        <CardDescription>{t("Operatorla canlı söhbət, işçi saatları və söhbət sonrası qiymətləndirmə.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={save} className="flex flex-col gap-5 text-sm">
@@ -93,34 +90,10 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
           <SwitchRow checked={csat} onChange={setCsat} on={t("Aktiv")} off={t("Söndürülüb")} title={t("Söhbət sonrası qiymət (CSAT)")}
             description={t("Operator cavab verib söhbəti bitirəndən sonra ziyarətçidən 1-5 ulduz istənir. Nəticə Canlı söhbət bölməsində görünür.")} />
 
-          <div className="flex flex-col gap-3">
-            <SwitchRow checked={proOn} onChange={setProOn} on={t("Aktiv")} off={t("Söndürülüb")} title={t("Proaktiv mesajlar")}
-              description={t("Ziyarətçi yazmamış, səhifədə müəyyən vaxt qalanda çat düyməsinin yanında qısa təklif çıxır. Mətn sənin yazdığındır, AI xərci yoxdur. Eyni ziyarətçiyə bir sessiyada hər mesaj yalnız bir dəfə göstərilir.")} />
-            {proOn && (
-              <div className="flex flex-col gap-3">
-                {rules.map((r, i) => (
-                  <div key={r.id ?? `n${i}`} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-                    <Label htmlFor={`pr-t${i}`}>{t("Mesaj")}</Label>
-                    <Textarea id={`pr-t${i}`} value={r.text} maxLength={140} rows={2} onChange={(e) => setRule(i, { text: e.target.value })} placeholder={t("Sualın var? Sənə kömək edə bilərəm.")} />
-                    <div className="flex flex-wrap items-end gap-3">
-                      <div className="flex flex-col gap-1">
-                        <Label htmlFor={`pr-d${i}`}>{t("Neçə saniyədən sonra")}</Label>
-                        <Input id={`pr-d${i}`} type="number" min={3} max={300} value={r.delaySec} onChange={(e) => setRule(i, { delaySec: Math.round(Number(e.target.value)) })} className="w-28" />
-                      </div>
-                      <div className="flex min-w-48 flex-1 flex-col gap-1">
-                        <Label htmlFor={`pr-m${i}`}>{t("Hansı səhifələrdə")}</Label>
-                        <Input id={`pr-m${i}`} value={r.match} maxLength={200} onChange={(e) => setRule(i, { match: e.target.value })} placeholder="/, /products/*" />
-                      </div>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setRules(rules.filter((_, j) => j !== i))} aria-label={t("Sil")}><Trash2 size={14} aria-hidden /></Button>
-                    </div>
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground">{t("Səhifə şablonu: * bütün sayt, /products/* bu bölmənin hamısı, vergüllə bir neçə yol. Ən çox 5 mesaj.")}</p>
-                {rules.length < 5 && <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setRules([...rules, { text: "", delaySec: 20, match: "*" }])}><Plus size={14} aria-hidden />{t("Mesaj əlavə et")}</Button>}
-                <p className="text-xs text-muted-foreground">{t("Başqa şərt üçün (məsələn, səbət tərk edilib) saytın skriptindən çağır:")} <code className="font-mono">CarAdvisor.proactive("Səbətində məhsul qalıb, kömək edim?")</code></p>
-              </div>
-            )}
-          </div>
+          <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+            {t("Proaktiv mesajlar indi Kampaniyalar bölməsindədir: başlıq, düymələr, kimə və nə vaxt göstərilməsi, statistika.")}{" "}
+            <Link href="/customers?f=campaigns" className="text-primary underline">{t("Kampaniyalara keç")}</Link>
+          </p>
           <Button disabled={!dirty || busy} className="self-start">{t("Saxla")}</Button>
         </form>
       </CardContent>

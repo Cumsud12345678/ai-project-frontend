@@ -14,11 +14,12 @@ import { ConfirmButton, VisitorFacts } from "@/components/visitor-facts";
  * və lazım olsa "ələ alır": ilk mesajı ziyarətçinin çatında görünür (≤15 san), söhbət canlı operatora keçir,
  * AI yazışması operator söhbətinə kontekst kimi düşür.
  */
-export function AiWatch({ title, onTaken }: { title: string; onTaken: (chatId: string) => void }) {
+export function AiWatch({ title, initial = "", onTaken }: { title: string; initial?: string; onTaken: (chatId: string) => void }) {
   const { t, locale } = useI18n();
   const [items, setItems] = useState<SiteVisitor[] | null>(null);
   const [enabled, setEnabled] = useState(true);
-  const [sel, setSel] = useState("");
+  const [sel, setSel] = useState(initial);
+  useEffect(() => { if (initial) setSel(initial); }, [initial]);
   const [msgs, setMsgs] = useState<ConversationMsg[] | null>(null);
   const [convErr, setConvErr] = useState("");
   const [text, setText] = useState("");

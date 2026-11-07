@@ -6,7 +6,13 @@ export type Profile = { language?: string; tone?: string; maxResults?: number; e
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string; /** CSV/JSON/XML faylının mətni (yalnız fayl ilə qoşulmada) */ feedText?: string };
 
 export type WorkHours = { tz: string; days: ({ from: string; to: string } | null)[] };
-export type ProactiveRule = { id: string; text: string; delaySec: number; match: string };
+export type CampaignButton = { label: string; kind: "chat" | "send" | "close" };
+/** Kampaniya (proaktiv mesaj) */
+export type ProactiveRule = { id: string; text: string; delaySec: number; match: string; name?: string; title?: string; active?: boolean;
+  audience?: "all" | "new" | "returning"; device?: "all" | "mobile" | "desktop"; freq?: "visit" | "once"; online?: boolean; buttons?: CampaignButton[]; startAt?: string | null; endAt?: string | null };
+export type CampaignStat = { shown: number; clicked: number; chats: number };
+export const getCampaignStats = () => call<{ stats: Record<string, CampaignStat> }>("/tenant/campaigns/stats");
+export const resetCampaignStats = (id: string) => call<{ ok: true }>(`/tenant/campaigns/${id}/stats`, { method: "DELETE" });
 export type WidgetSettings = {
   key: string;
   enabled: boolean;

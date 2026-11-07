@@ -52,7 +52,7 @@ function useGroups() {
   const { me, tenant, isOperator } = useSession();
   const mode: Mode = tenant?.config.profile?.mode ?? "listings";
   return useMemo(() => {
-    if (isOperator) return GROUPS.filter((g) => g.id === "inbox");
+    if (isOperator) return GROUPS.filter((g) => g.id === "inbox" || g.id === "customers"); // operator: müraciətlər və "İndi saytda"
     return GROUPS.map((g) => ({
       ...g,
       items: g.items.filter((i) => (i.when === "noTenant" ? !tenant : i.when === "partner" ? Boolean(me.partner) : !i.only || !tenant || i.only.includes(mode))),
@@ -61,7 +61,7 @@ function useGroups() {
 }
 
 /** Bu səhifələr çərçivənin içini tam tutur (boşluq və eni məhdudlaşdırılmır) */
-const FULL_BLEED = ["/inbox"];
+const FULL_BLEED = ["/inbox", "/customers"];
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 

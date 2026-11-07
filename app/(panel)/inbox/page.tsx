@@ -1,19 +1,18 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Ban, Bot, Check, CheckCheck, Hourglass, ChevronDown, CircleHelp, Clock, Eye, Inbox as InboxIcon, Mail, MessageCircle, MessagesSquare, Phone, Send, Star, Trash2, Undo2, UserRound, UserRoundX, type LucideIcon } from "lucide-react";
+import { Ban, Bot, Check, CheckCheck, Hourglass, CircleHelp, Clock, Inbox as InboxIcon, Mail, MessageCircle, MessagesSquare, Phone, Send, Star, Trash2, Undo2, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 import { deleteLead, deleteUnanswered, getBlocks, getLeads, getLiveCount, getLiveList, getTeam, getVisitors, getUnanswered, unblock, updateLead, type BlockItem, type LeadRow, type LeadStatus, type LiveItem, type UnansweredRow } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
-import { cn } from "@/lib/utils";
 import { RequireTenant, useSession } from "@/components/session";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LiveInbox, type LiveFolder } from "@/components/live-inbox";
 import { LeadForwardCard } from "@/components/lead-forward-card";
 import { NotifyBar } from "@/components/notify-bar";
-import { SiteVisitors } from "@/components/site-visitors";
+import { FolderPane, Pane, type FolderItem } from "@/components/folder-pane";
 import { AiWatch } from "@/components/ai-watch";
 
 const STATUS_ORDER: LeadStatus[] = ["new", "open", "pending", "solved"];
@@ -147,15 +146,15 @@ function Unanswered({ rows, reload }: { rows: UnansweredRow[]; reload: () => voi
   );
 }
 
-type FolderId = "ai" | "blocked" | "pending" | "open" | "mine" | "free" | "waiting" | "closed" | "site" | "telegram" | "whatsapp" | "vip" | "visitors" | "leads" | "handled" | "unanswered";
-type Folder = { id: FolderId; label: string; icon: LucideIcon; count?: number; live?: LiveFolder; empty?: string; color?: string };
+type FolderId = "ai" | "blocked" | "pending" | "open" | "mine" | "free" | "waiting" | "closed" | "site" | "telegram" | "whatsapp" | "vip" | "leads" | "handled" | "unanswered";
+type Folder = FolderItem<FolderId> & { live?: LiveFolder; empty?: string };
 
 const STORE = "inbox_folder";
 const myNameOf = (email?: string) => (email || "").split("@")[0].slice(0, 40);
 
 /**
  * Müraciətlər: bütün gələnlər bir yerdə. Solda qovluqlar (saylarla), ortada siyahı, sağda yazışma.
- * Canlı söhbətlər (vəziyyət və kanal üzrə), "İndi saytda", əlaqə formasından gələn müraciətlər və cavabsız suallar.
+ * Canlı söhbətlər (vəziyyət və kanal üzrə), AI söhbətləri, əlaqə formasından gələn müraciətlər və cavabsız suallar.
  */
 function Inbox() {
   const { t } = useI18n();
@@ -163,13 +162,13 @@ function Inbox() {
   const myName = myNameOf(me?.email);
   const [folder, setFolder] = useState<FolderId>("open");
   const [openId, setOpenId] = useState<string | undefined>();
+  const [watchPid, setWatchPid] = useState("");
   const [live, setLive] = useState<Awaited<ReturnType<typeof getLiveCount>> | null>(null);
   const [items, setItems] = useState<LiveItem[]>([]);
   const [aiCount, setAiCount] = useState<number | undefined>();
   const [leads, setLeads] = useState<Awaited<ReturnType<typeof getLeads>> | null>(null);
   const [un, setUn] = useState<Awaited<ReturnType<typeof getUnanswered>> | null>(null);
   const [error, setError] = useState("");
-  const [closedGroups, setClosedGroups] = useState<string[]>([]);
 
   // Son seçilən qovluq yadda qalır (yoxdursa: canlı söhbət açıqdırsa "Açıq", deyilsə "Müraciətlər")
   useEffect(() => {
@@ -177,6 +176,7 @@ function Inbox() {
     const q = new URLSearchParams(window.location.search);
     const chat = q.get("chat"), f = q.get("f") as FolderId | null;
     if (chat) { setFolder(q.get("closed") ? "closed" : "open"); setOpenId(chat); return; }
+    if (q.get("pid")) { setFolder("ai"); setWatchPid(q.get("pid")!); return; }
     if (f) { setFolder(f); return; }
     try { const v = localStorage.getItem(STORE) as FolderId | null; if (v) setFolder(v); } catch { /* yaddaş bağlıdır */ }
   }, []);
@@ -207,10 +207,9 @@ function Inbox() {
     { id: "live", label: t("Canlı söhbət"), items: [
       { id: "ai", label: t("AI söhbətləri"), icon: Bot, color: "text-violet-600", count: aiCount },
       { id: "open", label: t("Açıq"), icon: MessagesSquare, count: items.length, live: lv("all"), empty: t("Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa və ya Telegram/WhatsApp-da /operator yazsa burada görünəcək.") },
-      { id: "waiting", label: t("Cavab gözləyir"), icon: Clock, count: n((c) => c.waiting), live: lv("waiting"), empty: t("Hamısına cavab verilib.") },
+      { id: "waiting", label: t("Cavab gözləyir"), icon: Clock, alert: true, count: n((c) => c.waiting), live: lv("waiting"), empty: t("Hamısına cavab verilib.") },
       { id: "mine", label: t("Mənimkilər"), icon: UserRound, count: n((c) => c.assignee?.name === myName), live: lv("mine"), empty: t("Sənə təyin olunmuş söhbət yoxdur. Söhbəti açıb “Götür” bas.") },
       { id: "free", label: t("Təyin olunmamış"), icon: UserRoundX, count: n((c) => !c.assignee), live: lv("free"), empty: t("Bütün söhbətlərin operatoru var.") },
-      { id: "visitors", label: t("İndi saytda"), icon: Eye },
       { id: "closed", label: t("Bağlanmış"), icon: CheckCheck, live: lv("all", "all", "closed"), empty: t("Bağlanmış söhbət yoxdur.") },
       ...(isOperator ? [] : [{ id: "blocked" as const, label: t("Bloklanmış"), icon: Ban }]),
     ] },
@@ -229,21 +228,13 @@ function Inbox() {
   ];
   const all = groups.flatMap((g) => g.items);
   const cur = all.find((f) => f.id === folder) ?? all[0]!;
-  const liveFolder = Boolean(cur.live) || cur.id === "visitors" || cur.id === "ai";
+  const liveFolder = Boolean(cur.live) || cur.id === "ai";
 
-  const header = (title: string, extra?: React.ReactNode) => (
-    <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4"><h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{title}</h2>{extra}</div>
-  );
-  const pane = (title: string, children: React.ReactNode) => (
-    <div className="flex min-h-0 flex-1 flex-col">{header(title)}<div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6"><div className="mx-auto flex max-w-3xl flex-col gap-4">{children}</div></div></div>
-  );
+  const pane = (title: string, children: React.ReactNode) => <Pane title={title}>{children}</Pane>;
 
   let content: React.ReactNode;
   if (cur.live) content = live ? <LiveInbox key={cur.id} enabled={live.enabled} folder={cur.live} title={cur.label} empty={cur.empty ?? ""} open={openId} onChange={loadLive} /> : null;
-  else if (cur.id === "ai") content = <AiWatch title={cur.label} onTaken={(id) => { pick("open"); setOpenId(id); loadLive(); }} />;
-  else if (cur.id === "visitors") content = pane(cur.label, live?.enabled
-    ? <SiteVisitors onStarted={(id) => { pick("open"); setOpenId(id); loadLive(); }} />
-    : <p className="text-sm text-muted-foreground">{t("Canlı operator söhbəti söndürülüb.")} <Link href="/embed#live" className="text-primary underline">{t("Aç")}</Link></p>);
+  else if (cur.id === "ai") content = <AiWatch title={cur.label} initial={watchPid} onTaken={(id) => { pick("open"); setOpenId(id); loadLive(); }} />;
   else if (cur.id === "unanswered") content = pane(cur.label, un ? <Unanswered rows={un.items} reload={loadForms} /> : null);
   else if (cur.id === "blocked") content = pane(cur.label, <Blocked />);
   else {
@@ -252,61 +243,16 @@ function Inbox() {
     content = pane(cur.label, leads ? <>{cur.id === "leads" && <LeadForwardCard />}<Leads rows={leads.items.filter((l) => want.includes(statusOf(l)))} reload={loadForms} empty={empty} /></> : null);
   }
 
-  return (
-    <div className="flex h-full min-h-0">
-      <nav aria-label={t("Qovluqlar")} className="hidden w-60 shrink-0 flex-col border-r border-border bg-shell/50 md:flex">
-        {header(t("Müraciətlər"))}
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {groups.map((g) => {
-            const shut = closedGroups.includes(g.id);
-            return (
-              <div key={g.id} className="mb-2">
-                <button type="button" onClick={() => setClosedGroups((x) => (shut ? x.filter((y) => y !== g.id) : [...x, g.id]))} aria-expanded={!shut}
-                  className="flex w-full cursor-pointer items-center justify-between rounded-md px-2.5 py-1.5 text-[13px] font-semibold hover:bg-card/60">
-                  {g.label}<ChevronDown size={15} aria-hidden className={cn("text-muted-foreground transition-transform", shut && "-rotate-90")} />
-                </button>
-                {!shut && (
-                  <ul className="mt-0.5 flex flex-col gap-0.5">
-                    {g.items.map((f) => (
-                      <li key={f.id}>
-                        <button type="button" onClick={() => pick(f.id)} aria-current={folder === f.id ? "page" : undefined}
-                          className={cn("flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors", folder === f.id ? "bg-card font-medium text-foreground shadow-sm ring-1 ring-border/70" : "text-muted-foreground hover:bg-card/60 hover:text-foreground")}>
-                          <f.icon size={15} aria-hidden className={cn("shrink-0", f.color)} />
-                          <span className="min-w-0 flex-1 truncate text-left">{f.label}</span>
-                          {typeof f.count === "number" && <span className={cn("text-xs tabular-nums", f.id === "waiting" && f.count > 0 ? "rounded-full bg-destructive px-1.5 font-semibold text-white" : "text-muted-foreground")}>{f.count}</span>}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <div className="border-t border-border p-2"><NotifyBar /></div>
-      </nav>
-
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* Telefon: qovluqlar üfüqi siyahıda */}
-        <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-border px-3 py-2 md:hidden" role="tablist" aria-label={t("Qovluqlar")}>
-          {all.map((f) => (
-            <button key={f.id} type="button" role="tab" aria-selected={folder === f.id} onClick={() => pick(f.id)}
-              className={cn("shrink-0 cursor-pointer rounded-full border px-3 py-1 text-sm", folder === f.id ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground")}>
-              {f.label}{typeof f.count === "number" && f.count > 0 ? ` ${f.count}` : ""}
-            </button>
-          ))}
-        </div>
-        {liveFolder && live?.enabled && live.openNow === false && (
-          <p role="status" className="shrink-0 border-b border-amber/30 bg-amber/10 px-4 py-2 text-sm">
-            {t("İndi işçi saatlarından kənardır: ziyarətçilərə “Operatorla canlı yaz” düyməsi göstərilmir, onlara əlaqə forması təklif olunur. Açıq söhbətlərə cavab verə bilərsən.")}{" "}
-            <Link href="/embed#live" className="underline">{t("Saatları dəyiş")}</Link>
-          </p>
-        )}
-        {error && <p role="alert" className="shrink-0 px-4 py-2 text-sm text-destructive">{error}</p>}
-        <div className="flex min-h-0 flex-1">{content}</div>
-      </div>
-    </div>
-  );
+  const banner = <>
+    {liveFolder && live?.enabled && live.openNow === false && (
+      <p role="status" className="shrink-0 border-b border-amber/30 bg-amber/10 px-4 py-2 text-sm">
+        {t("İndi işçi saatlarından kənardır: ziyarətçilərə “Operatorla canlı yaz” düyməsi göstərilmir, onlara əlaqə forması təklif olunur. Açıq söhbətlərə cavab verə bilərsən.")}{" "}
+        <Link href="/embed#live" className="underline">{t("Saatları dəyiş")}</Link>
+      </p>
+    )}
+    {error && <p role="alert" className="shrink-0 px-4 py-2 text-sm text-destructive">{error}</p>}
+  </>;
+  return <FolderPane title={t("Müraciətlər")} groups={groups} value={cur.id} onPick={pick} footer={<NotifyBar />} banner={banner}>{content}</FolderPane>;
 }
 
 export default function InboxPage() {
