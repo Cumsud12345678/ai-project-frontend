@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { deletePrivateData, getPrivateData, newIdentitySecret, savePrivateData, testPrivateData, type FieldSpec, type PrivateData, type PrivateSource } from "@/lib/api";
+import { deletePrivateData, getPrivateData, savePrivateData, testPrivateData, type FieldSpec, type PrivateData, type PrivateSource } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
-import { KeyReveal } from "@/components/key-reveal";
+import { IdentitySetup } from "@/components/identity-setup";
 import { RequireTenant } from "@/components/session";
 import { FormSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -46,45 +46,6 @@ function toSource(f: SrcForm): PrivateSource {
     ...(f.userParam.trim() && { userParam: f.userParam.trim() }), ...(f.idField.trim() && { idField: f.idField.trim() }), ...(f.ownerField.trim() && { ownerField: f.ownerField.trim() }),
     ...(f.linesPath.trim() && f.linesTitle.trim() && { lines: { path: f.linesPath.trim(), title: f.linesTitle.trim(), ...(f.linesQty.trim() && { qty: f.linesQty.trim() }) } }),
   };
-}
-
-const NODE = `import crypto from "node:crypto";
-const b64u = (b) => Buffer.from(b).toString("base64url");
-export function carAdvisorToken(userId, secret = process.env.CAR_ADVISOR_SECRET) {
-  const p = b64u(JSON.stringify({ sub: String(userId), exp: Math.floor(Date.now() / 1000) + 900 }));
-  return \`v1.\${p}.\${crypto.createHmac("sha256", secret).update(\`v1.\${p}\`).digest("base64url")}\`;
-}`;
-const PHP = `function carAdvisorToken($userId, $secret) {
-  $b64u = fn($s) => rtrim(strtr(base64_encode($s), '+/', '-_'), '=');
-  $p = $b64u(json_encode(['sub' => (string)$userId, 'exp' => time() + 900]));
-  return "v1.$p." . $b64u(hash_hmac('sha256', "v1.$p", $secret, true));
-}`;
-const PY = `import base64, hashlib, hmac, json, time
-def car_advisor_token(user_id, secret):
-    b64u = lambda b: base64.urlsafe_b64encode(b).rstrip(b"=").decode()
-    p = b64u(json.dumps({"sub": str(user_id), "exp": int(time.time()) + 900}).encode())
-    return f"v1.{p}." + b64u(hmac.new(secret.encode(), f"v1.{p}".encode(), hashlib.sha256).digest())`;
-const PAGE_JS = `<script>
-  // Daxil olmuş istifadəçi üçün: tokeni SERVER yaradır (gizli açar brauzerə düşməməlidir)
-  function caIdentify(token) {
-    var go = function () { window.CarAdvisor && window.CarAdvisor.identify(token); };
-    window.CarAdvisor ? go() : window.addEventListener("load", go);
-  }
-  caIdentify("TOKEN_SERVERDƏN"); // istifadəçi çıxanda: caIdentify(null)
-  // Token bitəndə (15 dəq) yenisini al:
-  window.addEventListener("caradvisor:identity-expired", function () {
-    fetch("/api/car-advisor-token").then(function (r) { return r.text(); }).then(caIdentify);
-  });
-</script>`;
-
-function Code({ code }: { code: string }) {
-  const { t } = useI18n();
-  return (
-    <div className="relative">
-      <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs leading-relaxed"><code>{code}</code></pre>
-      <Button type="button" size="sm" variant="outline" className="absolute right-2 top-2" onClick={() => { navigator.clipboard?.writeText(code).then(() => toast.success(t("Kopyalandı")), () => toast.error(t("Kopyalanmadı. Açarı əl ilə seçib kopyala."))); }}>{t("Kopyala")}</Button>
-    </div>
-  );
 }
 
 function SourceCard({ f, set, remove, index }: { f: SrcForm; set: (s: SrcForm) => void; remove: () => void; index: number }) {
@@ -143,7 +104,7 @@ function SourceCard({ f, set, remove, index }: { f: SrcForm; set: (s: SrcForm) =
 }
 
 function CustomerData() {
-  const { t, short } = useI18n();
+  const { t } = useI18n();
   const [data, setData] = useState<PrivateData | null>(null);
   const [error, setError] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
@@ -153,8 +114,6 @@ function CustomerData() {
   const [sources, setSources] = useState<SrcForm[]>([]);
   const [preset, setPreset] = useState("orders");
   const [saving, setSaving] = useState(false);
-  const [revealed, setRevealed] = useState<string | null>(null);
-  const [lang, setLang] = useState<"node" | "php" | "py">("node");
   const [testKind, setTestKind] = useState("");
   const [testUser, setTestUser] = useState("");
   const [testOut, setTestOut] = useState("");
@@ -180,10 +139,6 @@ function CustomerData() {
     } catch (err) { setError((err as Error).message); }
     finally { setSaving(false); }
   }
-  async function makeSecret() {
-    try { setRevealed((await newIdentitySecret()).identitySecret); setData(await getPrivateData()); }
-    catch (err) { toast.error((err as Error).message); }
-  }
   async function runTest() {
     setTestOut("…");
     try { const r = await testPrivateData(testKind || data?.sources[0]?.key || "", testUser.trim()); setTestOut(r.ok ? (r.records?.length ? JSON.stringify(r.records, null, 2) : t("Bu istifadəçi üçün qeyd gəlmədi.")) : r.error ?? t("Xəta baş verdi")); }
@@ -191,7 +146,6 @@ function CustomerData() {
   }
 
   if (!data) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <FormSkeleton />;
-  const codes = { node: NODE, php: PHP, py: PY };
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -257,35 +211,10 @@ function CustomerData() {
         </Card>
       )}
 
-      {data.configured && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("3. Gizli açar (token imzalamaq üçün)")}</CardTitle>
-            <CardDescription>{data.identity.configured ? t("Yaradılıb: {d}. Yeni açar yaratsan köhnəsi dərhal işləməyi dayandırır.", { d: data.identity.createdAt ? short(data.identity.createdAt) : "" }) : t("Hələ yaradılmayıb.")}</CardDescription></CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {revealed && <KeyReveal apiKey={revealed} title={t("Yeni gizli açar")} onDone={() => setRevealed(null)} />}
-            {!revealed && (data.identity.configured
-              ? <DangerAction label="Yeni açar yarat" confirm={{ kind: "text", expected: t("yarat"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("yarat") }) }} warning={t("Köhnə açar dərhal etibarsız olur, saytındakı token kodunu yeni açarla yeniləməsən istifadəçilər öz məlumatlarını görə bilməyəcək.")} onConfirm={makeSecret} />
-              : <Button type="button" className="self-start" onClick={makeSecret}>{t("Gizli açar yarat")}</Button>)}
-          </CardContent>
-        </Card>
-      )}
-
-      {data.identity.configured && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("4. Saytında token ver")}</CardTitle><CardDescription>{t("Server tərəfdə (istifadəçi daxil olanda) token yarat. Gizli açarı heç vaxt brauzerə vermə.")}</CardDescription></CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex gap-1 text-sm" role="tablist">
-              {(["node", "php", "py"] as const).map((k) => <button key={k} role="tab" type="button" aria-selected={lang === k} onClick={() => setLang(k)} className={`rounded px-3 py-1.5 ${lang === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{k === "node" ? "Node.js" : k === "php" ? "PHP" : "Python"}</button>)}
-            </div>
-            <Code code={codes[lang]} />
-            <p className="text-sm text-muted-foreground">{t("Səhifədə vidjet skriptindən sonra tokeni vidjetə ver. İstifadəçi çıxanda null göndər: söhbət və şəxsi cavablar brauzerdən silinir.")}</p>
-            <Code code={PAGE_JS} />
-          </CardContent>
-        </Card>
-      )}
+      <IdentitySetup step="3. " onChanged={() => { getPrivateData().then(setData).catch(() => {}); }} />
 
       {data.configured && (
-        <DangerAction label="Müştəri məlumatını söndür" confirm={{ kind: "text", expected: t("sil"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("sil") }) }} warning={t("API ayarları və gizli açar silinəcək, çat şəxsi məlumatı göstərməyəcək.")} onConfirm={async () => { await deletePrivateData(); apply({ configured: false, sources: [], identity: { configured: false } }); toast.success(t("Söndürüldü.")); }} />
+        <DangerAction label="Müştəri məlumatını söndür" confirm={{ kind: "text", expected: t("sil"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("sil") }) }} warning={t("API ayarları silinəcək, çat şəxsi məlumatı göstərməyəcək. Gizli açar yalnız daxil olmuş istifadəçi üçün əməliyyat yoxdursa silinir.")} onConfirm={async () => { await deletePrivateData(); apply(await getPrivateData()); toast.success(t("Söndürüldü.")); }} />
       )}
     </div>
   );

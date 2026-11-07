@@ -96,6 +96,7 @@ function ListingsSetup() {
         const r = await updateConfig(config);
         setResult({ ok: true, sampleCount: r.sampleListings.length, sampleListings: r.sampleListings, supportedFilters: [] });
         toast.success(t("Konfiqurasiya yeniləndi. API açarın dəyişmədi."));
+        if (r.modeChanged === "both") toast.info(t("Çatın rejimi “Elanlar + dəstək” oldu: elan axtarışı və bilik bazası birlikdə işləyir. Bilik bazası bölməsindən dəyişə bilərsən."), { duration: 9000 });
         await refresh();
       } else {
         const r = await activate(config);
@@ -124,6 +125,12 @@ function ListingsSetup() {
 
       <Segmented value={way} onChange={setWay} label={t("Qoşulma yolu")}
         options={[{ value: "api", label: t("API ilə (JSON)") }, { value: "feed", label: t("Fayl və ya link ilə (CSV, JSON, XML)") }]} />
+
+      {tenant?.config.profile?.mode === "support" && (
+        <p role="status" className="rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 text-sm">
+          {t("Çat hazırda “Yalnız dəstək” rejimindədir və elan axtarmır. Mənbəni yadda saxlasan, rejim avtomatik “Elanlar + dəstək” olacaq: bilik bazası da işləməyə davam edəcək.")}
+        </p>
+      )}
 
       {way === "api" && <><ConfigAssist text={text} onChange={adopt} /><ConfigGuide /></>}
 

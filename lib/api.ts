@@ -151,7 +151,7 @@ export const deleteMyAccount = (password: string) => post<{ ok: true }>("/auth/d
 export const getTenant = () => call<TenantResponse>("/tenant");
 export const testConfig = (config: ConfigJson) => post<TestResult>("/tenant/config/test", { config });
 export const activate = (config: ConfigJson) => post<{ apiKey: string; tenant: TenantInfo; sampleListings: Listing[] }>("/tenant", { config });
-export const updateConfig = (config: ConfigJson) => call<{ tenant: TenantInfo; sampleListings: Listing[] }>("/tenant/config", { method: "PUT", body: { config } });
+export const updateConfig = (config: ConfigJson) => call<{ tenant: TenantInfo; sampleListings: Listing[]; modeChanged?: "listings" | "support" | "both" }>("/tenant/config", { method: "PUT", body: { config } });
 // Fayl/link ilə qoşulma (CSV, JSON, XML)
 export type FeedColumn = { path: string; samples: string[]; filled: number };
 export type FeedPreview = { ok: true; format: "csv" | "json" | "xml"; itemsPath: string; delimiter: string | null; count: number; truncated: boolean; columns: FeedColumn[]; suggestion: { fields: Record<string, unknown>; defaults: Record<string, unknown> }; sample: Listing[]; rawSample: unknown[] };

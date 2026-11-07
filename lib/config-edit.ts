@@ -98,6 +98,14 @@ export function addAttribute(config: ConfigJson, label: string, path: string, t:
   return { config: next };
 }
 
+// AI serverindəki PUBLIC_FIELDS ilə eyni (src/data/filters.js)
+const KNOWN_FIELDS = ["id", "title", "make", "model", "price", "currency", "year", "volume", "power", "mileage", "bodyType", "city", "fuelType", "transmission", "used", "credit", "barter", "url", "image", "attributes"];
+const FIELD_HINTS: Record<string, string> = {
+  "başlıq": "title", "ad": "title", "name": "title", "qiymət": "price", "qiymet": "price", "valyuta": "currency", "marka": "make", "brand": "make", "model": "model",
+  "il": "year", "yürüş": "mileage", "yurus": "mileage", "kateqoriya": "bodyType", "category": "bodyType", "şəhər": "city", "seher": "city",
+  "şəkil": "image", "sekil": "image", "foto": "image", "link": "url", "keçid": "url", "yanacaq": "fuelType", "sürətlər qutusu": "transmission",
+};
+
 export type Issue = { level: "error" | "warn" | "info"; text: string };
 
 /** Göndərmədən əvvəl tez yoxlama: səhvlər, xəbərdarlıqlar və faydalı məsləhətlər. */
@@ -126,6 +134,14 @@ export function lintConfig(config: ConfigJson, t: T = AZ): Issue[] {
     if (/^https?:\/\//i.test(imgPath) && !imgPath.includes("{")) out.push({ level: "error", text: t("fields.image: tam ünvanın içində dəyişən hissə { } ilə yazılmalıdır, yoxsa o sadə yol sayılır və şəkil boş qalır. Məsələn: “https://cdn.saytim.az/{images[0]}”.") });
     else if (imgPath && !imgPath.includes("{") && /^[\w.\-\[\]]+$/.test(imgPath) && !imgTpl.includes("://") && !/(url|src|link|href)$/i.test(imgPath) && /(^|\.)(images?|photos?|pictures?|img|thumb\w*)/i.test(imgPath))
       out.push({ level: "info", text: t("fields.image yalnız açar/yoldur (məs. “images[0]”). Şəkillər ayrıca saxlanılırsa (R2, S3, CDN), tam ünvan şablonu yaz: “https://cdn.saytim.az/{images[0]}”. Yoxsa şəkil kataloqda yüklənməyəcək.") });
+    // Sistem yalnız bu sahə adlarını tanıyır; qalanları səssizcə atılır (məs. “qiymət” → qiymət boş görünür)
+    const unknown = Object.keys(fields).filter((k) => !KNOWN_FIELDS.includes(k));
+    for (const k of unknown) {
+      const hint = FIELD_HINTS[k.toLowerCase()];
+      out.push({ level: "error", text: hint
+        ? t("response.fields.{k} tanınmır, sahə adı ingiliscə olmalıdır: “{h}”.", { k, h: hint })
+        : t("response.fields.{k} tanınmır və atılacaq. Standart adlardan birini yaz ({list}) və ya bu sahəni “attributes” içinə köçür.", { k, list: KNOWN_FIELDS.filter((f) => f !== "attributes").join(", ") }) });
+    }
     const attrs = isObj(fields.attributes) ? Object.keys(fields.attributes) : [];
     if (attrs.length > 8) out.push({ level: "warn", text: t("{n} əlavə sahə var. Hər biri AI sorğusunu bahalaşdırır, 5-8 kifayətdir.", { n: attrs.length }) });
   }

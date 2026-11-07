@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { clearActionLog, deleteActions, getActionLog, getActions, getActionStats, newSigningSecret, saveActions, testAction, type ActionItem, type ActionLogEntry, type ActionStats, type ActionParam, type ActionsData, type ActionTestResult } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
+import { IdentitySetup } from "@/components/identity-setup";
 import { KeyReveal } from "@/components/key-reveal";
 import { RequireTenant } from "@/components/session";
 import { FormSkeleton } from "@/components/skeletons";
@@ -91,7 +92,7 @@ function ActionCard({ f, set, remove, index, identityReady, runs }: { f: Form; s
           <label className="flex items-center gap-2"><input type="checkbox" checked={f.enabled !== false} onChange={(e) => up({ enabled: e.target.checked })} />{t("Aktivdir")}</label>
         </div>
         {f.requireIdentity
-          ? <p className="text-xs text-muted-foreground">{t("İstifadəçinin ID-si sorğuya (userId) saytın imzaladığı tokendən əlavə olunur. Ünvanda {userId} yaza bilərsən. AI onu dəyişə bilməz.")}{!identityReady && <> <b>{t("Əvvəlcə “Müştəri məlumatı” bölməsində gizli açar yarat.")}</b></>}</p>
+          ? <p className="text-xs text-muted-foreground">{t("İstifadəçinin ID-si sorğuya (userId) saytın imzaladığı tokendən əlavə olunur. Ünvanda {userId} yaza bilərsən. AI onu dəyişə bilməz.")}{!identityReady && <> <b>{t("Aşağıda “Gizli açar” bölməsində açar yarat.")}</b></>}</p>
           : <p className="text-xs text-destructive">{t("Diqqət: bu əməliyyat daxil olmamış ziyarətçilərə də açıqdır. Yalnız zərərsiz əməliyyatlar üçün (bilet, müraciət, rezerv) istifadə et; sifariş ləğvi kimi hesaba aid işlər üçün yuxarıdakı qutunu işarələ.")}</p>}
         <div>
           <p className="mb-2 text-sm font-medium">{t("Parametrlər: AI bunları istifadəçidən soruşur")}</p>
@@ -252,6 +253,8 @@ function ActionsPage() {
       </form>
 
       {revealed && <KeyReveal apiKey={revealed} title={t("İmza açarı (sorğunun həqiqiliyini yoxlamaq üçün)")} onDone={() => setRevealed(null)} />}
+
+      {(items.some((f) => f.requireIdentity) || data.identityReady) && <IdentitySetup onChanged={() => { getActions().then(setData).catch(() => {}); }} />}
 
       {saved && (
         <Card>
