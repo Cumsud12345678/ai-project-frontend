@@ -13,6 +13,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-amber: var(--amber);
   --color-destructive: var(--destructive);
+  --color-shell: var(--shell);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-muted: var(--sidebar-muted);
@@ -26,6 +27,7 @@
 
 :root {
   --background: #f4f6f9;
+  --shell: #eceff4; /* panel çərçivəsinin fonu (ikon zolağı, menyu, yuxarı zolaq) */
   --foreground: #0f172a;
   --card: #ffffff;
   --muted: #eef1f6;

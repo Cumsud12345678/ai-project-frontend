@@ -50,6 +50,8 @@ const EXTRA = [
   "Gözləyən 3 yükləmə sorğun var. Əvvəlcə onlar həll olunmalıdır", "Məbləğ düzgün deyil", "Sorğu tapılmadı", "Sorğu artıq həll olunub",
   "Bakı", "Gəncə", "Sumqayıt", "Qiymət (min)", "Qiymət (max)", "Şəhər", "Yanacaq növü", "Rəng",
   "İstifadə", "Sınaq söhbəti", "Sorğular", "Elanlar", "Elan mənbəyi", "Saytına qoş", "Ayarlar",
+  // panelin çərçivəsi (components/panel-shell.tsx: GROUPS)
+  "Ümumi", "Köməkçi", "Kanallar", "Sayt vidjeti", "Telegram və WhatsApp", "Hesab", "Quraşdırma", "Müraciətlər", "Bilik bazası", "Kataloq", "Müştəri məlumatı", "Əməliyyatlar", "Balans", "Partnyor",
   "Kateqoriya", "Brend", "Çatdırılma", "Qara · 12 ay zəmanət", "Ağ · 24 ay zəmanət",
   "Elan", "Qiymət", "İl", "Yürüş", "km",
   "Yeni açar yarat", "Açarı yenilə", "İstifadəçini sil", "Hesabımı sil", "Bütün sorğuları sil",

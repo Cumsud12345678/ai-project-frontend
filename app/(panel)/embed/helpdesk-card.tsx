@@ -13,10 +13,15 @@ import { SwitchRow } from "@/components/ui/switch";
 const DEFAULT_HOURS: WorkHours = { tz: "Asia/Baku", days: [null, ...Array.from({ length: 5 }, () => ({ from: "09:00", to: "18:00" })), null] };
 type Rule = Omit<ProactiveRule, "id"> & { id?: string };
 
-/** İşçi saatları, CSAT qiymətləndirməsi və proaktiv mesajlar: canlı operator və vidjet davranışı. */
+/**
+ * Canlı operator (açıq/bağlı, işçi saatları, CSAT) və proaktiv mesajlar.
+ * Canlı operatorun bütün ayarları yalnız bu kartdadır: əvvəl açıq/bağlı “Görünüş” kartında idi və iki kart
+ * bir-birinin köhnə dəyərini yazırdı (saat qoyub saxlayanda operator bağlı qalırdı).
+ */
 export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChange: (d: WidgetResponse) => void }) {
   const { t } = useI18n();
   const w = data.widget;
+  const [liveOn, setLiveOn] = useState(Boolean(w.live?.enabled));
   const [csat, setCsat] = useState(w.live?.csat !== false);
   const [hours, setHours] = useState<WorkHours | null>(w.live?.hours ?? null);
   const [proOn, setProOn] = useState(Boolean(w.proactive?.enabled));
@@ -26,7 +31,7 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
   const dayNames = [t("Bazar"), t("Bazar ertəsi"), t("Çərşənbə axşamı"), t("Çərşənbə"), t("Cümə axşamı"), t("Cümə"), t("Şənbə")];
   const order = [1, 2, 3, 4, 5, 6, 0];
 
-  const dirty = csat !== (w.live?.csat !== false) || JSON.stringify(hours) !== JSON.stringify(w.live?.hours ?? null) || proOn !== Boolean(w.proactive?.enabled) || JSON.stringify(rules) !== JSON.stringify(w.proactive?.rules ?? []);
+  const dirty = liveOn !== Boolean(w.live?.enabled) || csat !== (w.live?.csat !== false) || JSON.stringify(hours) !== JSON.stringify(w.live?.hours ?? null) || proOn !== Boolean(w.proactive?.enabled) || JSON.stringify(rules) !== JSON.stringify(w.proactive?.rules ?? []);
   const setDay = (i: number, v: { from: string; to: string } | null) => hours && setHours({ ...hours, days: hours.days.map((d, j) => (j === i ? v : d)) });
   const setRule = (i: number, p: Partial<Rule>) => setRules(rules.map((r, j) => (j === i ? { ...r, ...p } : r)));
 
@@ -35,22 +40,26 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
     if (!dirty || busy) return;
     setBusy(true);
     try {
-      onChange(await saveWidget({ live: { enabled: Boolean(w.live?.enabled), csat, hours }, proactive: { enabled: proOn, rules: rules as ProactiveRule[] } }));
+      onChange(await saveWidget({ live: { enabled: liveOn, csat, hours }, proactive: { enabled: proOn, rules: rules as ProactiveRule[] } }));
       toast.success(t("Saxlandı. Dəyişiklik saytda səhifə yenilənəndə görünəcək."));
     } catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); }
   }
 
   return (
-    <Card>
+    <Card id="live" className="scroll-mt-20">
       <CardHeader>
-        <CardTitle>{t("Operator və proaktiv mesajlar")}</CardTitle>
-        <CardDescription>{t("İşçi saatları, söhbət sonrası qiymətləndirmə və ziyarətçi yazmamış çatın özü təklif göstərməsi.")}</CardDescription>
+        <CardTitle>{t("Canlı operator və proaktiv mesajlar")}</CardTitle>
+        <CardDescription>{t("Operatorla canlı söhbət, işçi saatları, söhbət sonrası qiymətləndirmə və ziyarətçi yazmamış çatın özü təklif göstərməsi.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={save} className="flex flex-col gap-5 text-sm">
+          <SwitchRow checked={liveOn} onChange={setLiveOn} on={t("Açıq")} off={t("Bağlı")}
+            title={t("Canlı operator söhbəti")} description={t("Ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, Telegram və WhatsApp müştəriləri isə /operator yazır; sən Müraciətlər bölməsindən real vaxtda cavab verirsən. Yalnız panelə baxa bildiyin vaxtlarda aç: operator cavab verməsə ziyarətçiyə əlaqə forması təklif olunur.")} />
+
           <div className="flex flex-col gap-3">
-            <SwitchRow checked={Boolean(hours)} onChange={(v) => setHours(v ? DEFAULT_HOURS : null)} on={t("Saatla")} off={t("Həmişə")} title={t("Canlı operator işçi saatları")}
+            {/* Saat qoymaq = operatorun işləməsini istəmək: bağlı idisə avtomatik açılır */}
+            <SwitchRow checked={Boolean(hours)} onChange={(v) => { setHours(v ? (w.live?.hours ?? DEFAULT_HOURS) : null); if (v) setLiveOn(true); }} on={t("Saatla")} off={t("Həmişə")} title={t("Canlı operator işçi saatları")}
               description={t("İşçi saatlarından kənarda “Operatorla canlı yaz” düyməsi gizlənir, Telegram/WhatsApp-da /operator da işləmir və ziyarətçiyə əlaqə forması təklif olunur.")} />
             {hours && (
               <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
@@ -75,8 +84,10 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
                     );
                   })}
                 </ul>
+                <p className="text-xs text-muted-foreground">{t("Gecə növbəsi üçün bitişi başlanğıcdan kiçik yaz (məs. 22:00–02:00, ertəsi gün bitir). 00:00–00:00 bütün gün deməkdir.")}</p>
               </div>
             )}
+            {!liveOn && hours && <p className="text-xs text-muted-foreground">{t("Canlı operator bağlıdır: işçi saatları yadda qalır, amma operator açılana qədər təsir etmir.")}</p>}
           </div>
 
           <SwitchRow checked={csat} onChange={setCsat} on={t("Aktiv")} off={t("Söndürülüb")} title={t("Söhbət sonrası qiymət (CSAT)")}

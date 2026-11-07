@@ -439,7 +439,7 @@ export type TeamMember = { email: string; joined: boolean; addedAt: string };
 export const getTeam = () => call<{ max: number; members: TeamMember[] }>("/tenant/team");
 export const addTeamMember = (email: string) => post<{ ok: true }>("/tenant/team", { email });
 export const removeTeamMember = (email: string) => call<{ ok: true }>(`/tenant/team/${encodeURIComponent(email)}`, { method: "DELETE" });
-export const getLiveCount = () => call<{ enabled: boolean; open: number; waiting: number }>("/tenant/live/count");
+export const getLiveCount = () => call<{ enabled: boolean; openNow?: boolean; hasHours?: boolean; open: number; waiting: number }>("/tenant/live/count");
 export const getLiveTicket = () => post<{ ticket: string; url: string }>("/tenant/live/ws-ticket");
 /** Operatorun Telegram bildirişləri (platformanın bildiriş botu ilə, hər istifadəçi özü bağlayır) */
 export type NotifyView = { available: boolean; botUsername: string | null; telegram: { name: string; at: string } | null };

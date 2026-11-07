@@ -150,7 +150,7 @@ export function LiveInbox({ enabled, onChange }: { enabled: boolean; onChange?: 
     <div className="flex flex-col items-start gap-3 rounded-lg border border-border bg-card p-5">
       <p className="text-sm font-medium">{t("Canlı operator söhbəti söndürülüb.")}</p>
       <p className="text-sm text-muted-foreground">{t("Açanda ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, Telegram və WhatsApp müştəriləri isə /operator yazır; sən buradan onlara real vaxtda cavab verirsən. Bu bölməyə baxa bildiyin vaxtlarda aç.")}</p>
-      <Link href="/embed" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">{t("Saytına qoş bölməsində aç")}</Link>
+      <Link href="/embed#live" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">{t("Saytına qoş bölməsində aç")}</Link>
     </div>
   );
 

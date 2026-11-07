@@ -152,7 +152,6 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
   const { t } = useI18n();
   const w = data.widget;
   const [enabled, setEnabled] = useState(w.enabled);
-  const [liveOn, setLiveOn] = useState(Boolean(w.live?.enabled));
   const [title, setTitle] = useState(w.title);
   const [greeting, setGreeting] = useState(w.greeting);
   const [color, setColor] = useState(w.color);
@@ -165,7 +164,7 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
   const avatar = useImagePick(w.avatarUrl);
 
   const colorOk = /^#[0-9a-fA-F]{6}$/.test(color);
-  const dirty = enabled !== w.enabled || liveOn !== Boolean(w.live?.enabled) || title !== w.title || greeting !== w.greeting || color !== w.color || label !== (w.label ?? "") || theme !== (w.theme ?? "light") || logo.pending !== undefined || avatar.pending !== undefined;
+  const dirty = enabled !== w.enabled || title !== w.title || greeting !== w.greeting || color !== w.color || label !== (w.label ?? "") || theme !== (w.theme ?? "light") || logo.pending !== undefined || avatar.pending !== undefined;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -177,7 +176,7 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
         if (img.pending === undefined) continue;
         if (img.pending === null) await deleteWidgetImage(kind); else await uploadWidgetImage(kind, img.pending);
       }
-      onChange(await saveWidget({ enabled, title, greeting, color, label, theme, live: { enabled: liveOn } }));
+      onChange(await saveWidget({ enabled, title, greeting, color, label, theme }));
       logo.reset(); avatar.reset();
       toast.success(t("Saxlandı. Dəyişiklik saytda səhifə yenilənəndə görünəcək.")); }
     catch (err) { toast.error((err as Error).message); }
@@ -193,8 +192,6 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
           <div className="grid gap-4 sm:grid-cols-2">
             <SwitchRow className="sm:col-span-2" checked={enabled} onChange={setEnabled} on={t("Açıq")} off={t("Bağlı")}
               title={t("Vidjet aktivdir")} description={t("Söndürsən çat düyməsi saytında göstərilmir (skripti silmək lazım deyil).")} />
-            <SwitchRow className="sm:col-span-2" checked={liveOn} onChange={setLiveOn} on={t("Açıq")} off={t("Bağlı")}
-              title={t("Canlı operator söhbəti")} description={t("Ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, Telegram və WhatsApp müştəriləri isə /operator yazır; sən Müraciətlər bölməsindən real vaxtda cavab verirsən. Yalnız panelə baxa bildiyin vaxtlarda aç: operator cavab verməsə ziyarətçiyə əlaqə forması təklif olunur.")} />
             <div className="flex flex-col gap-1"><Label htmlFor="title">{t("Başlıq")}</Label><Input id="title" required maxLength={60} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="color">{t("Rəng")}</Label>

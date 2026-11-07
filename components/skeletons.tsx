@@ -108,20 +108,24 @@ export function UserListSkeleton({ rows = 4 }: { rows?: number }) {
 
 /** Giriş edildikdən sonra sessiya yüklənənədək: panelin və ya adminin ümumi görünüşü. */
 export function AppSkeleton({ admin = false }: { admin?: boolean }) {
+  if (admin) return (
+    <Busy className="min-h-screen">
+      <div className="border-b border-border bg-card"><div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3"><Skeleton className="h-5 w-40" /><Skeleton className="h-4 w-24" /></div></div>
+      <div className="mx-auto max-w-6xl px-5 py-8"><div className="flex flex-col gap-6"><PageHeaderSkeleton /><CardSkeleton /><CardSkeleton rows={2} /></div></div>
+    </Busy>
+  );
+  // Panelin çərçivəsi (components/panel-shell.tsx) ilə eyni: ikon zolağı, yuxarı zolaq, ağ məzmun sahəsi
   return (
-    <Busy className={admin ? "min-h-screen" : "min-h-screen md:grid md:grid-cols-[14rem_1fr]"}>
-      {admin ? (
-        <div className="border-b border-border bg-card"><div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3"><Skeleton className="h-5 w-40" /><Skeleton className="h-4 w-24" /></div></div>
-      ) : (
-        <aside className="border-b border-border bg-card p-4 md:h-screen md:border-r md:border-b-0">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2"><Skeleton className="h-5 w-32" /><Skeleton className="h-3 w-24" /></div>
-            <div className="flex gap-2 md:flex-col">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-9 w-28 md:w-full" />)}</div>
-          </div>
-        </aside>
-      )}
-      <div className={admin ? "mx-auto max-w-6xl px-5 py-8" : "mx-auto w-full max-w-5xl px-5 py-8"}>
-        <div className="flex flex-col gap-6"><PageHeaderSkeleton /><CardSkeleton /><CardSkeleton rows={2} /></div>
+    <Busy className="flex h-dvh flex-col bg-shell">
+      <div className="flex h-14 shrink-0 items-center gap-2 px-3">
+        <Skeleton className="hidden size-9 rounded-xl md:block md:mx-[21px]" /><Skeleton className="h-9 w-36 rounded-full" /><Skeleton className="hidden h-9 w-28 rounded-full sm:block" />
+        <Skeleton className="ml-auto h-9 w-9 rounded-full md:mx-auto md:w-96" />
+      </div>
+      <div className="flex min-h-0 flex-1">
+        <div className="hidden w-[84px] shrink-0 flex-col items-center gap-5 pt-2 md:flex">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="size-10 rounded-xl" />)}</div>
+        <div className="min-w-0 flex-1 bg-card md:mr-2 md:mb-2 md:rounded-2xl md:border md:border-border">
+          <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8"><div className="flex flex-col gap-6"><PageHeaderSkeleton /><CardSkeleton /><CardSkeleton rows={2} /></div></div>
+        </div>
       </div>
     </Busy>
   );

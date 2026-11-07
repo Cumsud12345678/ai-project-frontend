@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ExternalLink, Send, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
-import { connectTelegram, disconnectTelegram, getTelegram, setTelegramEnabled, type TelegramStatus } from "@/lib/api";
+import { connectTelegram, disconnectTelegram, getLiveCount, getTelegram, setTelegramEnabled, type TelegramStatus } from "@/lib/api";
 import { RequireTenant } from "@/components/session";
 import { FormSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
@@ -98,6 +99,23 @@ function Telegram() {
   );
 }
 
+/** Kanallarda müştəri /operator yazıb canlı operatora keçə bilər: bunu və operatorun hazırkı vəziyyətini göstəririk. */
+function OperatorNote() {
+  const { t } = useI18n();
+  const [live, setLive] = useState<Awaited<ReturnType<typeof getLiveCount>> | null>(null);
+  useEffect(() => { getLiveCount().then(setLive).catch(() => {}); }, []);
+  if (!live) return null;
+  const state = !live.enabled ? t("Canlı operator hazırda bağlıdır: müştəri /operator yazsa, bot cavab verməyə davam edir.")
+    : live.openNow === false ? t("Canlı operator açıqdır, amma indi işçi saatlarından kənardır: müştəriyə operatorların işləmədiyi deyilir və əlaqə qoymaq təklif olunur.")
+    : t("Canlı operator açıqdır: müştəri /operator yazsa söhbət Müraciətlər bölməsinə düşür və sən buradan cavab verirsən.");
+  return (
+    <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+      {t("Telegram və WhatsApp-da müştəri /operator yazaraq (və ya “operatorla danışmaq istəyirəm” kimi) insanla yazışmaya keçə bilər.")} {state}{" "}
+      <Link href="/embed#live" className="text-primary underline">{t("Ayarlar")}</Link>
+    </p>
+  );
+}
+
 export default function ChannelsPage() {
   const { t } = useI18n();
   return (
@@ -107,6 +125,7 @@ export default function ChannelsPage() {
           <h1 className="text-2xl font-semibold">{t("Kanallar")}</h1>
           <p className="text-sm text-muted-foreground">{t("Köməkçini saytdan başqa harada işlətmək istədiyini seç.")}</p>
         </header>
+        <OperatorNote />
         <WhatsApp />
         <Telegram />
       </div>

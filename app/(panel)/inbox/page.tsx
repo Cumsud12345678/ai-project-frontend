@@ -97,7 +97,7 @@ function OperatorInbox() {
 function Inbox() {
   const { t } = useI18n();
   const [tab, setTab] = useState<"live" | "leads" | "unanswered">("leads");
-  const [live, setLive] = useState<{ enabled: boolean; open: number; waiting: number } | null>(null);
+  const [live, setLive] = useState<Awaited<ReturnType<typeof getLiveCount>> | null>(null);
   const [leads, setLeads] = useState<Awaited<ReturnType<typeof getLeads>> | null>(null);
   const [un, setUn] = useState<Awaited<ReturnType<typeof getUnanswered>> | null>(null);
   const [error, setError] = useState("");
@@ -124,6 +124,12 @@ function Inbox() {
         { value: "leads", label: t("Müraciətlər"), badge: leads.open },
         { value: "unanswered", label: t("Cavabsız suallar"), badge: un.total },
       ]} />
+      {tab === "live" && live?.enabled && live.openNow === false && (
+        <p role="status" className="rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 text-sm">
+          {t("İndi işçi saatlarından kənardır: ziyarətçilərə “Operatorla canlı yaz” düyməsi göstərilmir, onlara əlaqə forması təklif olunur. Açıq söhbətlərə cavab verə bilərsən.")}{" "}
+          <Link href="/embed#live" className="underline">{t("Saatları dəyiş")}</Link>
+        </p>
+      )}
       {tab === "live" ? <LiveInbox enabled={Boolean(live?.enabled)} onChange={() => { getLiveCount().then(setLive).catch(() => {}); }} /> : tab === "leads" ? <div className="flex flex-col gap-4"><LeadForwardCard /><Leads rows={leads.items} reload={load} /></div> : <Unanswered rows={un.items} reload={load} />}
     </div>
   );
