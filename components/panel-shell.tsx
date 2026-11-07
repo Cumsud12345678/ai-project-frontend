@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity, BarChart3, Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
+  Activity, BarChart3, Bell, Bot, Building2, Globe, Hash, LayoutGrid, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Rocket,
   Search, Send, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ import { useSession } from "@/components/session";
 import { LangSwitch, useI18n } from "@/lib/i18n";
 
 type Mode = "listings" | "support" | "both";
-type Item = { href: string; label: string; icon: LucideIcon; only?: Mode[]; when?: "noTenant" | "partner" };
+type Item = { href: string; label: string; icon: LucideIcon; only?: Mode[]; when?: "noTenant" | "partner"; /** menyuda bu bənddən əvvəl alt başlıq */ section?: string };
 type Group = { id: string; label: string; icon: LucideIcon; items: Item[]; bottom?: boolean };
 
 // label: Azərbaycan açarı, render zamanı tərcümə olunur. only: göstərildiyi rejimlər.
@@ -43,13 +43,18 @@ const GROUPS: Group[] = [
     { href: "/queries", label: "Sorğu jurnalı", icon: MessagesSquare },
   ] },
   { id: "automations", label: "Avtomatika", icon: Workflow, items: [{ href: "/automations", label: "Avtomatlaşdırmalar", icon: Workflow }] },
-  { id: "channels", label: "Kanallar", icon: Radio, items: [
-    { href: "/embed", label: "Sayt vidjeti", icon: Code },
+  { id: "account", label: "Ayarlar", icon: Settings, bottom: true, items: [
+    { href: "/settings", label: "Hesab", icon: UserRound },
+    { href: "/settings/notifications", label: "Bildirişlər", icon: Bell },
+    { href: "/settings/company", label: "Şirkət məlumatı", icon: Building2 },
+    { href: "/settings/team", label: "Komanda üzvləri", icon: Users, section: "Komanda" },
+    { href: "/settings/channels", label: "Bütün kanallar", icon: LayoutGrid, section: "Kanallar" },
+    { href: "/embed", label: "Sayt vidjeti", icon: Globe },
     { href: "/channels", label: "Telegram və WhatsApp", icon: Send },
-  ] },
-  { id: "account", label: "Hesab", icon: Settings, bottom: true, items: [
-    { href: "/settings", label: "Ayarlar", icon: Settings },
-    { href: "/billing", label: "Balans", icon: Wallet },
+    { href: "/settings/canned", label: "Hazır cavablar", icon: Hash, section: "Söhbət qutusu" },
+    { href: "/settings/security", label: "Giriş və təhlükəsizlik", icon: ShieldCheck, section: "Təhlükəsizlik" },
+    { href: "/settings/api", label: "API girişi", icon: Code, section: "İnteqrasiyalar" },
+    { href: "/billing", label: "Balans", icon: Wallet, section: "Ödəniş" },
     { href: "/partner", label: "Partnyor", icon: HandCoins, when: "partner" },
   ] },
 ];
@@ -228,6 +233,7 @@ function SectionNav({ group, signals, onNavigate, className, compact }: { group:
           const s = itemSignal(i.href, signals);
           return (
             <li key={i.href}>
+              {i.section && <p className="px-3 pb-1 pt-4 text-[13px] font-semibold text-foreground">{t(i.section)}</p>}
               <Link href={i.href} onClick={onNavigate} aria-current={on ? "page" : undefined}
                 className={cn("flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors", on ? "bg-card font-medium text-foreground shadow-sm ring-1 ring-border/70" : "text-muted-foreground hover:bg-card/60 hover:text-foreground")}>
                 <i.icon size={16} aria-hidden className="shrink-0" />

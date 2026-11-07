@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FilterPills, PageHeader } from "@/components/page-header";
 import { ExternalLink, Send, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { connectTelegram, disconnectTelegram, getLiveCount, getTelegram, setTelegramEnabled, type TelegramStatus } from "@/lib/api";
 import { RequireTenant } from "@/components/session";
 import { FormSkeleton } from "@/components/skeletons";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
@@ -111,24 +112,27 @@ function OperatorNote() {
   return (
     <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
       {t("Telegram və WhatsApp-da müştəri /operator yazaraq (və ya “operatorla danışmaq istəyirəm” kimi) insanla yazışmaya keçə bilər.")} {state}{" "}
-      <Link href="/embed#live" className="text-primary underline">{t("Ayarlar")}</Link>
+      <Link href="/embed#live" className="font-medium text-foreground underline underline-offset-2">{t("Ayarlar")}</Link>
     </p>
   );
 }
 
-export default function ChannelsPage() {
+function ChannelTabs() {
   const { t } = useI18n();
+  const [c, setC] = useState<"whatsapp" | "telegram">("whatsapp");
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("c") === "telegram") setC("telegram"); }, []);
+  const pick = (v: "whatsapp" | "telegram") => { setC(v); window.history.replaceState(null, "", `?c=${v}`); };
   return (
-    <RequireTenant>
-      <div className="flex flex-col gap-6">
-        <header>
-          <h1 className="text-2xl font-semibold">{t("Kanallar")}</h1>
-          <p className="text-sm text-muted-foreground">{t("Köməkçini saytdan başqa harada işlətmək istədiyini seç.")}</p>
-        </header>
-        <OperatorNote />
-        <WhatsApp />
-        <Telegram />
-      </div>
-    </RequireTenant>
+    <div className="flex flex-col gap-6">
+      <PageHeader title={t("Telegram və WhatsApp")} description={t("Köməkçini saytdan başqa harada işlətmək istədiyini seç.")}
+        actions={<Link href="/settings/channels" className={buttonVariants({ variant: "outline" })}>{t("Bütün kanallar")}</Link>} />
+      <FilterPills value={c} onChange={pick} label={t("Kanallar")} items={[{ value: "whatsapp", label: "WhatsApp" }, { value: "telegram", label: "Telegram" }]} />
+      <OperatorNote />
+      {c === "whatsapp" ? <WhatsApp /> : <Telegram />}
+    </div>
   );
+}
+
+export default function ChannelsPage() {
+  return <RequireTenant><ChannelTabs /></RequireTenant>;
 }

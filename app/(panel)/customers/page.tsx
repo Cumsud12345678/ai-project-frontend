@@ -170,6 +170,7 @@ function Customers() {
     if (isOperator) return setFolder("rt_all"); // operator yalnız "İndi saytda"nı görür
     if (f === "campaigns") return setFolder("cp_all");
     if (f === "realtime") return setFolder("rt_all");
+    if (f === "blocked") return setFolder("ct_blocked");
     try { const v = localStorage.getItem(STORE) as FolderId | null; if (v) setFolder(v); } catch { /* yaddaş bağlıdır */ }
   }, [isOperator]);
   const pick = (f: FolderId) => { setFolder(f); try { localStorage.setItem(STORE, f); } catch { /* yaddaş bağlıdır */ } };

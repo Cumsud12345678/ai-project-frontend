@@ -93,7 +93,7 @@ function Queries() {
 
       {!stats.enabled && (
         <p role="status" className="rounded-md border border-border bg-muted px-3 py-2 text-sm">
-          {t("Sorğuların saxlanması söndürülüb, yeni suallar qeyd olunmur. Açmaq üçün")} <Link href="/settings" className="underline">{t("Ayarlar")}</Link> {t("bölməsinə keç.")}
+          {t("Sorğuların saxlanması söndürülüb, yeni suallar qeyd olunmur. Açmaq üçün")} <Link href="/settings/security" className="underline">{t("Ayarlar")}</Link> {t("bölməsinə keç.")}
         </p>
       )}
 

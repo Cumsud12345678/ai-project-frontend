@@ -1,14 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { getCanned, saveCanned, saveWidget, type CannedReply, type WidgetResponse, type WorkHours } from "@/lib/api";
+import { saveWidget, type WidgetResponse, type WorkHours } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/components/session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input, Label, Textarea } from "@/components/ui/input";
+import { Input, Label } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 
 const DEFAULT_HOURS: WorkHours = { tz: "Asia/Baku", days: [null, ...Array.from({ length: 5 }, () => ({ from: "09:00", to: "18:00" })), null] };
@@ -92,59 +90,10 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
 
           <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
             {t("Proaktiv mesajlar indi Kampaniyalar bölməsindədir: başlıq, düymələr, kimə və nə vaxt göstərilməsi, statistika.")}{" "}
-            <Link href="/customers?f=campaigns" className="text-primary underline">{t("Kampaniyalara keç")}</Link>
+            <Link href="/customers?f=campaigns" className="font-medium text-foreground underline underline-offset-2">{t("Kampaniyalara keç")}</Link>
           </p>
+          {liveOn && <p className="text-xs text-muted-foreground">{t("Operatorların hazır cavabları Ayarlar → Hazır cavablar bölməsindədir.")} <Link href="/settings/canned" className="font-medium text-foreground underline underline-offset-2">{t("Aç")}</Link></p>}
           <Button disabled={!dirty || busy} className="self-start">{t("Saxla")}</Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
-/** Operatorlar üçün hazır cavablar; yalnız sahib dəyişir. */
-export function CannedCard() {
-  const { t } = useI18n();
-  const { isOperator } = useSession();
-  const [items, setItems] = useState<(Omit<CannedReply, "id"> & { id?: string })[] | null>(null);
-  const [orig, setOrig] = useState("");
-  const [busy, setBusy] = useState(false);
-  useEffect(() => { getCanned().then((r) => { setItems(r.items); setOrig(JSON.stringify(r.items)); }).catch(() => setItems([])); }, []);
-  if (isOperator || items === null) return null;
-  const dirty = JSON.stringify(items) !== orig;
-  const set = (i: number, p: Partial<CannedReply>) => setItems(items.map((r, j) => (j === i ? { ...r, ...p } : r)));
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    if (!dirty || busy || !items) return;
-    setBusy(true);
-    try { const r = await saveCanned(items); setItems(r.items); setOrig(JSON.stringify(r.items)); toast.success(t("Saxlandı.")); }
-    catch (err) { toast.error((err as Error).message); }
-    finally { setBusy(false); }
-  }
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("Hazır cavablar")}</CardTitle>
-        <CardDescription>{t("Operatorlar canlı söhbətdə bir kliklə seçib mətni redaktə edib göndərir. Ən çox 30.")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={save} className="flex flex-col gap-3 text-sm">
-          {items.map((r, i) => (
-            <div key={r.id ?? `n${i}`} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-              <div className="flex items-end gap-2">
-                <div className="flex flex-1 flex-col gap-1">
-                  <Label htmlFor={`cn-t${i}`}>{t("Ad")}</Label>
-                  <Input id={`cn-t${i}`} value={r.title} maxLength={40} onChange={(e) => set(i, { title: e.target.value })} placeholder={t("Məsələn: Çatdırılma müddəti")} />
-                </div>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setItems(items.filter((_, j) => j !== i))} aria-label={t("Sil")}><Trash2 size={14} aria-hidden /></Button>
-              </div>
-              <Textarea value={r.text} maxLength={1000} rows={3} onChange={(e) => set(i, { text: e.target.value })} aria-label={t("Mətn")} />
-            </div>
-          ))}
-          {!items.length && <p className="text-muted-foreground">{t("Hələ hazır cavab yoxdur.")}</p>}
-          <div className="flex gap-2">
-            {items.length < 30 && <Button type="button" variant="outline" size="sm" onClick={() => setItems([...items, { title: "", text: "" }])}><Plus size={14} aria-hidden />{t("Cavab əlavə et")}</Button>}
-            <Button disabled={!dirty || busy || items.some((x) => !x.title.trim() || !x.text.trim())} size="sm">{t("Saxla")}</Button>
-          </div>
         </form>
       </CardContent>
     </Card>

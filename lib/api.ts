@@ -2,7 +2,9 @@ import { isLocale, translate } from "./i18n";
 
 export type Mode = "listings" | "support" | "both";
 export type AutoRefresh = "off" | "daily" | "weekly";
-export type Profile = { language?: string; tone?: string; answerLength?: "short" | "medium" | "long"; agentName?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; imageSearch?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
+/** Şirkətin rəsmi əlaqə məlumatı: köməkçi telefon, ünvan və iş saatı soruşulanda yalnız bunu deyir */
+export type CompanyInfo = { phone?: string; whatsapp?: string; email?: string; address?: string; city?: string; hours?: string; website?: string; instagram?: string; facebook?: string; about?: string };
+export type Profile = { company?: CompanyInfo; language?: string; tone?: string; answerLength?: "short" | "medium" | "long"; agentName?: string; maxResults?: number; extraInstructions?: string; logQueries?: boolean; generalKnowledge?: boolean; imageSearch?: boolean; mode?: Mode; fallbackMessage?: string; kbAutoRefresh?: AutoRefresh };
 export type ConfigJson = { businessName?: string; domain?: string; profile?: Profile; source?: Record<string, unknown>; apiSecret?: string; /** CSV/JSON/XML faylının mətni (yalnız fayl ilə qoşulmada) */ feedText?: string };
 
 export type WorkHours = { tz: string; days: ({ from: string; to: string } | null)[] };

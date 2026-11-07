@@ -7,7 +7,7 @@ import { PanelFrame } from "@/components/panel-shell";
 import { SessionProvider, useSession } from "@/components/session";
 import { useT } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
-import { alertLive } from "@/lib/live-alerts";
+import { alertLive, alertVisitor } from "@/lib/live-alerts";
 
 function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -34,6 +34,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   // Canlı söhbət açıqdırsa: yeni mesaj siqnalı ilə sayğac dərhal yenilənir
   // Ziyarətçi yazanda: qısa səs, tab gizlidirsə brauzer bildirişi və başlıqda sayğac (lib/live-alerts.ts)
   useLiveEvents((e) => {
+    if (e.t === "visitors") { if (!isOperator) alertVisitor(e, { visitor: t("Sayta yeni ziyarətçi girdi"), returning: t("Qayıdan ziyarətçi saytdadır"), body: t("Kimin saytda olduğunu Müştərilər bölməsində gör.") }); return; }
     if (e.t !== "live") return;
     refreshWaiting.current();
     alertLive(e, { start: t("Yeni canlı söhbət"), message: t("Ziyarətçi yeni mesaj yazdı"), body: t("Cavab vermək üçün Müraciətlər bölməsini aç.") }, pathname.startsWith("/inbox"));

@@ -36,7 +36,7 @@ function Team() {
                 <Users size={26} aria-hidden className="text-muted-foreground" />
                 <p className="font-semibold">{t("Bu dövrdə operator söhbəti olmayıb")}</p>
                 <p className="max-w-md text-sm text-muted-foreground">{t("Komanda üzvü canlı söhbətə cavab yazanda burada görünəcək.")}</p>
-                <Link href="/settings" className={buttonVariants({ variant: "outline", size: "sm" })}>{t("Komandaya üzv əlavə et")}</Link>
+                <Link href="/settings/team" className={buttonVariants({ variant: "outline", size: "sm" })}>{t("Komandaya üzv əlavə et")}</Link>
               </div>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-border bg-card">

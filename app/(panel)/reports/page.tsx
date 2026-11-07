@@ -65,7 +65,7 @@ function Overview() {
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {!data ? <div className="grid gap-3 sm:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-36 animate-pulse rounded-2xl bg-muted" />)}</div> : (
         <>
-          {!data.logOn && <p className="rounded-xl bg-amber/10 p-3 text-sm">{t("Sorğu jurnalı söndürülüb: AI göstəriciləri hesablanmır.")} <Link href="/settings" className="font-medium underline">{t("Ayarlar")}</Link></p>}
+          {!data.logOn && <p className="rounded-xl bg-amber/10 p-3 text-sm">{t("Sorğu jurnalı söndürülüb: AI göstəriciləri hesablanmır.")} <Link href="/settings/security" className="font-medium underline">{t("Ayarlar")}</Link></p>}
           <ReportSection title={t("Ümumi")}>
             <div className="grid overflow-hidden rounded-2xl border border-border bg-card sm:grid-cols-3 sm:divide-x sm:divide-border">
               <Kpi className="rounded-none border-0" label={t("AI söhbətləri")} value={c!.aiChats} prev={p?.aiChats} />

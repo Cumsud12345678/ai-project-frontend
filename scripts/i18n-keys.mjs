@@ -11,6 +11,8 @@ const SKIP = (f) => f.includes(`${path.sep}locales${path.sep}`) || f.includes(`$
 const EXTRA = [
   "Hesabatlar", "AI köməkçi", "Komanda performansı", "Sorğu jurnalı",
   "Avtomatika", "Avtomatlaşdırmalar",
+  "Ayarlar", "Bildirişlər", "Şirkət məlumatı", "Komanda", "Komanda üzvləri", "Bütün kanallar", "Söhbət qutusu", "Hazır cavablar", "Təhlükəsizlik", "Giriş və təhlükəsizlik", "İnteqrasiyalar", "API girişi", "Ödəniş",
+  "Telefon", "WhatsApp", "E-poçt", "Sayt", "Şəhər", "Ünvan", "İş saatları", "Instagram", "Facebook",
   "Ümumi baxış", "Profil", "Bacarıqlar",
   "Müştərilər",
   "Əməliyyat tapılmadı",
