@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Ban, Bot, Check, CheckCheck, Hourglass, CircleHelp, Clock, Inbox as InboxIcon, Mail, MessageCircle, MessagesSquare, Phone, Send, Star, Trash2, Undo2, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
-import { deleteLead, deleteUnanswered, getBlocks, getLeads, getLiveCount, getLiveList, getTeam, getVisitors, getUnanswered, unblock, updateLead, type BlockItem, type LeadRow, type LeadStatus, type LiveItem, type UnansweredRow } from "@/lib/api";
+import { deleteLead, getBlocks, getLeads, getLiveCount, getLiveList, getTeam, getVisitors, getUnanswered, unblock, updateLead, type BlockItem, type LeadRow, type LeadStatus, type LiveItem, type UnansweredRow } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
 import { RequireTenant, useSession } from "@/components/session";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LiveInbox, type LiveFolder } from "@/components/live-inbox";
 import { LeadForwardCard } from "@/components/lead-forward-card";
 import { NotifyBar } from "@/components/notify-bar";
+import { KnowledgeGaps } from "@/components/knowledge-gaps";
 import { FolderPane, Pane, type FolderItem } from "@/components/folder-pane";
 import { AiWatch } from "@/components/ai-watch";
 
@@ -129,19 +130,13 @@ function Blocked() {
 }
 
 function Unanswered({ rows, reload }: { rows: UnansweredRow[]; reload: () => void }) {
-  const { t, short } = useI18n();
+  const { t } = useI18n();
+  const { tenant } = useSession();
   if (!rows.length) return <p className="text-sm text-muted-foreground">{t("Cavabsız sual yoxdur. Çat bütün suallara cavab tapıb.")}</p>;
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">{t("Çatın cavab tapa bilmədiyi suallar. Bunlara aid məlumatı")} <Link href="/knowledge" className="underline">{t("Bilik bazasına")}</Link> {t("əlavə et və çat sonrakı dəfə cavab verəcək.")}</p>
-      <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-        {rows.map((r) => (
-          <li key={r.id} className="flex items-start gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1"><p className="break-words text-sm">{r.message}</p><p className="text-xs text-muted-foreground">{short(r.at)}</p></div>
-            <Button size="sm" variant="ghost" aria-label={t("Sil")} onClick={async () => { try { await deleteUnanswered(r.id); reload(); } catch (e) { toast.error((e as Error).message); } }}><Trash2 size={14} aria-hidden /></Button>
-          </li>
-        ))}
-      </ul>
+      <p className="text-sm text-muted-foreground">{t("Çatın cavab tapa bilmədiyi suallar. “Cavab ver” ilə düzgün cavabı bir dəfə yaz: köməkçi onu öyrənir və oxşar suallara özü cavab verir.")}</p>
+      <KnowledgeGaps rows={rows} canAnswer={tenant?.config.profile?.mode !== "listings"} reload={reload} />
     </div>
   );
 }

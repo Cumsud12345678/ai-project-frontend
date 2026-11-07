@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { chat, getListings, type ChatMessage, type Listing } from "@/lib/api";
+import { chat, type ChatMessage } from "@/lib/api";
+import { useSampleIdeas } from "@/components/assistant-preview";
 import { useI18n } from "@/lib/i18n";
 import { ListingTable } from "@/components/listing-table";
 import { RequireTenant, useSession } from "@/components/session";
@@ -23,29 +24,10 @@ function Rich({ text }: { text: string }) {
 }
 
 function Playground() {
-  const { t, num } = useI18n();
+  const { t } = useI18n();
   const { tenant } = useSession();
   const mode = tenant?.config.profile?.mode ?? "listings";
-  // Nümunə suallar müştərinin öz kataloqundan qurulur (sayta uyğun olsun); alınmasa neytral suallar göstərilir
-  const [sample, setSample] = useState<Listing[]>([]);
-  useEffect(() => {
-    if (mode === "support") return;
-    getListings({}).then((r) => setSample(r.listings.slice(0, 20))).catch(() => {});
-  }, [mode]);
-  const supportIdeas = [t("Çatdırılma neçə gün çəkir?"), t("Geri qaytarma qaydaları hansılardır?"), t("Hansı ödəniş üsulları var?"), t("Sizinlə necə əlaqə saxlaya bilərəm?")];
-  const priced = sample.filter((l) => typeof l.price === "number" && l.price > 0);
-  const named = sample.find((l) => l.title);
-  const sorted = [...priced].sort((a, b) => a.price! - b.price!);
-  const median = sorted.length ? sorted[Math.floor(sorted.length / 2)]!.price! : 0;
-  const budget = median >= 100 ? Math.round(median / 10) * 10 : median;
-  const cur = priced[0]?.currency ?? "";
-  const listingIdeas = [
-    budget ? (cur ? t("Büdcəm {n} {cur}-dir, nə təklif edirsən?", { n: num(budget), cur }) : t("Büdcəm {n}-dir, nə təklif edirsən?", { n: num(budget) })) : t("Mənə ən ucuz variantları göstər"),
-    named ? t("“{title}” haqqında ətraflı məlumat ver", { title: named.title.slice(0, 50) }) : t("Mənə ən uyğun variantı tövsiyə et"),
-    t("Mənə ən ucuz variantları göstər"),
-    t("Ən populyar 3 variantı müqayisə et"),
-  ];
-  const ideas = [...new Set(mode === "support" ? supportIdeas : mode === "both" ? [listingIdeas[0]!, listingIdeas[1]!, supportIdeas[0]!, supportIdeas[1]!] : listingIdeas)].slice(0, 4);
+  const ideas = useSampleIdeas();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);

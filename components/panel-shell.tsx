@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
-  Search, Send, Settings, Shield, ShieldCheck, Users, Wallet, X, Zap, type LucideIcon,
+  Activity, Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
+  Search, Send, Settings, Shield, ShieldCheck, UserRound, Users, Wallet, Wand2, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Overview } from "@/lib/api";
@@ -27,12 +27,15 @@ const GROUPS: Group[] = [
   { id: "inbox", label: "Müraciətlər", icon: Inbox, items: [{ href: "/inbox", label: "Müraciətlər", icon: Inbox }] },
   { id: "customers", label: "Müştərilər", icon: Users, items: [{ href: "/customers", label: "Müştərilər", icon: Users }] },
   { id: "ai", label: "Köməkçi", icon: Bot, items: [
-    { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
+    { href: "/assistant", label: "Ümumi baxış", icon: Activity },
+    { href: "/assistant/profile", label: "Profil", icon: UserRound },
+    { href: "/assistant/skills", label: "Bacarıqlar", icon: Wand2 },
     { href: "/knowledge", label: "Bilik bazası", icon: BookOpen },
     { href: "/listings", label: "Kataloq", icon: List, only: ["listings", "both"] },
     { href: "/connection", label: "Elan mənbəyi", icon: Plug, only: ["listings", "both"] },
     { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck },
     { href: "/actions", label: "Əməliyyatlar", icon: Zap },
+    { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
   ] },
   { id: "channels", label: "Kanallar", icon: Radio, items: [
     { href: "/embed", label: "Sayt vidjeti", icon: Code },
@@ -207,13 +210,15 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
 function SectionNav({ group, signals, onNavigate, className, compact }: { group: ReturnType<typeof useGroups>[number]; signals: Signals; onNavigate?: () => void; className?: string; compact?: boolean }) {
   const { t } = useI18n();
   const pathname = usePathname();
+  // Ən uzun uyğun ünvan seçilir: /assistant/profile açıqdırsa "Ümumi baxış" (/assistant) da yanmasın
+  const current = group.items.filter((i) => isActive(pathname, i.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
   return (
     <div className={className}>
       {/* Telefon menyusunda tək səhifəli bölmənin başlığı təkrar olmasın ("Müraciətlər / Müraciətlər") */}
       {!(compact && group.items.length === 1) && <p className="px-3 pt-3 pb-2 text-[15px] font-semibold">{t(group.label)}</p>}
       <ul className="flex flex-col gap-0.5">
         {group.items.map((i) => {
-          const on = isActive(pathname, i.href);
+          const on = i.href === current;
           const s = itemSignal(i.href, signals);
           return (
             <li key={i.href}>

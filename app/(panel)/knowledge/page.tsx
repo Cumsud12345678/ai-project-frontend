@@ -7,7 +7,6 @@ import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProf
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { QaCard } from "./qa-card";
-import { ProcCard } from "./proc-card";
 import { RequireTenant, useSession } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -296,7 +295,11 @@ function Knowledge() {
       </Card>
 
       {usesKb && <QaCard info={info} onChange={load} />}
-      {usesKb && <ProcCard info={info} onChange={load} />}
+      {usesKb && (
+        <p className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
+          {t("Ssenarilər (köməkçi nə vaxt nə etsin) indi Köməkçi → Bacarıqlar bölməsindədir.")} <Link href="/assistant/skills#proc" className="text-primary underline">{t("Bacarıqlara keç")}</Link>
+        </p>
+      )}
       {usesKb && <AutoRefreshCard info={info} />}
       {usesKb && <FallbackCard info={info} />}
     </div>
