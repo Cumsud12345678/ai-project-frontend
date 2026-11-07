@@ -322,6 +322,15 @@ export const getConversations = (q: { days?: number; limit?: number; before?: st
 };
 export const getConversation = (sid: string) => call<{ sid: string; messages: ConversationMsg[] }>(`/tenant/conversations/${encodeURIComponent(sid)}`);
 export type Funnel = { days: number; conversations: number | null; questions: number; answered: number; unanswered: number; live: number; leads: number; leadsHandled: number; handoffs: number; handoffRate: number | null; handledRate: number | null; costAzn: number | null; withoutHandoff: number | null; actionsDone: number | null; feedbackUp: number; feedbackDown: number; csatAvg: number | null; csatCount: number; cardClicks: number };
+// Hesabatlar: dövr və əvvəlki dövr, gündəlik bölgü, komanda
+export type Csat = { good: number; neutral: number; bad: number; avg: number | null };
+export type PeriodMetrics = { aiChats: number | null; questions: number | null; unanswered: number | null; resolution: number | null;
+  liveNew: number; liveClosed: number; missed: number; firstResponseSec: number | null; durationSec: number | null; csat: Csat;
+  leadsNew: number; leadsSolved: number; resolveSec: number | null; handoffs: number; up: number; down: number; clicks: number; actionsDone: number | null };
+export type TeamRow = { name: string; chats: number; replies: number; firstResponseSec: number | null; durationSec: number | null; csat: Csat };
+export type DailyRow = { day: string; questions: number | null; unanswered: number | null; live: number; leads: number; csatBad: number };
+export type ReportData = { days: number; from: string; to: string; prevFrom: string; prevTo: string; generatedAt: string; logOn: boolean; cur: PeriodMetrics; prev: PeriodMetrics | null; daily: DailyRow[]; team: TeamRow[]; top: { message: string; count: number }[]; topNoResults: { message: string; count: number }[] };
+export const getReportData = (days: number) => call<ReportData>(`/tenant/reports?days=${days}`);
 export const getFunnel = (days: number) => call<Funnel>(`/tenant/funnel?days=${days}`);
 export type TrendDay = { day: string; total: number; unanswered: number };
 export type InsightsTrend = { days: number; enabled: boolean; daily: TrendDay[]; feedback: { up: number; down: number; satisfaction: number | null } };

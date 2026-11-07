@@ -9,6 +9,7 @@ const DIRS = ["app", "components", "lib"];
 const SKIP = (f) => f.includes(`${path.sep}locales${path.sep}`) || f.includes(`${path.sep}ui${path.sep}`);
 // t() ilə birbaşa çağırılmayan (dəyişənlə ötürülən) açarlar
 const EXTRA = [
+  "Hesabatlar", "AI köməkçi", "Komanda performansı", "Sorğu jurnalı",
   "Avtomatika", "Avtomatlaşdırmalar",
   "Ümumi baxış", "Profil", "Bacarıqlar",
   "Müştərilər",

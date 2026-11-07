@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity, Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
-  Search, Send, Settings, Shield, ShieldCheck, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
+  Activity, BarChart3, Bot, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
+  Search, Send, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Overview } from "@/lib/api";
@@ -22,7 +22,6 @@ const GROUPS: Group[] = [
   { id: "home", label: "Ümumi", icon: LayoutDashboard, items: [
     { href: "/setup", label: "Quraşdırma", icon: Rocket, when: "noTenant" },
     { href: "/dashboard", label: "İstifadə", icon: Gauge },
-    { href: "/queries", label: "Sorğular", icon: MessagesSquare },
   ] },
   { id: "inbox", label: "Müraciətlər", icon: Inbox, items: [{ href: "/inbox", label: "Müraciətlər", icon: Inbox }] },
   { id: "customers", label: "Müştərilər", icon: Users, items: [{ href: "/customers", label: "Müştərilər", icon: Users }] },
@@ -36,6 +35,12 @@ const GROUPS: Group[] = [
     { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck },
     { href: "/actions", label: "Əməliyyatlar", icon: Zap },
     { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
+  ] },
+  { id: "reports", label: "Hesabatlar", icon: BarChart3, items: [
+    { href: "/reports", label: "Ümumi baxış", icon: Activity },
+    { href: "/reports/ai", label: "AI köməkçi", icon: Sparkles },
+    { href: "/reports/team", label: "Komanda performansı", icon: Users },
+    { href: "/queries", label: "Sorğu jurnalı", icon: MessagesSquare },
   ] },
   { id: "automations", label: "Avtomatika", icon: Workflow, items: [{ href: "/automations", label: "Avtomatlaşdırmalar", icon: Workflow }] },
   { id: "channels", label: "Kanallar", icon: Radio, items: [

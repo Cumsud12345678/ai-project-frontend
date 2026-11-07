@@ -145,7 +145,7 @@ function Assistant() {
       <section className="flex flex-col gap-4 rounded-2xl bg-muted/50 p-5">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="flex-1 font-semibold">{t("Nəticələr")} <span className="font-normal text-muted-foreground">{period}</span></h2>
-          <Link href="/queries" className={buttonVariants({ variant: "outline", size: "sm" })}>{t("Tam hesabat")}<ChevronRight size={14} aria-hidden /></Link>
+          <Link href="/reports/ai" className={buttonVariants({ variant: "outline", size: "sm" })}>{t("Tam hesabat")}<ChevronRight size={14} aria-hidden /></Link>
         </div>
         {f && f.f7.conversations === null && <p className="text-sm text-muted-foreground">{t("Sorğu jurnalı söndürülüb, ona görə söhbət sayı hesablanmır. Ayarlar bölməsindən aça bilərsən.")}</p>}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
