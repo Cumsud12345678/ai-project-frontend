@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { kbAddQa, kbDelete, kbUpdateQa, type KbInfo, type KbSource } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label, Textarea } from "@/components/ui/input";
 
@@ -61,7 +63,6 @@ function QaRow({ s, info, onChange }: { s: KbSource; info: KbInfo; onChange: () 
     setBusy(true);
     try { await kbDelete(s.id); toast.success(t("Silindi.")); onChange(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); setConfirm(false); }
   }
-  if (edit) return <li className="px-4 py-3"><QaForm info={info} initial={s} onDone={() => { setEdit(false); onChange(); }} onCancel={() => setEdit(false)} /></li>;
   const qs = s.questions ?? [];
   return (
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start">
@@ -80,6 +81,9 @@ function QaRow({ s, info, onChange }: { s: KbSource; info: KbInfo; onChange: () 
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => setConfirm(true)} aria-label={t("Sil")}><Trash2 size={14} aria-hidden /></Button>
         )}
       </div>
+      <Modal open={edit} onClose={() => setEdit(false)} title={t("Dəqiq cavabı dəyiş")} size="lg">
+        <QaForm info={info} initial={s} onDone={() => { setEdit(false); onChange(); }} onCancel={() => setEdit(false)} />
+      </Modal>
     </li>
   );
 }
@@ -87,6 +91,7 @@ function QaRow({ s, info, onChange }: { s: KbSource; info: KbInfo; onChange: () 
 export function QaCard({ info, onChange }: { info: KbInfo; onChange: () => void }) {
   const { t } = useI18n();
   const pairs = info.sources.filter((s) => s.type === "qa");
+  const [adding, setAdding] = useState(false);
   const max = info.limits.qa ?? 300;
   return (
     <Card>
@@ -95,7 +100,10 @@ export function QaCard({ info, onChange }: { info: KbInfo; onChange: () => void 
         <CardDescription>{t("Vacib suallara özün cavab yaz. İstifadəçinin sualı yazdığın suallardan birinə uyğun gələndə bot cavabı olduğu kimi, süni intellektsiz və pulsuz verir. Uyğun gəlməyən suallara adi qaydada cavab verilir.")}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {pairs.length < max ? <QaForm info={info} onDone={onChange} /> : <p className="text-sm text-muted-foreground">{t("Ən çox {n} cütlük əlavə edə bilərsiniz.", { n: max })}</p>}
+        {pairs.length < max ? <Button type="button" className="self-start" onClick={() => setAdding(true)}><Plus size={16} aria-hidden />{t("Dəqiq cavab əlavə et")}</Button> : <p className="text-sm text-muted-foreground">{t("Ən çox {n} cütlük əlavə edə bilərsiniz.", { n: max })}</p>}
+        <Modal open={adding} onClose={() => setAdding(false)} title={t("Dəqiq cavab əlavə et")} description={t("Sual bu ifadələrdən birinə uyğun gələndə bot cavabı olduğu kimi verir.")} size="lg">
+          <QaForm info={info} onDone={() => { setAdding(false); onChange(); }} onCancel={() => setAdding(false)} />
+        </Modal>
       </CardContent>
       {pairs.length > 0 && <ul className="divide-y divide-border border-t border-border">{pairs.map((s) => <QaRow key={s.id} s={s} info={info} onChange={onChange} />)}</ul>}
     </Card>

@@ -8,7 +8,7 @@ export function Switch({ checked, onChange, id, label, labelledBy, describedBy }
     <button type="button" role="switch" id={id} aria-checked={checked} aria-label={label} aria-labelledby={labelledBy} aria-describedby={describedBy}
       onClick={() => onChange(!checked)}
       className={cn("relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        checked ? "bg-primary" : "bg-slate-300")}>
+        checked ? "bg-foreground" : "bg-slate-300")}>
       <span aria-hidden className={cn("inline-block size-5 rounded-full bg-white shadow transition-transform", checked ? "translate-x-5.5" : "translate-x-0.5")} />
     </button>
   );

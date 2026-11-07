@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { kbAddProc, kbDelete, kbUpdateProc, type KbInfo, type KbSource } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, Textarea } from "@/components/ui/input";
 
@@ -67,7 +69,6 @@ function ProcRow({ s, info, onChange }: { s: KbSource; info: KbInfo; onChange: (
     setBusy(true);
     try { await kbDelete(s.id); toast.success(t("Silindi.")); onChange(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); setConfirm(false); }
   }
-  if (edit) return <li className="px-4 py-3"><ProcForm info={info} initial={s} onDone={() => { setEdit(false); onChange(); }} onCancel={() => setEdit(false)} /></li>;
   return (
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start">
       <div className="min-w-0 flex-1">
@@ -86,6 +87,9 @@ function ProcRow({ s, info, onChange }: { s: KbSource; info: KbInfo; onChange: (
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => setConfirm(true)} aria-label={t("Sil")}><Trash2 size={14} aria-hidden /></Button>
         )}
       </div>
+      <Modal open={edit} onClose={() => setEdit(false)} title={t("Ssenarini dəyiş")} size="lg">
+        <ProcForm info={info} initial={s} onDone={() => { setEdit(false); onChange(); }} onCancel={() => setEdit(false)} />
+      </Modal>
     </li>
   );
 }
@@ -94,6 +98,7 @@ function ProcRow({ s, info, onChange }: { s: KbSource; info: KbInfo; onChange: (
 export function ProcCard({ info, onChange }: { info: KbInfo; onChange: () => void }) {
   const { t } = useI18n();
   const procs = info.sources.filter((s) => s.type === "proc");
+  const [adding, setAdding] = useState(false);
   const max = info.limits.proc ?? 20;
   return (
     <Card>
@@ -102,7 +107,10 @@ export function ProcCard({ info, onChange }: { info: KbInfo; onChange: () => voi
         <CardDescription>{t("Qaytarma, sifarişin ləğvi, rezerv kimi addım-addım proseslər üçün qayda yaz. Müştəri bu mövzuda yazanda bot addımlarla irəliləyir: lazım olan məlumatı soruşur və qaydanı pozmur. Tək cavab kifayətdirsə “Dəqiq cavablar”dan istifadə et.")}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {procs.length < max ? <ProcForm info={info} onDone={onChange} /> : <p className="text-sm text-muted-foreground">{t("Ən çox {n} ssenari əlavə edə bilərsiniz.", { n: max })}</p>}
+        {procs.length < max ? <Button type="button" className="self-start" onClick={() => setAdding(true)}><Plus size={16} aria-hidden />{t("Yeni ssenari")}</Button> : <p className="text-sm text-muted-foreground">{t("Ən çox {n} ssenari əlavə edə bilərsiniz.", { n: max })}</p>}
+        <Modal open={adding} onClose={() => setAdding(false)} title={t("Yeni ssenari")} description={t("Müştəri bu mövzuda yazanda bot addımlarla irəliləyir.")} size="lg">
+          <ProcForm info={info} onDone={() => { setAdding(false); onChange(); }} onCancel={() => setAdding(false)} />
+        </Modal>
       </CardContent>
       {procs.length > 0 && <ul className="divide-y divide-border border-t border-border">{procs.map((s) => <ProcRow key={s.id} s={s} info={info} onChange={onChange} />)}</ul>}
     </Card>

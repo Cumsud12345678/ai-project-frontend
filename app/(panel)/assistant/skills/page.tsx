@@ -39,7 +39,7 @@ function Skills() {
   const [w, setW] = useState<WidgetResponse | null>(null);
   const [kb, setKb] = useState<KbInfo | null>(null);
   const [greet, setGreet] = useState<string | null>(null);
-  const [showProc, setShowProc] = useState(false);
+  const [showProc, setShowProc] = useState(true);
   useEffect(() => { if (window.location.hash === "#proc") setShowProc(true); }, []);
   const loadKb = useCallback(() => { getKb().then(setKb).catch(() => {}); }, []);
   useEffect(() => { getWidget().then(setW).catch(() => {}); loadKb(); }, [loadKb]);

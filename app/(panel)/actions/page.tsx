@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { FlaskConical, KeyRound, Pencil, Plug, Plus, ShieldCheck, Trash2, Zap } from "lucide-react";
 import { clearActionLog, deleteActions, getActionLog, getActions, getActionStats, newSigningSecret, saveActions, testAction, type ActionItem, type ActionLogEntry, type ActionStats, type ActionParam, type ActionsData, type ActionTestResult } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
@@ -10,8 +11,12 @@ import { RequireTenant } from "@/components/session";
 import { FormSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+import { RowMenu } from "@/components/ui/row-menu";
+import { Switch } from "@/components/ui/switch";
+import { ConnectionModal, SetupSteps, connInput, type ConnValue } from "@/components/api-connection";
+import { FilterPills, PageHeader } from "@/components/page-header";
 
 const blankParam = (): ActionParam => ({ name: "", type: "string", description: "", required: true });
 const blankAction = (p: Partial<ActionItem> = {}): ActionItem => ({ key: "", title: "", description: "", method: "POST", path: "/", params: [], requireIdentity: false, enabled: true, ...p });
@@ -63,47 +68,44 @@ function Code({ code }: { code: string }) {
 
 const select = "h-10 rounded-md border border-border bg-card px-2 text-sm";
 
-function ActionCard({ f, set, remove, index, identityReady, runs }: { f: Form; set: (a: Form) => void; remove: () => void; index: number; identityReady: boolean; runs?: Record<string, number> }) {
+/** Bir əməliyyatın forması (modalın içində) */
+function ActionFields({ f, set, identityReady }: { f: Form; set: (a: Form) => void; identityReady: boolean }) {
   const { t } = useI18n();
   const up = (p: Partial<Form>) => set({ ...f, ...p });
   const setParam = (i: number, p: Partial<Form["params"][number]>) => up({ params: f.params.map((x, j) => (j === i ? { ...x, ...p } : x)) });
-  const id = (n: string) => `act${index}-${n}`;
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div><CardTitle className="flex flex-wrap items-center gap-2 text-base">{f.title || t("Yeni əməliyyat")}{runs && (runs.done || runs.failed || runs.cancelled) ? <Badge className="bg-primary/10 text-xs font-normal text-primary">{t("30 gündə: {done} icra, {other} icra olunmadı", { done: runs.done ?? 0, other: (runs.failed ?? 0) + (runs.cancelled ?? 0) + (runs.unknown ?? 0) + (runs.expired ?? 0) + (runs.denied ?? 0) })}</Badge> : null}</CardTitle><CardDescription>{t("AI bu əməliyyatı yalnız istifadəçi açıq istəyəndə təklif edir; icra üçün istifadəçi ayrıca təsdiq verir.")}</CardDescription></div>
-          <Button type="button" size="sm" variant="outline" onClick={remove}>{t("Sil")}</Button>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
+      <section className="flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1"><Label htmlFor={id("title")}>{t("Ad (istifadəçiyə görünür)")}</Label><Input id={id("title")} value={f.title} maxLength={60} onChange={(e) => up({ title: e.target.value })} required /></div>
-          <div className="flex flex-col gap-1"><Label htmlFor={id("key")}>{t("Texniki ad (latın, kiçik hərf)")}</Label><Input id={id("key")} value={f.key} onChange={(e) => up({ key: e.target.value })} placeholder="cancel_order" pattern="[a-z][a-z0-9_]{1,30}" required /></div>
+          <div className="flex flex-col gap-1"><Label htmlFor="af-title">{t("Ad (istifadəçiyə görünür)")}</Label><Input id="af-title" value={f.title} maxLength={60} onChange={(e) => up({ title: e.target.value })} required /></div>
+          <div className="flex flex-col gap-1"><Label htmlFor="af-key">{t("Texniki ad (latın, kiçik hərf)")}</Label><Input id="af-key" value={f.key} onChange={(e) => up({ key: e.target.value })} placeholder="cancel_order" pattern="[a-z][a-z0-9_]{1,30}" required /></div>
         </div>
-        <div className="flex flex-col gap-1"><Label htmlFor={id("desc")}>{t("Təsvir: AI bu əməliyyatı nə vaxt təklif etsin?")}</Label><Input id={id("desc")} value={f.description} maxLength={300} onChange={(e) => up({ description: e.target.value })} required /></div>
+        <div className="flex flex-col gap-1"><Label htmlFor="af-desc">{t("Təsvir: AI bu əməliyyatı nə vaxt təklif etsin?")}</Label><Input id="af-desc" value={f.description} maxLength={300} onChange={(e) => up({ description: e.target.value })} required /></div>
         <div className="grid gap-3 sm:grid-cols-[8rem_1fr]">
-          <div className="flex flex-col gap-1"><Label htmlFor={id("m")}>{t("Metod")}</Label>
-            <select id={id("m")} value={f.method} onChange={(e) => up({ method: e.target.value as Form["method"] })} className={select}><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select></div>
-          <div className="flex flex-col gap-1"><Label htmlFor={id("path")}>{t("Sorğu ünvanı")}</Label><Input id={id("path")} value={f.path} onChange={(e) => up({ path: e.target.value })} placeholder="/orders/{orderNo}/cancel" required /></div>
+          <div className="flex flex-col gap-1"><Label htmlFor="af-m">{t("Metod")}</Label>
+            <select id="af-m" value={f.method} onChange={(e) => up({ method: e.target.value as Form["method"] })} className={select}><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select></div>
+          <div className="flex flex-col gap-1"><Label htmlFor="af-path">{t("Sorğu ünvanı")}</Label><Input id="af-path" value={f.path} onChange={(e) => up({ path: e.target.value })} placeholder="/orders/{orderNo}/cancel" required /></div>
         </div>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={f.requireIdentity === true} onChange={(e) => up({ requireIdentity: e.target.checked })} />{t("Yalnız daxil olmuş istifadəçi üçün (tövsiyə olunur)")}</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={f.enabled !== false} onChange={(e) => up({ enabled: e.target.checked })} />{t("Aktivdir")}</label>
-        </div>
+      </section>
+
+      <section className="flex flex-col gap-2 rounded-xl bg-muted/50 p-3">
+        <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={f.requireIdentity === true} onChange={(e) => up({ requireIdentity: e.target.checked })} />{t("Yalnız daxil olmuş istifadəçi üçün (tövsiyə olunur)")}</label>
         {f.requireIdentity
-          ? <p className="text-xs text-muted-foreground">{t("İstifadəçinin ID-si sorğuya (userId) saytın imzaladığı tokendən əlavə olunur. Ünvanda {userId} yaza bilərsən. AI onu dəyişə bilməz.")}{!identityReady && <> <b>{t("Aşağıda “Gizli açar” bölməsində açar yarat.")}</b></>}</p>
+          ? <p className="text-xs text-muted-foreground">{t("İstifadəçinin ID-si sorğuya (userId) saytın imzaladığı tokendən əlavə olunur. Ünvanda {userId} yaza bilərsən. AI onu dəyişə bilməz.")}{!identityReady && <> <b>{t("Təhlükəsizlik bölməsində gizli açar yarat.")}</b></>}</p>
           : <p className="text-xs text-destructive">{t("Diqqət: bu əməliyyat daxil olmamış ziyarətçilərə də açıqdır. Yalnız zərərsiz əməliyyatlar üçün (bilet, müraciət, rezerv) istifadə et; sifariş ləğvi kimi hesaba aid işlər üçün yuxarıdakı qutunu işarələ.")}</p>}
-        <div>
-          <p className="mb-2 text-sm font-medium">{t("Parametrlər: AI bunları istifadəçidən soruşur")}</p>
-          <div className="flex flex-col gap-2">
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <div><h3 className="text-sm font-semibold">{t("Parametrlər: AI bunları istifadəçidən soruşur")}</h3></div>
+        {f.params.length > 0 && (
+          <div className="overflow-hidden rounded-xl border border-border">
             {f.params.map((p, i) => (
-              <div key={i} className="grid grid-cols-2 gap-2 rounded-md border border-border p-2 sm:grid-cols-[1fr_7rem_1fr_auto]">
+              <div key={i} className="grid grid-cols-2 gap-2 border-b border-border p-2.5 last:border-b-0 sm:grid-cols-[1fr_8rem_1.4fr_auto]">
                 <Input aria-label={t("Ad")} placeholder={t("Ad (məs. orderNo)")} value={p.name} onChange={(e) => setParam(i, { name: e.target.value })} />
                 <select aria-label={t("Növ")} value={p.type} onChange={(e) => setParam(i, { type: e.target.value as ActionParam["type"] })} className={select}>
                   <option value="string">{t("Mətn")}</option><option value="number">{t("Ədəd")}</option><option value="integer">{t("Tam ədəd")}</option><option value="boolean">{t("Bəli/xeyr")}</option><option value="enum">{t("Siyahıdan seçim")}</option></select>
                 <Input aria-label={t("Təsvir")} placeholder={t("Təsvir (AI üçün)")} value={p.description} onChange={(e) => setParam(i, { description: e.target.value })} className="col-span-2 sm:col-span-1" />
-                <Button type="button" size="sm" variant="outline" aria-label={t("Sil")} onClick={() => up({ params: f.params.filter((_, j) => j !== i) })}>×</Button>
+                <Button type="button" size="sm" variant="ghost" aria-label={t("Sil")} onClick={() => up({ params: f.params.filter((_, j) => j !== i) })} className="self-center"><Trash2 size={14} aria-hidden /></Button>
                 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={p.required === true} onChange={(e) => setParam(i, { required: e.target.checked })} />{t("Məcburi")}</label>
                 {p.type === "enum" && <Input aria-label={t("Dəyərlər")} placeholder={t("Dəyərlər (vergüllə): gec, səhv, başqa")} value={p.enumText ?? ""} onChange={(e) => setParam(i, { enumText: e.target.value })} className="col-span-2 sm:col-span-3" />}
                 {p.type === "string" && <Input aria-label={t("Maksimum uzunluq")} type="number" placeholder={t("Maks. uzunluq (200)")} value={p.maxLength ?? ""} onChange={(e) => setParam(i, { maxLength: e.target.value ? Number(e.target.value) : undefined })} className="col-span-2 sm:col-span-3" />}
@@ -111,213 +113,267 @@ function ActionCard({ f, set, remove, index, identityReady, runs }: { f: Form; s
               </div>
             ))}
           </div>
-          <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => up({ params: [...f.params, blankParam()] })} disabled={f.params.length >= 8}>{t("Parametr əlavə et")}</Button>
-        </div>
+        )}
+        <Button type="button" size="sm" variant="outline" className="self-start" onClick={() => up({ params: [...f.params, blankParam()] })} disabled={f.params.length >= 8}><Plus size={14} aria-hidden />{t("Parametr əlavə et")}</Button>
+      </section>
+
+      <section className="flex flex-col gap-2">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1"><Label htmlFor={id("ct")}>{t("Təsdiq mətni (ixtiyari)")}</Label><Input id={id("ct")} value={f.confirmText ?? ""} maxLength={200} onChange={(e) => up({ confirmText: e.target.value })} placeholder={t("Sifariş {orderNo} ləğv olunacaq")} /></div>
-          <div className="flex flex-col gap-1"><Label htmlFor={id("sm")}>{t("Uğur mesajı (ixtiyari)")}</Label><Input id={id("sm")} value={f.successMessage ?? ""} maxLength={200} onChange={(e) => up({ successMessage: e.target.value })} placeholder={t("Sifariş {orderNo} ləğv edildi.")} /></div>
+          <div className="flex flex-col gap-1"><Label htmlFor="af-ct">{t("Təsdiq mətni (ixtiyari)")}</Label><Input id="af-ct" value={f.confirmText ?? ""} maxLength={200} onChange={(e) => up({ confirmText: e.target.value })} placeholder={t("Sifariş {orderNo} ləğv olunacaq")} /></div>
+          <div className="flex flex-col gap-1"><Label htmlFor="af-sm">{t("Uğur mesajı (ixtiyari)")}</Label><Input id="af-sm" value={f.successMessage ?? ""} maxLength={200} onChange={(e) => up({ successMessage: e.target.value })} placeholder={t("Sifariş {orderNo} ləğv edildi.")} /></div>
         </div>
         <p className="text-xs text-muted-foreground">{t("Təsdiq kartında bütün parametr dəyərləri həmişə göstərilir: mətn onları gizlədə bilməz.")}</p>
-      </CardContent>
-    </Card>
+      </section>
+    </div>
   );
 }
+
+type Tab = "items" | "security" | "log";
 
 function ActionsPage() {
   const { t, short } = useI18n();
   const [data, setData] = useState<ActionsData | null>(null);
-  const [error, setError] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
-  const [authType, setAuthType] = useState("bearer");
-  const [authName, setAuthName] = useState("X-Api-Key");
-  const [secret, setSecret] = useState("");
-  const [items, setItems] = useState<Form[]>([]);
-  const [preset, setPreset] = useState("cancel");
+  const [loadError, setLoadError] = useState("");
+  const [tab, setTab] = useState<Tab>("items");
+  const [picker, setPicker] = useState(false);
+  const [edit, setEdit] = useState<{ f: Form; index: number | null } | null>(null);
+  const [conn, setConn] = useState<{ pending: ActionItem[] | null } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+  const [del, setDel] = useState<number | null>(null);
   const [revealed, setRevealed] = useState<string | null>(null);
   const [lang, setLang] = useState<"node" | "py">("node");
   const [log, setLog] = useState<ActionLogEntry[] | null>(null);
   const [stats, setStats] = useState<ActionStats | null>(null);
-  const [testKey, setTestKey] = useState("");
+  const [test, setTest] = useState<ActionItem | null>(null);
   const [testVals, setTestVals] = useState<Record<string, string>>({});
   const [testUser, setTestUser] = useState("test-user");
   const [realOk, setRealOk] = useState(false);
   const [testOut, setTestOut] = useState<ActionTestResult | string | null>(null);
 
-  const apply = useCallback((d: ActionsData) => {
-    setData(d);
-    setBaseUrl(d.baseUrl ?? ""); setAuthType(d.auth?.type ?? "bearer"); setAuthName(d.auth?.name ?? "X-Api-Key");
-    setItems(d.items.map(toForm)); setTestKey((k) => k || d.items[0]?.key || "");
-  }, []);
+  const load = useCallback(() => getActions().then(setData).catch((e: Error) => setLoadError(e.message)), []);
   const loadLog = useCallback(() => { getActionLog().then((r) => setLog(r.entries)).catch(() => setLog([])); getActionStats().then(setStats).catch(() => setStats(null)); }, []);
-  useEffect(() => { getActions().then(apply).catch((e: Error) => setError(e.message)); loadLog(); }, [apply, loadLog]);
+  useEffect(() => { void load(); loadLog(); }, [load, loadLog]);
 
   const STATUS: Record<ActionLogEntry["status"], string> = { done: t("icra olundu"), failed: t("alınmadı"), unknown: t("bəlli deyil"), cancelled: t("ləğv edildi"), expired: t("vaxtı bitdi"), denied: t("rədd edildi"), test: t("sınaq") };
-  const presets: { id: string; label: string; make: () => Form }[] = [
-    { id: "cancel", label: t("Sifarişi ləğv et"), make: () => toForm(blankAction({ key: "cancel_order", title: t("Sifarişi ləğv et"), description: t("İstifadəçi öz sifarişini ləğv etmək istəyəndə"), path: "/orders/{orderNo}/cancel", requireIdentity: true,
+  const presets: { id: string; label: string; hint: string; make: () => Form }[] = [
+    { id: "cancel", label: t("Sifarişi ləğv et"), hint: t("İstifadəçi öz sifarişini ləğv etmək istəyəndə"), make: () => toForm(blankAction({ key: "cancel_order", title: t("Sifarişi ləğv et"), description: t("İstifadəçi öz sifarişini ləğv etmək istəyəndə"), path: "/orders/{orderNo}/cancel", requireIdentity: true,
       params: [{ name: "orderNo", type: "string", description: t("Sifariş nömrəsi"), required: true, maxLength: 30 }], confirmText: t("Sifariş {orderNo} ləğv olunacaq"), successMessage: t("Sifariş {orderNo} ləğv edildi.") })) },
-    { id: "ticket", label: t("Dəstək bileti yarat"), make: () => toForm(blankAction({ key: "create_ticket", title: t("Dəstək bileti yarat"), description: t("İstifadəçi problem barədə rəsmi müraciət (bilet) açmaq istəyəndə"), path: "/tickets",
+    { id: "ticket", label: t("Dəstək bileti yarat"), hint: t("İstifadəçi problem barədə rəsmi müraciət (bilet) açmaq istəyəndə"), make: () => toForm(blankAction({ key: "create_ticket", title: t("Dəstək bileti yarat"), description: t("İstifadəçi problem barədə rəsmi müraciət (bilet) açmaq istəyəndə"), path: "/tickets",
       params: [{ name: "subject", type: "string", description: t("Problemin qısa mövzusu"), required: true, maxLength: 100 }, { name: "message", type: "string", description: t("Problemin təsviri"), required: true, maxLength: 500 }], confirmText: t("Bilet açılacaq: {subject}"), successMessage: t("Biletiniz yaradıldı, tezliklə cavab veriləcək.") })) },
-    { id: "book", label: t("Görüş / rezerv"), make: () => toForm(blankAction({ key: "book_appointment", title: t("Görüş rezerv et"), description: t("İstifadəçi görüş, qəbul və ya rezerv etmək istəyəndə"), path: "/appointments",
+    { id: "book", label: t("Görüş / rezerv"), hint: t("İstifadəçi görüş, qəbul və ya rezerv etmək istəyəndə"), make: () => toForm(blankAction({ key: "book_appointment", title: t("Görüş rezerv et"), description: t("İstifadəçi görüş, qəbul və ya rezerv etmək istəyəndə"), path: "/appointments",
       params: [{ name: "date", type: "string", description: t("Tarix (YYYY-MM-DD)"), required: true, maxLength: 10 }, { name: "time", type: "string", description: t("Saat (HH:MM)"), required: true, maxLength: 5 }, { name: "phone", type: "string", description: t("Telefon nömrəsi"), required: true, maxLength: 20 }], confirmText: t("{date} {time} üçün rezerv ediləcək"), successMessage: t("Rezerviniz qeydə alındı.") })) },
-    { id: "lead", label: t("Lead göndər (CRM)"), make: () => toForm(blankAction({ key: "send_lead", title: t("Müraciət göndər"), description: t("İstifadəçi satış və ya təklif üçün əlaqə qoymaq istəyəndə"), path: "/leads",
+    { id: "lead", label: t("Lead göndər (CRM)"), hint: t("İstifadəçi satış və ya təklif üçün əlaqə qoymaq istəyəndə"), make: () => toForm(blankAction({ key: "send_lead", title: t("Müraciət göndər"), description: t("İstifadəçi satış və ya təklif üçün əlaqə qoymaq istəyəndə"), path: "/leads",
       params: [{ name: "name", type: "string", description: t("Ad"), required: true, maxLength: 80 }, { name: "phone", type: "string", description: t("Telefon nömrəsi"), required: true, maxLength: 20 }], confirmText: t("{name} ({phone}) üçün müraciət göndəriləcək"), successMessage: t("Müraciətiniz göndərildi.") })) },
-    { id: "custom", label: t("Digər (özün təyin et)"), make: () => toForm(blankAction()) },
+    { id: "custom", label: t("Digər (özün təyin et)"), hint: t("Boş formadan başla"), make: () => toForm(blankAction()) },
   ];
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true); setError("");
+  const connOf = (d: ActionsData): ConnValue => ({ baseUrl: d.baseUrl ?? "", authType: d.auth?.type ?? "bearer", authName: d.auth?.name ?? "X-Api-Key", secret: "" });
+  /** Hamısını saxlayır: bağlantı (dəyişməyibsə mövcud) + əməliyyatlar */
+  async function persist(items: ActionItem[], c?: ConnValue): Promise<boolean> {
+    if (!data) return false;
+    setSaving(true); setErr("");
     try {
-      const body = {
-        baseUrl: baseUrl.trim(), ...(secret.trim() && { apiSecret: secret.trim() }),
-        auth: authType === "none" ? { type: "none" } : { type: authType, ...(authType === "header" && { name: authName.trim() }) },
-        items: items.map(toItem),
-      };
-      const r = await saveActions(body);
+      const r = await saveActions({ ...connInput(c ?? connOf(data), ["header"]), items });
       const { signingSecret, ...view } = r;
-      apply(view); setSecret("");
+      setData(view);
       if (signingSecret) setRevealed(signingSecret);
       toast.success(t("Yadda saxlanıldı."));
-    } catch (err) { setError((err as Error).message); }
+      return true;
+    } catch (e) { setErr((e as Error).message); return false; }
     finally { setSaving(false); }
   }
-  async function rotate() {
-    try { setRevealed((await newSigningSecret()).signingSecret); setData(await getActions()); }
-    catch (err) { toast.error((err as Error).message); }
+  async function saveEdit() {
+    if (!data || !edit) return;
+    const item = toItem(edit.f);
+    const items = edit.index === null ? [...data.items, item] : data.items.map((x, i) => (i === edit.index ? item : x));
+    // API hələ qoşulmayıbsa: əvvəl bağlantı soruşulur, əməliyyat onunla birlikdə saxlanır
+    if (!data.configured) { setConn({ pending: items }); setEdit(null); return; }
+    if (await persist(items)) setEdit(null);
   }
-  const testSpec = data?.items.find((i) => i.key === testKey);
+  async function remove(i: number) {
+    if (!data) return;
+    if (data.items.length === 1) { await deleteActions(); await load(); setLog([]); toast.success(t("Əməliyyatlar söndürüldü.")); }
+    else await persist(data.items.filter((_, j) => j !== i));
+    setDel(null);
+  }
+  async function rotate() {
+    try { setRevealed((await newSigningSecret()).signingSecret); await load(); }
+    catch (e) { toast.error((e as Error).message); }
+  }
   async function runTest(send: boolean) {
-    if (!testSpec) return;
+    if (!test) return;
     setTestOut(null);
     try {
-      const params = Object.fromEntries(Object.entries(testVals).filter(([k, v]) => v.trim() && testSpec.params.some((p) => p.name === k)));
-      setTestOut(await testAction({ key: testSpec.key, params, send, ...(testSpec.requireIdentity && { userId: testUser.trim() }) }));
+      const params = Object.fromEntries(Object.entries(testVals).filter(([k, v]) => v.trim() && test.params.some((p) => p.name === k)));
+      setTestOut(await testAction({ key: test.key, params, send, ...(test.requireIdentity && { userId: testUser.trim() }) }));
       if (send) loadLog();
-    } catch (err) { setTestOut((err as Error).message); }
+    } catch (e) { setTestOut((e as Error).message); }
   }
 
-  if (!data) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <FormSkeleton />;
-  const saved = data.configured && data.items.length > 0;
+  if (!data) return loadError ? <p role="alert" className="text-sm text-destructive">{loadError}</p> : <FormSkeleton />;
+  const needsIdentity = data.items.some((x) => x.requireIdentity);
+  const newBtn = <Button onClick={() => { setErr(""); setPicker(true); }} disabled={data.items.length >= 10}><Plus size={16} aria-hidden />{t("Yeni əməliyyat")}</Button>;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-semibold">{t("Əməliyyatlar")}</h1>
-        <p className="text-sm text-muted-foreground">{t("Çat istifadəçinin istəyi ilə sənin saytında əməliyyat icra edə bilsin: sifarişi ləğv et, bilet yarat, görüş rezerv et, müraciət göndər. Hər əməliyyat yalnız istifadəçi kartı görüb təsdiq verəndən sonra icra olunur.")}</p>
-      </header>
+    <div className="flex flex-col gap-6">
+      <PageHeader title={t("Əməliyyatlar")}
+        description={t("Çat istifadəçinin istəyi ilə sənin saytında əməliyyat icra edə bilsin: sifarişi ləğv et, bilet yarat, görüş rezerv et, müraciət göndər. Hər əməliyyat yalnız istifadəçi kartı görüb təsdiq verəndən sonra icra olunur.")}
+        actions={<>{data.configured && <Button variant="outline" onClick={() => { setErr(""); setConn({ pending: null }); }}><Plug size={16} aria-hidden />{t("API bağlantısı")}</Button>}{newBtn}</>} />
 
-      <div className="flex flex-wrap gap-2 text-sm">
-        <Badge className={saved ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}>{t("Əməliyyatlar qoşulub")}</Badge>
-        <Badge className={data.signing.configured ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}>{t("İmza açarı yaradılıb")}</Badge>
-        <Badge className={data.identityReady ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}>{t("İstifadəçi tokeni hazırdır")}</Badge>
-      </div>
+      <SetupSteps steps={[
+        { title: t("Əməliyyatlar qoşulub"), done: data.configured && data.items.length > 0, action: { label: t("Əlavə et"), run: () => setPicker(true) } },
+        { title: t("İmza açarı yaradılıb"), done: data.signing.configured, action: data.configured ? { label: t("Bax"), run: () => setTab("security") } : undefined },
+        { title: t("İstifadəçi tokeni hazırdır"), done: data.identityReady === true || !needsIdentity, action: { label: t("Qur"), run: () => setTab("security") } },
+      ]} />
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">{t("Təhlükəsizlik necə işləyir")}</CardTitle></CardHeader>
-        <CardContent className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-          <p>{t("AI heç vaxt əməliyyatı özü icra etmir. O yalnız təklif yaradır; istifadəçi nə olacağını (bütün dəyərlərlə) kartda görür və “Təsdiq et” düyməsinə basır. Təsdiq birdəfəliklədir və 10 dəqiqədən sonra bitir.")}</p>
-          <p>{t("Yalnız burada təyin etdiyin əməliyyatlar və parametrlər mümkündür. Hər parametr tip, uzunluq və icazəli dəyərlər üzrə yoxlanır, artıq sahələr atılır.")}</p>
-          <p>{t("İstifadəçi ID-si yalnız saytın imzaladığı tokendən gəlir; AI və ya ziyarətçi başqasının adından əməliyyat edə bilməz. Təsdiqi də eyni istifadəçi verməlidir.")}</p>
-          <p>{t("Sorğular imzalanır (HMAC), təkrar icra qarşısı üçün unikal açarla gedir və avtomatik təkrarlanmır. Cavab gəlməzsə nəticə “bəlli deyil” kimi bildirilir, uğur uydurulmur.")}</p>
-          <p>{t("İstifadəçi başına saatda 5 icra, sayt üzrə gündə 500 icra limiti var. Hər addım aşağıdakı jurnala yazılır.")}</p>
-        </CardContent>
-      </Card>
+      <FilterPills value={tab} onChange={setTab} label={t("Bölmələr")} items={[
+        { value: "items", label: t("Əməliyyatlar"), count: data.items.length, icon: <Zap size={14} aria-hidden /> },
+        { value: "security", label: t("Təhlükəsizlik"), icon: <ShieldCheck size={14} aria-hidden /> },
+        ...(data.configured ? [{ value: "log" as const, label: t("Jurnal"), count: log?.length }] : []),
+      ]} />
 
-      <form onSubmit={save} className="flex flex-col gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("1. Sənin API-n")}</CardTitle><CardDescription>{t("Əməliyyatları icra edən daxili API. Yalnız yazma sorğuları (POST, PUT, PATCH, DELETE) göndərilir; oxuma üçün “Müştəri məlumatı” bölməsindən istifadə et.")}</CardDescription></CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1"><Label htmlFor="ac-base">{t("API ünvanı (https)")}</Label><Input id="ac-base" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.saytin.az" required /></div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="flex flex-col gap-1"><Label htmlFor="ac-at">{t("Autentifikasiya")}</Label>
-                <select id="ac-at" value={authType} onChange={(e) => setAuthType(e.target.value)} className="h-10 rounded-md border border-border bg-card px-3 text-sm"><option value="bearer">Bearer</option><option value="header">Header</option><option value="none">{t("Yoxdur")}</option></select></div>
-              {authType === "header" && <div className="flex flex-col gap-1"><Label htmlFor="ac-an">{t("Ad")}</Label><Input id="ac-an" value={authName} onChange={(e) => setAuthName(e.target.value)} /></div>}
-              {authType !== "none" && <div className="flex flex-col gap-1"><Label htmlFor="ac-sec">{t("API açarı")}</Label><Input id="ac-sec" type="password" autoComplete="off" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={data.auth?.hasSecret ? t("Saxlanılıb (dəyişmək üçün yaz)") : ""} /></div>}
-            </div>
-            <p className="text-xs text-muted-foreground">{t("Bu açar yalnız əməliyyatlar üçün ayrıca, mümkün qədər məhdud səlahiyyətli açar olsun.")}</p>
-          </CardContent>
-        </Card>
-        <div>
-          <h2 className="font-medium">{t("2. Hansı əməliyyatlar olsun?")}</h2>
-          <p className="text-sm text-muted-foreground">{t("Hər biri üçün ünvan, parametrlər və təsdiq mətni göstərilir. Ən çox 10 əməliyyat.")}</p>
+      {tab === "items" && (data.items.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+          <span className="grid size-12 place-items-center rounded-full bg-muted"><Zap size={22} aria-hidden /></span>
+          <h2 className="font-semibold">{t("Hələ əməliyyat yoxdur")}</h2>
+          <p className="max-w-md text-sm text-muted-foreground">{t("Hazır nümunədən başla: sifarişi ləğv et, bilet yarat, görüş rezerv et. Sonra öz API-nin ünvanını yaz.")}</p>
+          {newBtn}
         </div>
-        {items.map((f, i) => <ActionCard key={i} index={i} f={f} runs={stats?.byKey[f.key]} identityReady={data.identityReady === true} set={(n) => setItems((cur) => cur.map((x, j) => (j === i ? n : x)))} remove={() => setItems((cur) => cur.filter((_, j) => j !== i))} />)}
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="flex flex-col gap-1"><Label htmlFor="ac-preset">{t("Əməliyyat əlavə et")}</Label>
-            <select id="ac-preset" value={preset} onChange={(e) => setPreset(e.target.value)} className="h-10 rounded-md border border-border bg-card px-3 text-sm">{presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select></div>
-          <Button type="button" variant="outline" disabled={items.length >= 10} onClick={() => setItems((cur) => [...cur, presets.find((p) => p.id === preset)!.make()])}>{t("Əlavə et")}</Button>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+          <table className="w-full min-w-[40rem] text-sm">
+            <thead className="border-b border-border text-left text-xs text-muted-foreground"><tr>
+              <th className="px-4 py-3 font-medium">{t("Ad")}</th><th className="px-4 py-3 font-medium">{t("Sorğu")}</th><th className="px-4 py-3 font-medium">{t("Kim üçün")}</th><th className="px-4 py-3 font-medium">{t("30 gündə")}</th><th className="px-4 py-3 font-medium">{t("Aktiv")}</th><th className="w-12 px-2" />
+            </tr></thead>
+            <tbody className="divide-y divide-border">
+              {data.items.map((a, i) => {
+                const r = stats?.byKey[a.key];
+                const other = r ? (r.failed ?? 0) + (r.cancelled ?? 0) + (r.unknown ?? 0) + (r.expired ?? 0) + (r.denied ?? 0) : 0;
+                return (
+                  <tr key={a.key} className="align-middle hover:bg-muted/40">
+                    <td className="px-4 py-3"><button type="button" onClick={() => { setErr(""); setEdit({ f: toForm(a), index: i }); }} className="cursor-pointer text-left"><span className="block font-medium hover:underline">{a.title}</span><span className="font-mono text-xs text-muted-foreground">{a.key}</span></button></td>
+                    <td className="px-4 py-3"><span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">{a.method}</span> <span className="font-mono text-xs">{a.path}</span></td>
+                    <td className="px-4 py-3 text-xs">{a.requireIdentity ? t("Daxil olmuş istifadəçi") : <span className="text-amber">{t("Hamı")}</span>}</td>
+                    <td className="px-4 py-3 text-xs tabular-nums text-muted-foreground">{r ? t("{done} icra · {other} yox", { done: r.done ?? 0, other }) : "—"}</td>
+                    <td className="px-4 py-3"><Switch checked={a.enabled !== false} label={a.title} onChange={(v) => void persist(data.items.map((x, j) => (j === i ? { ...x, enabled: v } : x)))} /></td>
+                    <td className="px-2 py-3 text-right"><RowMenu items={[
+                      { label: t("Redaktə et"), icon: Pencil, run: () => { setErr(""); setEdit({ f: toForm(a), index: i }); } },
+                      { label: t("Sına"), icon: FlaskConical, run: () => { setTest(a); setTestVals({}); setTestOut(null); setRealOk(false); } },
+                      { label: t("Sil"), icon: Trash2, danger: true, run: () => setDel(i) },
+                    ]} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button disabled={saving || items.length === 0} className="self-start">{saving ? t("Yoxlanılır…") : t("Yadda saxla")}</Button>
-      </form>
+      ))}
 
-      {revealed && <KeyReveal apiKey={revealed} title={t("İmza açarı (sorğunun həqiqiliyini yoxlamaq üçün)")} onDone={() => setRevealed(null)} />}
-
-      {(items.some((f) => f.requireIdentity) || data.identityReady) && <IdentitySetup onChanged={() => { getActions().then(setData).catch(() => {}); }} />}
-
-      {saved && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("Yoxla")}</CardTitle><CardDescription>{t("Əvvəlcə sorğunun necə görünəcəyinə bax (heç nə göndərilmir). Sonra istəsən real sınaq sorğusu göndər: o X-Chatbot-Test: 1 başlığı ilə gedir, API-n bunu görüb əməliyyatı real icra etməməlidir.")}</CardDescription></CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-end gap-2">
-              <select aria-label={t("Əməliyyat")} value={testKey} onChange={(e) => { setTestKey(e.target.value); setTestVals({}); setTestOut(null); }} className={select}>{data.items.map((s) => <option key={s.key} value={s.key}>{s.title}</option>)}</select>
-              {testSpec?.requireIdentity && <Input aria-label={t("İstifadəçi ID-si")} value={testUser} onChange={(e) => setTestUser(e.target.value)} placeholder={t("İstifadəçi ID-si")} className="max-w-xs" />}
-            </div>
-            {testSpec && <div className="grid gap-2 sm:grid-cols-2">{testSpec.params.map((p) => <Input key={p.name} aria-label={p.name} placeholder={`${p.name}${p.required ? " *" : ""}`} value={testVals[p.name] ?? ""} onChange={(e) => setTestVals((v) => ({ ...v, [p.name]: e.target.value }))} />)}</div>}
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="outline" disabled={!testSpec} onClick={() => runTest(false)}>{t("Sorğuya bax")}</Button>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={realOk} onChange={(e) => setRealOk(e.target.checked)} />{t("Real sorğunun sənin API-na göndəriləcəyini başa düşürəm")}</label>
-              <Button type="button" variant="outline" disabled={!testSpec || !realOk} onClick={() => runTest(true)}>{t("Real sınaq göndər")}</Button>
-            </div>
-            {testOut && <pre className="max-h-72 overflow-auto rounded-md bg-muted p-3 text-xs">{typeof testOut === "string" ? testOut : JSON.stringify(testOut.preview ? testOut.preview : { status: testOut.status, httpStatus: testOut.httpStatus, message: testOut.message ? t(testOut.message) : undefined, ms: testOut.ms }, null, 2)}</pre>}
-          </CardContent>
-        </Card>
+      {tab === "security" && (
+        <div className="flex flex-col gap-4">
+          <section className="rounded-2xl bg-muted/50 p-5">
+            <h2 className="mb-2 font-semibold">{t("Təhlükəsizlik necə işləyir")}</h2>
+            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-muted-foreground">
+              <li>{t("AI heç vaxt əməliyyatı özü icra etmir. O yalnız təklif yaradır; istifadəçi nə olacağını (bütün dəyərlərlə) kartda görür və “Təsdiq et” düyməsinə basır. Təsdiq birdəfəliklədir və 10 dəqiqədən sonra bitir.")}</li>
+              <li>{t("Yalnız burada təyin etdiyin əməliyyatlar və parametrlər mümkündür. Hər parametr tip, uzunluq və icazəli dəyərlər üzrə yoxlanır, artıq sahələr atılır.")}</li>
+              <li>{t("İstifadəçi ID-si yalnız saytın imzaladığı tokendən gəlir; AI və ya ziyarətçi başqasının adından əməliyyat edə bilməz. Təsdiqi də eyni istifadəçi verməlidir.")}</li>
+              <li>{t("Sorğular imzalanır (HMAC), təkrar icra qarşısı üçün unikal açarla gedir və avtomatik təkrarlanmır. Cavab gəlməzsə nəticə “bəlli deyil” kimi bildirilir, uğur uydurulmur.")}</li>
+              <li>{t("İstifadəçi başına saatda 5 icra, sayt üzrə gündə 500 icra limiti var. Hər addım aşağıdakı jurnala yazılır.")}</li>
+            </ul>
+          </section>
+          {data.configured && (
+            <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
+              <div className="flex flex-wrap items-start gap-3">
+                <div className="min-w-0 flex-1"><h2 className="flex items-center gap-2 font-semibold"><KeyRound size={16} aria-hidden />{t("Sorğunun həqiqiliyini yoxla")}</h2>
+                  <p className="text-sm text-muted-foreground">{data.signing.configured ? t("İmza açarı yaradılıb: {d}. Yeni açar yaratsan köhnəsi ilə imzalanan yoxlama uğursuz olacaq.", { d: data.signing.createdAt ? short(data.signing.createdAt) : "" }) : t("Hələ yaradılmayıb.")}</p></div>
+              </div>
+              <p className="text-sm text-muted-foreground">{t("Hər sorğu X-Chatbot-Signature başlığı ilə gəlir. API-nda onu yoxla: yalnız bizdən gələn sorğuları qəbul et. X-Chatbot-Idempotency-Key təkrar gələrsə əməliyyatı bir də icra etmə.")}</p>
+              <FilterPills value={lang} onChange={setLang} label={t("Dil")} items={[{ value: "node", label: "Node.js" }, { value: "py", label: "Python" }]} />
+              <Code code={lang === "node" ? VERIFY_NODE : VERIFY_PY} />
+              {!revealed && <DangerAction label={t("Yeni imza açarı yarat")} confirm={{ kind: "text", expected: t("yarat"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("yarat") }) }} warning={t("Köhnə açar dərhal etibarsız olur, API-ndakı yoxlamanı yeni açarla yeniləməlisən.")} onConfirm={rotate} />}
+            </section>
+          )}
+          <IdentitySetup onChanged={() => { void load(); }} />
+          {data.configured && (
+            <section className="flex flex-col gap-2 rounded-2xl border border-destructive/30 p-5">
+              <h2 className="font-semibold text-destructive">{t("Təhlükəli zona")}</h2>
+              <DangerAction label={t("Əməliyyatları söndür")} confirm={{ kind: "text", expected: t("sil"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("sil") }) }} warning={t("Bütün əməliyyatlar, API açarı və imza açarı silinəcək. Çat artıq heç bir əməliyyat təklif etməyəcək.")} onConfirm={async () => { await deleteActions(); await load(); setLog([]); setTab("items"); toast.success(t("Əməliyyatlar söndürüldü.")); }} />
+            </section>
+          )}
+        </div>
       )}
 
-      {data.configured && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("3. Sorğunun həqiqiliyini yoxla")}</CardTitle>
-            <CardDescription>{data.signing.configured ? t("İmza açarı yaradılıb: {d}. Yeni açar yaratsan köhnəsi ilə imzalanan yoxlama uğursuz olacaq.", { d: data.signing.createdAt ? short(data.signing.createdAt) : "" }) : t("Hələ yaradılmayıb.")}</CardDescription></CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <p className="text-sm text-muted-foreground">{t("Hər sorğu X-Chatbot-Signature başlığı ilə gəlir. API-nda onu yoxla: yalnız bizdən gələn sorğuları qəbul et. X-Chatbot-Idempotency-Key təkrar gələrsə əməliyyatı bir də icra etmə.")}</p>
-            <div className="flex gap-1 text-sm" role="tablist">
-              {(["node", "py"] as const).map((k) => <button key={k} role="tab" type="button" aria-selected={lang === k} onClick={() => setLang(k)} className={`rounded px-3 py-1.5 ${lang === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{k === "node" ? "Node.js" : "Python"}</button>)}
-            </div>
-            <Code code={lang === "node" ? VERIFY_NODE : VERIFY_PY} />
-            {!revealed && <DangerAction label={t("Yeni imza açarı yarat")} confirm={{ kind: "text", expected: t("yarat"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("yarat") }) }} warning={t("Köhnə açar dərhal etibarsız olur, API-ndakı yoxlamanı yeni açarla yeniləməlisən.")} onConfirm={rotate} />}
-          </CardContent>
-        </Card>
+      {tab === "log" && (
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="flex-1 text-sm text-muted-foreground">{t("Son əməliyyatlar: kim, nə vaxt, nəticə. E-poçtlar maskalanır, 90 gün saxlanır.")}</p>
+            <Button type="button" size="sm" variant="outline" onClick={loadLog}>{t("Yenilə")}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={!log?.length} onClick={() => { clearActionLog().then(() => setLog([])).catch((e: Error) => toast.error(e.message)); }}>{t("Təmizlə")}</Button>
+          </div>
+          {!log ? <p className="text-sm text-muted-foreground">…</p> : log.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">{t("Hələ əməliyyat olmayıb.")}</p> : (
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card"><table className="w-full min-w-[36rem] text-left text-xs">
+              <thead className="border-b border-border text-muted-foreground"><tr><th className="px-4 py-2.5 font-medium">{t("Vaxt")}</th><th className="px-4 font-medium">{t("Əməliyyat")}</th><th className="px-4 font-medium">{t("İstifadəçi")}</th><th className="px-4 font-medium">{t("Nəticə")}</th><th className="px-4 font-medium">{t("Dəyərlər")}</th></tr></thead>
+              <tbody className="divide-y divide-border">{log.map((e, i) => (
+                <tr key={e.id ?? i} className="align-top">
+                  <td className="whitespace-nowrap px-4 py-2">{short(e.at)}</td><td className="px-4 py-2">{e.title}</td><td className="px-4 py-2">{e.subject ?? "-"}</td>
+                  <td className="whitespace-nowrap px-4 py-2"><Badge className={e.status === "done" ? "bg-emerald-500/10 text-emerald-700" : e.status === "test" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive"}>{STATUS[e.status] ?? e.status}{e.httpStatus ? ` (${e.httpStatus})` : ""}</Badge></td>
+                  <td className="break-all px-4 py-2 text-muted-foreground">{Object.entries(e.params ?? {}).map(([k, v]) => `${k}=${v}`).join(", ")}</td>
+                </tr>))}</tbody>
+            </table></div>
+          )}
+        </section>
       )}
 
-      {data.configured && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between gap-3">
-              <div><CardTitle className="text-base">{t("Jurnal")}</CardTitle><CardDescription>{t("Son əməliyyatlar: kim, nə vaxt, nəticə. E-poçtlar maskalanır, 90 gün saxlanır.")}</CardDescription></div>
-              <div className="flex gap-2"><Button type="button" size="sm" variant="outline" onClick={loadLog}>{t("Yenilə")}</Button>
-                <Button type="button" size="sm" variant="outline" disabled={!log?.length} onClick={() => { clearActionLog().then(() => setLog([])).catch((e: Error) => toast.error(e.message)); }}>{t("Təmizlə")}</Button></div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {!log ? <p className="text-sm text-muted-foreground">…</p> : log.length === 0 ? <p className="text-sm text-muted-foreground">{t("Hələ əməliyyat olmayıb.")}</p> : (
-              <div className="overflow-x-auto"><table className="w-full text-left text-xs">
-                <thead className="text-muted-foreground"><tr><th className="py-1 pr-3">{t("Vaxt")}</th><th className="pr-3">{t("Əməliyyat")}</th><th className="pr-3">{t("İstifadəçi")}</th><th className="pr-3">{t("Nəticə")}</th><th>{t("Dəyərlər")}</th></tr></thead>
-                <tbody>{log.map((e, i) => (
-                  <tr key={e.id ?? i} className="border-t border-border align-top">
-                    <td className="whitespace-nowrap py-1 pr-3">{short(e.at)}</td><td className="pr-3">{e.title}</td><td className="pr-3">{e.subject ?? "-"}</td>
-                    <td className="whitespace-nowrap pr-3">{STATUS[e.status] ?? e.status}{e.httpStatus ? ` (${e.httpStatus})` : ""}</td>
-                    <td className="break-all text-muted-foreground">{Object.entries(e.params ?? {}).map(([k, v]) => `${k}=${v}`).join(", ")}</td>
-                  </tr>))}</tbody>
-              </table></div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* Hazır nümunə seçimi */}
+      <Modal open={picker} onClose={() => setPicker(false)} title={t("Yeni əməliyyat")} description={t("Hazır nümunədən başla, sonra öz API-nə uyğunlaşdır.")} size="lg">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {presets.map((p) => (
+            <button key={p.id} type="button" onClick={() => { setPicker(false); setErr(""); setEdit({ f: p.make(), index: null }); }}
+              className="flex cursor-pointer flex-col items-start gap-1 rounded-xl border border-border p-4 text-left hover:border-foreground/40 hover:bg-muted/40">
+              <span className="font-medium">{p.label}</span><span className="text-xs text-muted-foreground">{p.hint}</span>
+            </button>
+          ))}
+        </div>
+      </Modal>
 
-      {data.configured && (
-        <DangerAction label={t("Əməliyyatları söndür")} confirm={{ kind: "text", expected: t("sil"), hint: t("Təsdiqləmək üçün “{word}” yaz", { word: t("sil") }) }} warning={t("Bütün əməliyyatlar, API açarı və imza açarı silinəcək. Çat artıq heç bir əməliyyat təklif etməyəcək.")} onConfirm={async () => { await deleteActions(); apply(await getActions()); setLog([]); toast.success(t("Əməliyyatlar söndürüldü.")); }} />
-      )}
+      {/* Əməliyyatın redaktəsi */}
+      <Modal open={Boolean(edit)} onClose={() => setEdit(null)} busy={saving} size="lg" title={edit?.index === null ? t("Yeni əməliyyat") : edit?.f.title || t("Əməliyyat")}
+        description={t("AI bu əməliyyatı yalnız istifadəçi açıq istəyəndə təklif edir; icra üçün istifadəçi ayrıca təsdiq verir.")}
+        footer={<>{err && <p role="alert" className="mr-auto text-sm text-destructive">{err}</p>}<Button type="button" variant="outline" onClick={() => setEdit(null)} disabled={saving}>{t("Ləğv et")}</Button><Button type="submit" form="act-form" disabled={saving}>{saving ? t("Yoxlanılır…") : data.configured ? t("Saxla") : t("Davam et")}</Button></>}>
+        {edit && <form id="act-form" onSubmit={(e) => { e.preventDefault(); void saveEdit(); }}><ActionFields f={edit.f} set={(f) => setEdit({ ...edit, f })} identityReady={data.identityReady === true} /></form>}
+      </Modal>
+
+      {/* API bağlantısı (ilk dəfə: əməliyyatla birlikdə saxlanır) */}
+      <ConnectionModal open={Boolean(conn)} onClose={() => setConn(null)} initial={connOf(data)} hasSecret={Boolean(data.auth?.hasSecret)} saving={saving} error={err}
+        types={[{ value: "bearer", label: "Bearer" }, { value: "header", label: "Header" }, { value: "none", label: t("Yoxdur") }]} named={["header"]}
+        description={t("Əməliyyatları icra edən daxili API. Yalnız yazma sorğuları (POST, PUT, PATCH, DELETE) göndərilir; oxuma üçün “Müştəri məlumatı” bölməsindən istifadə et.")}
+        hint={t("Bu açar yalnız əməliyyatlar üçün ayrıca, mümkün qədər məhdud səlahiyyətli açar olsun.")}
+        saveLabel={conn?.pending ? t("Qoş və saxla") : undefined}
+        onSave={async (c) => { if (await persist(conn?.pending ?? data.items, c)) setConn(null); }} />
+
+      {/* Silmə təsdiqi */}
+      <Modal open={del !== null} onClose={() => setDel(null)} size="sm" title={t("Əməliyyat silinsin?")}
+        description={data.items.length === 1 ? t("Bu sonuncu əməliyyatdır: silinsə API bağlantısı və imza açarı da silinəcək.") : t("Çat artıq bu əməliyyatı təklif etməyəcək.")}
+        footer={<><Button type="button" variant="outline" onClick={() => setDel(null)}>{t("Ləğv et")}</Button><Button type="button" variant="destructive" disabled={saving} onClick={() => del !== null && void remove(del)}>{t("Sil")}</Button></>}>
+        <p className="text-sm font-medium">{del !== null ? data.items[del]?.title : ""}</p>
+      </Modal>
+
+      {/* Sınaq */}
+      <Modal open={Boolean(test)} onClose={() => setTest(null)} size="lg" title={t("Sına: {name}", { name: test?.title ?? "" })}
+        description={t("Əvvəlcə sorğunun necə görünəcəyinə bax (heç nə göndərilmir). Sonra istəsən real sınaq sorğusu göndər: o X-Chatbot-Test: 1 başlığı ilə gedir, API-n bunu görüb əməliyyatı real icra etməməlidir.")}
+        footer={<><Button type="button" variant="outline" onClick={() => runTest(false)}>{t("Sorğuya bax")}</Button><Button type="button" disabled={!realOk} onClick={() => runTest(true)}>{t("Real sınaq göndər")}</Button></>}>
+        {test && (
+          <div className="flex flex-col gap-3">
+            {test.requireIdentity && <div className="flex flex-col gap-1"><Label htmlFor="ts-user">{t("İstifadəçi ID-si")}</Label><Input id="ts-user" value={testUser} onChange={(e) => setTestUser(e.target.value)} className="max-w-xs" /></div>}
+            {test.params.length > 0 && <div className="grid gap-2 sm:grid-cols-2">{test.params.map((p) => <div key={p.name} className="flex flex-col gap-1"><Label htmlFor={`ts-${p.name}`}>{p.name}{p.required ? " *" : ""}</Label><Input id={`ts-${p.name}`} value={testVals[p.name] ?? ""} onChange={(e) => setTestVals((v) => ({ ...v, [p.name]: e.target.value }))} /></div>)}</div>}
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={realOk} onChange={(e) => setRealOk(e.target.checked)} />{t("Real sorğunun sənin API-na göndəriləcəyini başa düşürəm")}</label>
+            {testOut && <pre className="max-h-72 overflow-auto rounded-xl bg-muted p-3 text-xs">{typeof testOut === "string" ? testOut : JSON.stringify(testOut.preview ? testOut.preview : { status: testOut.status, httpStatus: testOut.httpStatus, message: testOut.message ? t(testOut.message) : undefined, ms: testOut.ms }, null, 2)}</pre>}
+          </div>
+        )}
+      </Modal>
+
+      {revealed && <Modal open onClose={() => setRevealed(null)} title={t("İmza açarı")} size="md"><KeyReveal apiKey={revealed} title={t("İmza açarı (sorğunun həqiqiliyini yoxlamaq üçün)")} onDone={() => setRevealed(null)} /></Modal>}
     </div>
   );
 }

@@ -33,7 +33,8 @@
   --muted: #eef1f6;
   --muted-foreground: #576274;
   --border: #dbe1ea;
-  --primary: #1d4ed8;
+  /* Vurğu rəngi: qara (mavi az işlənir; mavi yalnız qrafiklərdə və müştərinin vidjet rəngində) */
+  --primary: #18181b;
   --primary-foreground: #ffffff;
   --amber: #b45309;
   --destructive: #b91c1c;

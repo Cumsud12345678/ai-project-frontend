@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { FileText, Globe, Loader2, Plug, RefreshCw, Trash2, Type, UploadCloud } from "lucide-react";
+import { BookOpen, FileText, Globe, Loader2, MessageSquareText, Plug, Plus, RefreshCw, Settings2, Trash2, Type, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProfile, type AutoRefresh, type KbInfo, type KbSource, type Mode } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -16,6 +16,8 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { SwitchRow } from "@/components/ui/switch";
 import { Tabs } from "@/components/ui/tabs";
+import { Modal } from "@/components/ui/modal";
+import { FilterPills, PageHeader } from "@/components/page-header";
 
 const ACCEPT = ".pdf,.docx,.txt,.md,.csv,.html,.htm,.json";
 
@@ -94,12 +96,8 @@ function AddSection({ info, onAdded }: { info: KbInfo; onAdded: () => void }) {
   }
 
   return (
-    <div className="border-t border-border">
-      <div className="flex flex-col gap-1 px-5 pt-4">
-        <h3 className="text-sm font-semibold">{t("Məlumat əlavə et")}</h3>
-        <p className="text-sm text-muted-foreground">{t("Çat cavabları yalnız buraya əlavə etdiyin məlumatdan götürür. İstədiyin qədər mənbə qarışdıra bilərsən.")}</p>
-      </div>
-      <div className="flex flex-col gap-4 px-5 py-4">
+    <div>
+      <div className="flex flex-col gap-4">
         <Tabs value={tab} onChange={setTab} label={t("Mənbə növü")} items={[{ value: "file", label: t("Fayl") }, { value: "site", label: t("Sayt linki") }, { value: "text", label: t("Mətn / FAQ") }]} />
         {full && <p role="alert" className="text-sm text-destructive">{t("Mənbə limitinə çatdın ({n}). Yenisini əlavə etmək üçün köhnələrini sil.", { n: info.limits.sources })}</p>}
 
@@ -239,6 +237,8 @@ function FallbackCard({ info }: { info: KbInfo }) {
   );
 }
 
+type Filter = "all" | "site" | "file" | "text" | "qa";
+
 function Knowledge() {
   const { t, num } = useI18n();
   const { refresh } = useSession();
@@ -246,6 +246,9 @@ function Knowledge() {
   const [mode, setMode] = useState<Mode | null>(null); // qaralama: "Saxla"ya qədər yalnız görünüşü dəyişir
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [adding, setAdding] = useState(false);
+  const [settings, setSettings] = useState(false);
   const load = useCallback(() => getKb().then((i) => { setInfo(i); setMode((m) => m ?? i.mode); setError(""); }).catch((e: Error) => setError(e.message)), []);
   useEffect(() => { void load(); }, [load]);
   const processing = info?.sources.some((s) => s.status === "processing");
@@ -256,12 +259,14 @@ function Knowledge() {
   }, [processing, load]);
 
   if (!info || !mode) return error ? <p role="alert" className="text-sm text-destructive">{error}</p> : <CardSkeleton rows={4} />;
-  const plain = info.sources.filter((s) => s.type !== "qa" && s.type !== "proc"); // sual-cavab cütləri və ssenarilər ayrıca kartdadır
+  const plain = info.sources.filter((s) => s.type !== "qa" && s.type !== "proc"); // sual-cavab və ssenarilər ayrıca
+  const kindOf = (s: KbSource): Filter => (s.type === "url" || s.type === "site" ? "site" : s.type === "file" ? "file" : "text");
+  const qaCount = info.sources.filter((s) => s.type === "qa").length;
   const ready = plain.filter((s) => s.status === "ready").length;
-  const dirty = mode !== info.mode;
-  const usesKb = mode !== "listings";
+  const usesKb = info.mode !== "listings";
+  const shown = filter === "all" ? plain : plain.filter((s) => kindOf(s) === filter);
 
-  async function save() {
+  async function saveMode() {
     setSaving(true);
     try { await saveProfile({ mode: mode! }); await refresh(); await load(); toast.success(t("Saxlandı.")); }
     catch (e) { toast.error((e as Error).message); }
@@ -270,38 +275,66 @@ function Knowledge() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-semibold">{t("Bilik bazası")}</h1>
-        <p className="text-sm text-muted-foreground">{t("Çat müştərilərin suallarına şirkətinin sənədləri və saytı əsasında cavab verir. Məlumat yoxdursa uydurmur: “bilmirəm” deyir və sualı sənə göstərir.")}</p>
-      </header>
+      <PageHeader title={t("Bilik bazası")}
+        description={t("Çat müştərilərin suallarına şirkətinin sənədləri və saytı əsasında cavab verir. Məlumat yoxdursa uydurmur: “bilmirəm” deyir və sualı sənə göstərir.")}
+        actions={<>
+          <Button variant="outline" onClick={() => setSettings(true)}><Settings2 size={16} aria-hidden />{t("Ayarlar")}</Button>
+          {usesKb && <Button onClick={() => setAdding(true)} disabled={info.totals.sources >= info.limits.sources}><Plus size={16} aria-hidden />{t("Yeni mənbə")}</Button>}
+        </>} />
 
-      <Card>
-        <CardHeader><CardTitle>{t("Çatın rejimi")}</CardTitle><CardDescription>{t("Çat saytında nə edəcək.")}</CardDescription></CardHeader>
-        <ModeSection mode={mode} setMode={setMode} />
-        {usesKb && <AddSection info={info} onAdded={load} />}
-        {usesKb && (
-          <div className="border-t border-border">
-            <div className="flex flex-col gap-1 px-5 pt-4">
-              <h3 className="text-sm font-semibold">{t("Mənbələr")} <span className="font-normal text-muted-foreground">({info.totals.sources}/{info.limits.sources})</span></h3>
-              <p className="text-sm text-muted-foreground">{ready > 0 ? t("{n} mənbə hazırdır, cəmi {chunks} hissə. Çatı “Sınaq söhbəti”ndə yoxlaya bilərsən.", { n: ready, chunks: num(info.totals.chunks) }) : t("Hələ mənbə yoxdur. Yuxarıdan fayl, sayt linki və ya mətn əlavə et.")}</p>
-            </div>
-            {plain.length > 0 && <ul className="mt-3 divide-y divide-border border-t border-border">{plain.map((s) => <SourceRow key={s.id} s={s} onChange={load} />)}</ul>}
-          </div>
-        )}
-        <div className="flex items-center justify-end gap-3 border-t border-border px-5 py-3">
-          {usesKb && <p className="mr-auto text-xs text-muted-foreground">{t("Fayl, sayt və mətn əlavə etmək və silmək dərhal tətbiq olunur. “Saxla” yalnız rejimi saxlayır.")}</p>}
-          <Button onClick={save} disabled={saving || !dirty}>{saving ? t("Saxlanır…") : t("Saxla")}</Button>
+      {!usesKb && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-amber/40 bg-amber/10 p-4 text-sm">
+          <p className="min-w-0 flex-1">{t("Bilik bazası istifadə olunmur: çat yalnız elan axtarır. Şirkət haqqında suallara da cavab versin istəyirsənsə, rejimi dəyiş.")}</p>
+          <Button size="sm" onClick={() => setSettings(true)}>{t("Rejimi dəyiş")}</Button>
         </div>
-      </Card>
-
-      {usesKb && <QaCard info={info} onChange={load} />}
-      {usesKb && (
-        <p className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
-          {t("Ssenarilər (köməkçi nə vaxt nə etsin) indi Köməkçi → Bacarıqlar bölməsindədir.")} <Link href="/assistant/skills#proc" className="text-primary underline">{t("Bacarıqlara keç")}</Link>
-        </p>
       )}
-      {usesKb && <AutoRefreshCard info={info} />}
-      {usesKb && <FallbackCard info={info} />}
+
+      {usesKb && (
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <FilterPills value={filter} onChange={setFilter} label={t("Mənbə növü")} items={[
+              { value: "all", label: t("Hamısı"), count: plain.length + qaCount },
+              { value: "site", label: t("Saytlar"), count: plain.filter((s) => kindOf(s) === "site").length, icon: <Globe size={14} aria-hidden className="text-sky-600" /> },
+              { value: "file", label: t("Fayllar"), count: plain.filter((s) => kindOf(s) === "file").length, icon: <FileText size={14} aria-hidden className="text-rose-600" /> },
+              { value: "text", label: t("Mətnlər"), count: plain.filter((s) => kindOf(s) === "text").length, icon: <Type size={14} aria-hidden /> },
+              { value: "qa", label: t("Dəqiq cavablar"), count: qaCount, icon: <MessageSquareText size={14} aria-hidden className="text-emerald-600" /> },
+            ]} />
+            <p className="text-sm text-muted-foreground">{t("{n}/{max} mənbə · {chunks} hissə", { n: info.totals.sources, max: info.limits.sources, chunks: num(info.totals.chunks) })}</p>
+          </div>
+
+          {filter !== "qa" && (shown.length ? (
+            <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">{shown.map((s) => <SourceRow key={s.id} s={s} onChange={load} />)}</ul>
+          ) : (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+              <span className="grid size-12 place-items-center rounded-full bg-muted"><BookOpen size={22} aria-hidden /></span>
+              <h2 className="font-semibold">{filter === "all" ? t("Hələ mənbə yoxdur") : t("Bu növdə mənbə yoxdur")}</h2>
+              <p className="max-w-md text-sm text-muted-foreground">{t("Sayt linki, fayl (PDF, Word) və ya mətn əlavə et: çat cavabları yalnız buradan götürür.")}</p>
+              <Button onClick={() => setAdding(true)}><Plus size={16} aria-hidden />{t("Yeni mənbə")}</Button>
+            </div>
+          ))}
+          {ready > 0 && filter === "all" && <p className="-mt-3 text-xs text-muted-foreground">{t("{n} mənbə hazırdır, cəmi {chunks} hissə. Çatı “Sınaq söhbəti”ndə yoxlaya bilərsən.", { n: ready, chunks: num(info.totals.chunks) })}</p>}
+          {(filter === "all" || filter === "qa") && <QaCard info={info} onChange={load} />}
+          <p className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
+            {t("Ssenarilər (köməkçi nə vaxt nə etsin) indi Köməkçi → Bacarıqlar bölməsindədir.")} <Link href="/assistant/skills#proc" className="text-primary underline">{t("Bacarıqlara keç")}</Link>
+          </p>
+        </>
+      )}
+
+      <Modal open={adding} onClose={() => setAdding(false)} size="lg" title={t("Yeni mənbə")} description={t("Çat cavabları yalnız buraya əlavə etdiyin məlumatdan götürür. İstədiyin qədər mənbə qarışdıra bilərsən.")}>
+        <AddSection info={info} onAdded={() => { setAdding(false); void load(); }} />
+      </Modal>
+
+      <Modal open={settings} onClose={() => { setSettings(false); setMode(info.mode); }} size="lg" title={t("Bilik bazasının ayarları")}
+        footer={mode !== info.mode ? <><Button variant="outline" onClick={() => setMode(info.mode)}>{t("Ləğv et")}</Button><Button onClick={saveMode} disabled={saving}>{saving ? t("Saxlanır…") : t("Rejimi saxla")}</Button></> : undefined}>
+        <div className="flex flex-col gap-5">
+          <section className="overflow-hidden rounded-xl border border-border">
+            <div className="px-5 pt-4"><h3 className="font-semibold">{t("Çatın rejimi")}</h3><p className="text-sm text-muted-foreground">{t("Çat saytında nə edəcək.")}</p></div>
+            <ModeSection mode={mode} setMode={setMode} />
+          </section>
+          {usesKb && <AutoRefreshCard info={info} />}
+          {usesKb && <FallbackCard info={info} />}
+        </div>
+      </Modal>
     </div>
   );
 }
