@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Headset, Send, ShoppingBag, Sparkles } from "lucide-react";
+import { BookOpen, Headset, Search, Send, ShoppingBag, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const PRODUCTS = [
@@ -9,17 +9,23 @@ const PRODUCTS = [
   { name: "Nova Air", info: "Qara · 12 ay zəmanət", price: "115" },
 ];
 
-type Scenario = { id: "catalog" | "support" | "handoff"; query: string; answer: string; note?: string; action?: string };
+type Scenario = { id: "catalog" | "support" | "handoff"; tab: string; icon: React.ElementType; query: string; answer: string; note?: string; action?: string };
+const HOLD = 5200; // cavab göründükdən sonra növbəti ssenariyə qədər
 
-/** Hero-dakı canlı nümunə: üç ssenari növbə ilə oynayır. Kataloq axtarışı, bilik bazasından cavab, operatora yönləndirmə. */
+/**
+ * Hero-dakı canlı nümunə: üç ssenari (kataloq axtarışı, bilik bazasından cavab, operatora yönləndirmə).
+ * Yuxarıdakı tablarla istənilən ssenarini seçmək olar; üzərinə gələndə avtomatik keçid dayanır.
+ */
 export function HeroDemo() {
   const { t } = useI18n();
   const scenarios: Scenario[] = [
-    { id: "catalog", query: t("Büdcəm 150 AZN-dir, yaxşı simsiz qulaqlıq axtarıram"), answer: t("Büdcənə uyğun 3 məhsul tapdım. Ən ucuzu axırıncıdır.") },
-    { id: "support", query: t("Sifariş neçə günə çatdırılır?"), answer: t("Bakı daxilində 1–2 iş günü, rayonlara 3–4 gün. 100 ₼-dən yuxarı sifarişlərdə çatdırılma pulsuzdur."), note: t("Mənbə: Çatdırılma şərtləri") },
-    { id: "handoff", query: t("Zəmanəti 3 ilə uzatmaq olarmı?"), answer: t("Bu barədə dəqiq məlumatım yoxdur, uydurmaq istəmirəm. İstəsəniz operatora yazın, sizinlə əlaqə saxlasınlar."), action: t("Operatora yaz") },
+    { id: "catalog", tab: t("Kataloq"), icon: Search, query: t("Büdcəm 150 AZN-dir, yaxşı simsiz qulaqlıq axtarıram"), answer: t("Büdcənə uyğun 3 məhsul tapdım. Ən ucuzu axırıncıdır.") },
+    { id: "support", tab: t("Sual-cavab"), icon: BookOpen, query: t("Sifariş neçə günə çatdırılır?"), answer: t("Bakı daxilində 1–2 iş günü, rayonlara 3–4 gün. 100 ₼-dən yuxarı sifarişlərdə çatdırılma pulsuzdur."), note: t("Mənbə: Çatdırılma şərtləri") },
+    { id: "handoff", tab: t("Operator"), icon: Headset, query: t("Zəmanəti 3 ilə uzatmaq olarmı?"), answer: t("Bu barədə dəqiq məlumatım yoxdur, uydurmaq istəmirəm. İstəsəniz operatora yazın, sizinlə əlaqə saxlasınlar."), action: t("Operatora yaz") },
   ];
   const [idx, setIdx] = useState(0);
+  const [run, setRun] = useState(0); // eyni taba yenidən klikləyəndə ssenari təzədən oynasın
+  const [paused, setPaused] = useState(false);
   const sc = scenarios[idx]!;
   const query = sc.query;
   const [typed, setTyped] = useState(0);
@@ -35,47 +41,65 @@ export function HeroDemo() {
       i += 1; setTyped(i);
       if (i >= query.length) {
         clearInterval(tick);
-        timers.push(setTimeout(() => setPhase("thinking"), 450));
-        timers.push(setTimeout(() => setPhase("done"), 1700));
-        timers.push(setTimeout(() => setIdx((n) => (n + 1) % 3), 1700 + 5200)); // növbəti ssenari
+        timers.push(setTimeout(() => setPhase("thinking"), 400));
+        timers.push(setTimeout(() => setPhase("done"), 1500));
       }
-    }, 38);
+    }, 34);
     return () => { clearInterval(tick); timers.forEach(clearTimeout); };
-  }, [query, idx]);
+  }, [query, idx, run]);
 
+  // Cavab göründükdən sonra növbəti ssenari (üzərinə gələndə gözləyir)
+  useEffect(() => {
+    if (phase !== "done" || paused) return;
+    const id = setTimeout(() => setIdx((n) => (n + 1) % scenarios.length), HOLD);
+    return () => clearTimeout(id);
+  }, [phase, paused, scenarios.length]);
+
+  const pick = (i: number) => { setIdx(i); setRun((n) => n + 1); };
   const sent = phase !== "typing";
   return (
-    <div className="relative">
-      <div className="absolute inset-x-4 -bottom-4 top-6 rounded-[2rem] bg-[var(--l-mist)]" aria-hidden />
-      <div className="relative mx-auto flex h-[38rem] sm:h-[40rem] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-20px_rgba(12,42,37,.35)]" role="img" aria-label={t("Nümunə söhbət: ziyarətçi sual yazır, köməkçi uyğun variantları tapır, suala cavab verir və ya operatora yönləndirir")}>
-        <div className="flex items-center gap-3 bg-[var(--l-teal)] px-4 py-3.5 text-white">
-          <span className="grid size-9 place-items-center rounded-full bg-white/15"><Sparkles size={18} aria-hidden /></span>
-          <div className="leading-tight"><p className="text-sm font-semibold">{t("Köməkçi")}</p><p className="text-xs text-white/75">{t("Axtarır, cavab verir, lazım olsa operatora yönləndirir")}</p></div>
+    <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="absolute -inset-x-3 -top-3 -bottom-6 rounded-[2.25rem] bg-gradient-to-b from-[var(--l-mist)] to-transparent" aria-hidden />
+
+      <div role="tablist" aria-label={t("Nümunə ssenarilər")} className="relative mx-auto mb-3 grid w-full max-w-md grid-cols-3 gap-1 rounded-2xl border border-[var(--l-line)] bg-white/80 p-1 backdrop-blur">
+        {scenarios.map((s, i) => (
+          <button key={s.id} type="button" role="tab" aria-selected={i === idx} onClick={() => pick(i)}
+            className={`relative flex cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-2 py-2 text-[13px] font-semibold transition-colors ${i === idx ? "bg-[var(--l-ink)] text-white" : "text-[var(--l-sub)] hover:bg-[var(--l-mist)] hover:text-[var(--l-ink)]"}`}>
+            <s.icon size={14} aria-hidden /><span className="truncate">{s.tab}</span>
+            {i === idx && phase === "done" && !paused && <span key={`${idx}-${run}`} className="l-progress absolute inset-x-0 bottom-0 h-0.5 bg-[var(--l-orange)]" style={{ "--dur": `${HOLD}ms` } as React.CSSProperties} aria-hidden />}
+          </button>
+        ))}
+      </div>
+
+      <div className="relative mx-auto flex h-[34rem] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_30px_70px_-30px_rgba(9,9,11,.45)] sm:h-[36rem]" role="img" aria-label={t("Nümunə söhbət: ziyarətçi sual yazır, köməkçi uyğun variantları tapır, suala cavab verir və ya operatora yönləndirir")}>
+        <div className="flex items-center gap-3 border-b border-[var(--l-line)] px-4 py-3.5">
+          <span className="relative grid size-9 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Sparkles size={17} aria-hidden /><span className="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-white bg-emerald-500" /></span>
+          <div className="min-w-0 leading-tight"><p className="text-sm font-semibold">{t("Köməkçi")}</p><p className="truncate text-xs text-[var(--l-sub)]">{t("Axtarır, cavab verir, lazım olsa operatora yönləndirir")}</p></div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-hidden bg-[#f4f7f4] p-4 text-sm">
-          <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 shadow-sm">{t("Salam! Nə axtardığınızı və ya sualınızı yazın, kömək edim.")}</div>
-          {sent && <div className="l-in ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-[var(--l-teal)] px-3.5 py-2.5 text-white">{query}</div>}
+        <div className="flex flex-1 flex-col gap-3 overflow-hidden bg-[#fafafa] p-4 text-sm">
+          <div className="max-w-[85%] rounded-2xl rounded-bl-md border border-[var(--l-line)] bg-white px-3.5 py-2.5">{t("Salam! Nə axtardığınızı və ya sualınızı yazın, kömək edim.")}</div>
+          {sent && <div className="l-in ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-[var(--l-ink)] px-3.5 py-2.5 text-white">{query}</div>}
           {phase === "thinking" && (
-            <div className="l-in flex w-fit gap-1 rounded-2xl rounded-bl-md bg-white px-4 py-3 shadow-sm" aria-hidden>
-              {[0, 1, 2].map((i) => <span key={i} className="size-1.5 animate-bounce rounded-full bg-[var(--l-teal)]/60" style={{ animationDelay: `${i * 120}ms` }} />)}
+            <div className="l-in flex w-fit gap-1 rounded-2xl rounded-bl-md border border-[var(--l-line)] bg-white px-4 py-3" aria-hidden>
+              {[0, 1, 2].map((i) => <span key={i} className="size-1.5 animate-bounce rounded-full bg-[var(--l-ink)]/50" style={{ animationDelay: `${i * 120}ms` }} />)}
             </div>
           )}
           {phase === "done" && (
-            <div key={sc.id} className="l-in flex flex-col gap-2.5">
-              <div className="max-w-[90%] rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 shadow-sm">
+            <div key={`${sc.id}-${run}`} className="l-in flex flex-col gap-2.5">
+              <div className="max-w-[90%] rounded-2xl rounded-bl-md border border-[var(--l-line)] bg-white px-3.5 py-2.5">
                 {sc.answer}
-                {sc.note && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[#41594f]">{sc.note}</p>}
+                {sc.note && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[var(--l-sub)]"><BookOpen size={12} aria-hidden />{sc.note}</p>}
               </div>
               {sc.action && <span className="inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--l-orange-d)] px-3.5 py-2 text-sm font-semibold text-white"><Headset size={15} aria-hidden />{sc.action}</span>}
               {sc.id === "catalog" && PRODUCTS.map((c, i) => (
-                <div key={c.name} className={`${i === 2 ? "max-sm:hidden " : ""}flex items-center gap-3 rounded-xl border border-[var(--l-line)] bg-white p-2.5 shadow-sm`}>
-                  <span className="grid size-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[var(--l-mist)] to-[#cfe0d6] text-[var(--l-teal)]"><ShoppingBag size={26} aria-hidden /></span>
+                <div key={c.name} className={`${i === 2 ? "max-sm:hidden " : ""}l-in flex items-center gap-3 rounded-xl border border-[var(--l-line)] bg-white p-2.5`} style={{ animationDelay: `${(i + 1) * 120}ms` }}>
+                  <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[var(--l-mist)] to-[#e4e4e7]"><ShoppingBag size={22} aria-hidden /></span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{c.name}</p>
-                    <p className="truncate text-xs text-[#58706a]">{t(c.info)}</p>
+                    <p className="truncate text-xs text-[#71717a]">{t(c.info)}</p>
                   </div>
-                  <p className="shrink-0 font-semibold text-[var(--l-orange-d)]">{c.price} ₼</p>
+                  <p className="shrink-0 font-semibold">{c.price} ₼</p>
                 </div>
               ))}
             </div>
@@ -83,13 +107,13 @@ export function HeroDemo() {
         </div>
 
         <div className="flex items-center gap-2 border-t border-[var(--l-line)] bg-white p-3">
-          <div className="flex min-h-10 flex-1 items-center rounded-xl border border-[var(--l-line)] px-3 text-sm" aria-hidden>
-            {phase === "typing" ? <span>{query.slice(0, typed)}<span className="l-caret ml-px inline-block h-4 w-px translate-y-0.5 bg-[var(--l-ink)]" /></span> : <span className="text-[#8a9b95]">{t("Mesajınızı yazın…")}</span>}
+          <div className="flex min-h-10 min-w-0 flex-1 items-center rounded-xl border border-[var(--l-line)] px-3 text-sm" aria-hidden>
+            {phase === "typing" ? <span className="py-2 leading-snug">{query.slice(0, typed)}<span className="l-caret ml-px inline-block h-4 w-px translate-y-0.5 bg-[var(--l-ink)]" /></span> : <span className="text-[#a1a1aa]">{t("Mesajınızı yazın…")}</span>}
           </div>
-          <span className="grid size-10 place-items-center rounded-xl bg-[var(--l-orange-d)] text-white" aria-hidden><Send size={16} /></span>
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--l-ink)] text-white" aria-hidden><Send size={16} /></span>
         </div>
       </div>
-      <p className="relative mt-6 text-center text-xs text-[#58706a]">{t("Nümunə söhbət. Real məlumat sənin saytından və sənədlərindən gələcək.")}</p>
+      <p className="relative mt-5 text-center text-xs text-[#71717a]">{t("Nümunə söhbət. Real məlumat sənin saytından və sənədlərindən gələcək.")}</p>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import "@fontsource-variable/unbounded";
 import "@fontsource-variable/onest";
 import { Landing } from "@/components/landing/landing";
 import { landingMetadata } from "@/lib/landing-seo";

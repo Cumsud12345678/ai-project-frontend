@@ -8,12 +8,12 @@ import { useI18n } from "@/lib/i18n";
  * əməliyyat jurnalı, kanallar, dillər), ona görə telefon-çat təkrarlanmır. Hamısı statik nümunədir.
  */
 
-const muted = "text-[#5f746d]";
+const muted = "text-[#71717a]";
 
 /** Ortaq çərçivə: incə xətt, yüngül kölgə, istəyə görə başlıq zolağı. */
 function Frame({ title, meta, label, children, className = "" }: { title?: string; meta?: React.ReactNode; label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[var(--l-line)] bg-white shadow-[0_1px_2px_rgba(12,42,37,.06),0_24px_48px_-28px_rgba(12,42,37,.28)] ${className}`} role="img" aria-label={label}>
+    <div className={`mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[var(--l-line)] bg-white shadow-[0_1px_2px_rgba(9,9,11,.06),0_24px_48px_-28px_rgba(9,9,11,.28)] ${className}`} role="img" aria-label={label}>
       {title && (
         <div className="flex items-center justify-between gap-3 border-b border-[var(--l-line)] px-4 py-3" aria-hidden>
           <p className="text-[13px] font-semibold">{title}</p>
@@ -26,7 +26,7 @@ function Frame({ title, meta, label, children, className = "" }: { title?: strin
 }
 
 function Dot({ tone }: { tone: "amber" | "teal" | "gray" }) {
-  const c = tone === "amber" ? "bg-amber-500" : tone === "teal" ? "bg-[var(--l-teal)]" : "bg-[#b5c2bc]";
+  const c = tone === "amber" ? "bg-amber-500" : tone === "teal" ? "bg-[var(--l-teal)]" : "bg-[#a1a1aa]";
   return <span className={`inline-block size-2 shrink-0 rounded-full ${c}`} />;
 }
 
@@ -51,12 +51,12 @@ export function InboxVisual() {
                 <span className={`shrink-0 text-[11px] tabular-nums ${muted}`}>{r.time}</span>
               </div>
               <p className={`truncate text-[13px] ${muted}`}>{r.text}</p>
-              <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-[#41594f]"><Dot tone={r.tone} />{r.status}</p>
+              <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-[#52525b]"><Dot tone={r.tone} />{r.status}</p>
             </div>
           </Reveal>
         ))}
       </ul>
-      <div className="grid grid-cols-2 border-t border-[var(--l-line)] bg-[#fafcfa]">
+      <div className="grid grid-cols-2 border-t border-[var(--l-line)] bg-[#fafafa]">
         <div className="px-4 py-3.5">
           <p className={`text-[11px] ${muted}`}>{t("Orta ilk cavab")}</p>
           <p className="l-display mt-0.5 text-lg font-semibold tabular-nums">14 {t("san")}</p>
@@ -82,15 +82,15 @@ export function DataAccessVisual() {
   ];
   return (
     <Frame title={t("Köməkçiyə görünən sahələr")} label={t("Nümunə: müştəri məlumatının hansı sahələrinin açıq, hansının gizli olduğu")}
-      meta={<span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#41594f]"><KeyRound size={12} />HMAC</span>}>
-      <div className="flex items-center gap-2 border-b border-[var(--l-line)] bg-[#fafcfa] px-4 py-2.5 font-mono text-[12px] text-[#41594f]">
+      meta={<span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#52525b]"><KeyRound size={12} />HMAC</span>}>
+      <div className="flex items-center gap-2 border-b border-[var(--l-line)] bg-[#fafafa] px-4 py-2.5 font-mono text-[12px] text-[#52525b]">
         <span className="rounded bg-[var(--l-teal)]/10 px-1.5 py-0.5 font-semibold text-[var(--l-teal)]">GET</span>
         <span className="truncate">/api/me/orders/10482</span>
       </div>
       <ul className="divide-y divide-[var(--l-line)] text-[13px]">
         {rows.map((r, i) => (
           <Reveal as="li" key={r.field} delay={i * 90} className="flex items-center gap-3 px-4 py-3">
-            <span className="w-32 shrink-0 truncate font-mono text-[12px] text-[#41594f]">{r.field}</span>
+            <span className="w-32 shrink-0 truncate font-mono text-[12px] text-[#52525b]">{r.field}</span>
             <span className={`min-w-0 flex-1 truncate ${r.open ? "font-medium" : `font-mono ${muted}`}`}>{r.value}</span>
             {r.open
               ? <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-[var(--l-teal)]"><Check size={13} strokeWidth={2.5} />{t("açıq")}</span>
@@ -151,7 +151,7 @@ export function ChannelsVisual() {
     <div className="mx-auto w-full max-w-md" role="img" aria-label={t("Nümunə: sayt, Telegram və WhatsApp eyni bilik bazasından cavab verir")}>
       <div className="grid grid-cols-3 gap-2.5" aria-hidden>
         {channels.map((c, i) => (
-          <Reveal key={c.name} delay={i * 110} className="rounded-xl border border-[var(--l-line)] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(12,42,37,.05)]">
+          <Reveal key={c.name} delay={i * 110} className="rounded-xl border border-[var(--l-line)] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(9,9,11,.05)]">
             <span className="grid size-8 place-items-center rounded-lg bg-[var(--l-mist)] text-[var(--l-teal)]">{c.icon}</span>
             <p className="mt-2.5 text-[13px] font-semibold">{c.name}</p>
             <p className={`truncate font-mono text-[11px] ${muted}`}>{c.meta}</p>
@@ -165,11 +165,11 @@ export function ChannelsVisual() {
         <span className="absolute top-0 right-0 h-4 w-px bg-[var(--l-teal)]/40" />
         <span className="absolute top-4 right-0 left-0 h-px bg-[var(--l-teal)]/40" />
       </div>
-      <Reveal delay={360} className="rounded-2xl border border-[var(--l-line)] bg-white p-4 shadow-[0_1px_2px_rgba(12,42,37,.06),0_24px_48px_-28px_rgba(12,42,37,.28)]">
+      <Reveal delay={360} className="rounded-2xl border border-[var(--l-line)] bg-white p-4 shadow-[0_1px_2px_rgba(9,9,11,.06),0_24px_48px_-28px_rgba(9,9,11,.28)]">
         <div aria-hidden>
           <p className="flex items-center gap-2 text-[13px] font-semibold"><BookOpen size={15} className="text-[var(--l-teal)]" />{t("Bir bilik bazası")}</p>
           <ul className="mt-3 flex flex-col gap-1.5">
-            {docs.map(([icon, name]) => <li key={name} className={`flex items-center gap-2 rounded-lg bg-[#f6f9f7] px-2.5 py-2 text-[12px] ${muted}`}>{icon}<span className="truncate text-[var(--l-ink)]">{name}</span></li>)}
+            {docs.map(([icon, name]) => <li key={name} className={`flex items-center gap-2 rounded-lg bg-[#f4f4f5] px-2.5 py-2 text-[12px] ${muted}`}>{icon}<span className="truncate text-[var(--l-ink)]">{name}</span></li>)}
           </ul>
           <div className="mt-3 flex items-center gap-3 rounded-lg border border-dashed border-[var(--l-line)] px-2.5 py-2">
             <Mic size={14} className="shrink-0 text-[var(--l-orange-d)]" />
@@ -205,7 +205,7 @@ export function LanguagesVisual() {
           </Reveal>
         ))}
       </ul>
-      <div className={`flex items-center gap-2 border-t border-[var(--l-line)] bg-[#fafcfa] px-4 py-3 text-[12px] ${muted}`}>
+      <div className={`flex items-center gap-2 border-t border-[var(--l-line)] bg-[#fafafa] px-4 py-3 text-[12px] ${muted}`}>
         <Circle size={8} className="shrink-0 fill-[var(--l-teal)] text-[var(--l-teal)]" />
         {t("Mənbə: Çatdırılma şərtləri (AZ) · ayrıca tərcümə lazım deyil")}
       </div>

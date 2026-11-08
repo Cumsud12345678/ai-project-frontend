@@ -59,28 +59,28 @@ export function LiveDemo({ signedIn }: { signedIn: boolean }) {
   const asked = msgs.some((m) => m.k === "action" && m.state === "ask");
 
   return (
-    <section id="sinaq" className="scroll-mt-20 bg-[var(--l-mist)] py-16 lg:py-24">
-      <div className="mx-auto w-full max-w-6xl px-5">
-        <Reveal as="p" className="text-sm font-semibold tracking-wide text-[var(--l-orange-d)] uppercase">{t("Özün sına")}</Reveal>
-        <Reveal as="h2" delay={80} className="l-display mt-3 max-w-3xl text-[clamp(1.5rem,3.4vw,2.4rem)] font-semibold leading-[1.15]">{t("Çatda yaz, operatorun nə gördüyünü də gör")}</Reveal>
-        <Reveal as="p" delay={160} className="mt-5 max-w-2xl text-[16px] leading-relaxed text-[#41594f]">{t("Aşağıdakı suallardan birini bas. Solda ziyarətçinin gördüyü çatı, sağda isə eyni anda operatorun və sahibin panelində nə göründüyünü izləyirsən.")}</Reveal>
+    <section id="sinaq" className="scroll-mt-24 bg-[var(--l-mist)]/60 py-20 lg:py-28">
+      <div className="mx-auto w-full max-w-6xl px-5 sm:px-6">
+        <Reveal as="p" className="text-[13px] font-semibold tracking-wide text-[var(--l-orange-d)] uppercase">{t("Özün sına")}</Reveal>
+        <Reveal as="h2" delay={80} className="l-display mt-3 max-w-3xl text-[clamp(1.75rem,3.6vw,2.75rem)] font-semibold leading-[1.08]">{t("Çatda yaz, operatorun nə gördüyünü də gör")}</Reveal>
+        <Reveal as="p" delay={160} className="mt-5 max-w-2xl text-[16px] leading-relaxed text-[#52525b]">{t("Aşağıdakı suallardan birini bas. Solda ziyarətçinin gördüyü çatı, sağda isə eyni anda operatorun və sahibin panelində nə göründüyünü izləyirsən.")}</Reveal>
 
         <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
-          <div className="flex min-w-0 flex-col overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-24px_rgba(12,42,37,.35)]">
-            <div className="flex items-center gap-3 bg-[var(--l-teal)] px-4 py-3.5 text-white">
-              <span className="grid size-9 place-items-center rounded-full bg-white/15"><Sparkles size={18} aria-hidden /></span>
-              <div className="leading-tight"><p className="text-sm font-semibold">{t("Köməkçi")}</p><p className="text-xs text-white/75">{t("Ziyarətçinin gördüyü")}</p></div>
+          <div className="flex min-w-0 flex-col overflow-hidden rounded-3xl border border-[var(--l-line)] bg-white shadow-[0_24px_60px_-24px_rgba(9,9,11,.35)]">
+            <div className="flex items-center gap-3 border-b border-[var(--l-line)] px-4 py-3.5">
+              <span className="grid size-9 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Sparkles size={17} aria-hidden /></span>
+              <div className="leading-tight"><p className="text-sm font-semibold">{t("Köməkçi")}</p><p className="text-xs text-[var(--l-sub)]">{t("Ziyarətçinin gördüyü")}</p></div>
             </div>
-            <div className="flex h-[22rem] flex-col gap-3 overflow-y-auto bg-[#f4f7f4] p-4 text-sm" role="log" aria-live="polite" aria-label={t("Nümunə söhbət")}>
-              {!msgs.length && <p className="m-auto max-w-[16rem] text-center text-[#58706a]">{t("Aşağıdan bir sual seç.")}</p>}
+            <div className="flex h-[22rem] flex-col gap-3 overflow-y-auto bg-[#fafafa] p-4 text-sm" role="log" aria-live="polite" aria-label={t("Nümunə söhbət")}>
+              {!msgs.length && <p className="m-auto max-w-[16rem] text-center text-[#71717a]">{t("Aşağıdan bir sual seç.")}</p>}
               {msgs.map((m, i) => {
                 if (m.k === "user") return <div key={i} className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-[var(--l-teal)] px-3.5 py-2.5 text-white">{m.text}</div>;
                 if (m.k === "bot") return (
                   <div key={i} className="max-w-[90%] rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 shadow-sm">{m.text}
-                    {m.note && <p className="mt-2 inline-flex rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[#41594f]">{m.note}</p>}
+                    {m.note && <p className="mt-2 inline-flex rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[#52525b]">{m.note}</p>}
                   </div>
                 );
-                if (m.k === "system") return <div key={i} className="mx-auto rounded-full bg-[var(--l-mist)] px-3 py-1 text-xs text-[#41594f]">{m.text}</div>;
+                if (m.k === "system") return <div key={i} className="mx-auto rounded-full bg-[var(--l-mist)] px-3 py-1 text-xs text-[#52525b]">{m.text}</div>;
                 if (m.k === "operator") return (
                   <div key={i} className="max-w-[90%] rounded-2xl rounded-bl-md border border-[var(--l-orange-d)]/30 bg-white px-3.5 py-2.5 shadow-sm">
                     <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--l-orange-d)]"><Headset size={13} aria-hidden />{t("Operator · Aynur")}</p>
@@ -90,7 +90,7 @@ export function LiveDemo({ signedIn }: { signedIn: boolean }) {
                 return (
                   <div key={i} className={`max-w-[92%] rounded-2xl rounded-bl-md border bg-white p-3.5 shadow-sm ${m.state === "ask" ? "border-[var(--l-teal)]/30" : "border-[var(--l-line)] opacity-80"}`}>
                     <p className="font-semibold">{t("Sifariş {orderNo} ləğv olunacaq", { orderNo: "#10482" })}</p>
-                    <dl className="mt-2 flex flex-col gap-1 text-xs text-[#41594f]">
+                    <dl className="mt-2 flex flex-col gap-1 text-xs text-[#52525b]">
                       <div className="flex justify-between gap-3"><dt>{t("Sifariş nömrəsi")}</dt><dd className="font-medium text-[var(--l-ink)]">10482</dd></div>
                       <div className="flex justify-between gap-3"><dt>{t("Səbəb")}</dt><dd className="font-medium text-[var(--l-ink)]">{t("Fikrimi dəyişdim")}</dd></div>
                     </dl>
@@ -107,38 +107,38 @@ export function LiveDemo({ signedIn }: { signedIn: boolean }) {
               <div className="flex flex-wrap gap-2">
                 {chips.map(([s, label]) => (
                   <button key={s} type="button" disabled={used.includes(s) || busy || (s === "cancel" && asked)} onClick={() => ask(s)}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--l-teal)]/40 px-3 py-1.5 text-xs font-medium text-[var(--l-teal)] hover:bg-[var(--l-teal)]/5 disabled:cursor-default disabled:border-[var(--l-line)] disabled:text-[#8a9b95] disabled:hover:bg-transparent">
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--l-teal)]/40 px-3 py-1.5 text-xs font-medium text-[var(--l-teal)] hover:bg-[var(--l-teal)]/5 disabled:cursor-default disabled:border-[var(--l-line)] disabled:text-[#a1a1aa] disabled:hover:bg-transparent">
                     <Send size={12} aria-hidden />{label}
                   </button>
                 ))}
               </div>
-              {!!msgs.length && <button type="button" onClick={reset} className="inline-flex cursor-pointer items-center gap-1.5 self-start text-xs text-[#58706a] hover:underline"><RotateCcw size={12} aria-hidden />{t("Yenidən başla")}</button>}
+              {!!msgs.length && <button type="button" onClick={reset} className="inline-flex cursor-pointer items-center gap-1.5 self-start text-xs text-[#71717a] hover:underline"><RotateCcw size={12} aria-hidden />{t("Yenidən başla")}</button>}
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-4 rounded-3xl border border-[var(--l-line)] bg-white p-5 shadow-[0_24px_60px_-24px_rgba(12,42,37,.2)]">
+          <div className="flex min-w-0 flex-col gap-4 rounded-3xl border border-[var(--l-line)] bg-white p-5 shadow-[0_24px_60px_-24px_rgba(9,9,11,.2)]">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold">{t("Operator və sahib paneli")}</p>
-              <span className="rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[#41594f]">{t("Nümunə")}</span>
+              <span className="rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[#52525b]">{t("Nümunə")}</span>
             </div>
             <div>
-              <p className="text-xs font-semibold tracking-wide text-[#58706a] uppercase">{t("Canlı söhbətlər")}</p>
-              {!handoff ? <p className="mt-2 rounded-xl border border-dashed border-[var(--l-line)] p-4 text-sm text-[#58706a]">{t("Hələ operatora keçən söhbət yoxdur. Ziyarətçi operator istəyəndə burada görünəcək.")}</p> : (
+              <p className="text-xs font-semibold tracking-wide text-[#71717a] uppercase">{t("Canlı söhbətlər")}</p>
+              {!handoff ? <p className="mt-2 rounded-xl border border-dashed border-[var(--l-line)] p-4 text-sm text-[#71717a]">{t("Hələ operatora keçən söhbət yoxdur. Ziyarətçi operator istəyəndə burada görünəcək.")}</p> : (
                 <div className="mt-2 flex flex-col gap-2 rounded-xl border border-[var(--l-line)] p-3 text-sm">
                   <p className="flex flex-wrap items-center gap-2 font-medium">{t("Ziyarətçi")}<span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">{t("Cavab gözləyir")}</span></p>
-                  <p className="flex min-w-0 items-center gap-1.5 text-xs text-[#58706a]"><Globe size={12} aria-hidden className="shrink-0" /><span className="shrink-0">{t("Yazdığı səhifə:")}</span><span className="truncate font-medium text-[var(--l-ink)]">{t("Kross velosiped")} · /products/5</span></p>
-                  <p className="text-xs text-[#58706a]">{t("Çatla əvvəlki yazışma ({n} mesaj)", { n: msgs.filter((m) => m.k === "user" || m.k === "bot").length - 1 })}</p>
+                  <p className="flex min-w-0 items-center gap-1.5 text-xs text-[#71717a]"><Globe size={12} aria-hidden className="shrink-0" /><span className="shrink-0">{t("Yazdığı səhifə:")}</span><span className="truncate font-medium text-[var(--l-ink)]">{t("Kross velosiped")} · /products/5</span></p>
+                  <p className="text-xs text-[#71717a]">{t("Çatla əvvəlki yazışma ({n} mesaj)", { n: msgs.filter((m) => m.k === "user" || m.k === "bot").length - 1 })}</p>
                 </div>
               )}
             </div>
             <div>
-              <p className="text-xs font-semibold tracking-wide text-[#58706a] uppercase">{t("Əməliyyat jurnalı")}</p>
-              {!log.length ? <p className="mt-2 rounded-xl border border-dashed border-[var(--l-line)] p-4 text-sm text-[#58706a]">{t("İstifadəçi kartda təsdiq verəndə əməliyyat burada qeyd olunur.")}</p> : (
+              <p className="text-xs font-semibold tracking-wide text-[#71717a] uppercase">{t("Əməliyyat jurnalı")}</p>
+              {!log.length ? <p className="mt-2 rounded-xl border border-dashed border-[var(--l-line)] p-4 text-sm text-[#71717a]">{t("İstifadəçi kartda təsdiq verəndə əməliyyat burada qeyd olunur.")}</p> : (
                 <ul className="mt-2 flex flex-col gap-2">{log.map((x, i) => <li key={i} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--l-line)] p-3 text-sm"><span className="truncate">{x}</span><span className="shrink-0 rounded-full bg-[var(--l-teal)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--l-teal)]">{t("icra olundu")}</span></li>)}</ul>
               )}
             </div>
-            <p className="mt-auto text-xs leading-relaxed text-[#58706a]">{t("Bu, əvvəlcədən yazılmış nümunədir, real AI çağırılmır. Öz saytının məlumatı ilə sınamaq üçün qeydiyyatdan keç.")}</p>
-            <Link href={signedIn ? "/dashboard" : "/register"} className="inline-flex h-11 items-center justify-center self-start rounded-xl bg-[var(--l-teal)] px-5 text-sm font-semibold text-white hover:bg-[var(--l-teal-d)]">{signedIn ? t("Panelə keç") : t("Qeydiyyatdan keç")}</Link>
+            <p className="mt-auto text-xs leading-relaxed text-[#71717a]">{t("Bu, əvvəlcədən yazılmış nümunədir, real AI çağırılmır. Öz saytının məlumatı ilə sınamaq üçün qeydiyyatdan keç.")}</p>
+            <Link href={signedIn ? "/dashboard" : "/register"} className="inline-flex h-11 items-center justify-center self-start rounded-xl bg-[var(--l-ink)] px-5 text-[15px] font-semibold text-white hover:bg-black">{signedIn ? t("Panelə keç") : t("Qeydiyyatdan keç")}</Link>
           </div>
         </div>
       </div>

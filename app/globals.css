@@ -52,52 +52,89 @@
 body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { letter-spacing: -0.01em; }
 
-/* Açılış səhifəsi (/): panelin yaşıl-narıncı kimliyi, öz şriftləri ilə */
+/* Açılış səhifəsi (/): panel ilə eyni monoxrom kimlik (qara/ağ/boz) + bir isti vurğu rəngi (narıncı) */
 .landing {
-  --l-ink: #0c2a25;
-  --l-teal: #0b6b57;
-  --l-teal-d: #08493c;
-  --l-mist: #e6efe9;
-  --l-paper: #f8faf7;
-  --l-orange: #ea580c;
-  --l-orange-d: #c2410c;
-  --l-line: #d3ddd5;
+  --l-ink: #09090b;
+  --l-teal: #18181b;       /* əsas (köhnə ad saxlanıb: vizuallar bunu işlədir) */
+  --l-teal-d: #000000;
+  --l-mist: #f4f4f5;
+  --l-paper: #ffffff;
+  --l-orange: #f97316;
+  --l-orange-d: #ea580c;
+  --l-line: #e4e4e7;
+  --l-sub: #52525b;
   background: var(--l-paper);
   color: var(--l-ink);
   font-family: "Onest Variable", system-ui, sans-serif;
   scroll-behavior: smooth;
   overflow-x: clip; /* animasiyadan əvvəlki yan yerdəyişmə telefonda üfüqi sürüşdürmə yaratmasın */
 }
-.landing .l-display { font-family: "Unbounded Variable", "Onest Variable", system-ui, sans-serif; letter-spacing: -0.02em; }
-.landing :focus-visible { outline: 2px solid var(--l-orange-d); outline-offset: 3px; border-radius: 6px; }
+.landing .l-display { font-family: "Onest Variable", system-ui, sans-serif; letter-spacing: -0.035em; }
+.landing :focus-visible { outline: 2px solid var(--l-orange-d); outline-offset: 3px; border-radius: 8px; }
 @keyframes l-blink { 50% { opacity: 0; } }
 @keyframes l-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .landing .l-caret { animation: l-blink 1s steps(1) infinite; }
 .landing .l-in { animation: l-rise .45s ease both; }
-@media (prefers-reduced-motion: reduce) { .landing .l-caret, .landing .l-in { animation: none; } .landing { scroll-behavior: auto; } }
+
+/* Fon: incə nöqtəli tor + yuxarıda yumşaq işıq */
+.landing .l-grid { background-image: radial-gradient(rgba(9,9,11,.09) 1px, transparent 1px); background-size: 22px 22px; mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 40%, transparent 100%); }
+.landing .l-grid-dark { background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 22px 22px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, #000 30%, transparent 100%); }
+.landing .l-glow { background: radial-gradient(closest-side, rgba(249,115,22,.18), transparent); filter: blur(10px); }
+/* Vurğulanan söz: narıncı alt xətt */
+.landing .l-mark { background: linear-gradient(transparent 62%, rgba(249,115,22,.28) 62%, rgba(249,115,22,.28) 92%, transparent 92%); }
+
+/* Əsas düymə: ox üzərinə gələndə sağa sürüşür */
+.landing .l-btn-arrow svg { transition: transform .2s ease; }
+.landing .l-btn-arrow:hover svg { transform: translateX(3px); }
+
+/* Kartın üzərində siçanı izləyən işıq (spotlight) */
+.landing .l-spot { position: relative; isolation: isolate; }
+.landing .l-spot::before { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(249,115,22,.10), transparent 45%); }
+.landing .l-spot:hover::before { opacity: 1; }
+
+/* Sonsuz sürüşən sətir (istifadə sahələri) */
+@keyframes l-marquee { to { transform: translateX(-50%); } }
+.landing .l-marquee { animation: l-marquee 40s linear infinite; }
+.landing .l-marquee-wrap:hover .l-marquee { animation-play-state: paused; }
+.landing .l-fade-x { mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+
+/* Tab dəyişəndə məzmun yumşaq görünür */
+@keyframes l-swap { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.landing .l-swap { animation: l-swap .45s cubic-bezier(.2,.7,.2,1) both; }
+/* Hero demo ssenari irəliləmə zolağı */
+@keyframes l-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.landing .l-progress { transform-origin: left; animation: l-progress var(--dur, 7s) linear both; }
+/* Akkordeon: hündürlük yumşaq açılır */
+.landing .l-acc { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+.landing .l-acc[data-open="true"] { grid-template-rows: 1fr; }
+.landing .l-acc > div { overflow: hidden; }
+/* Sürüşdürmə zolağı (qiymət kalkulyatoru) */
+.landing input[type=range].l-range { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--l-ink) var(--p, 50%), var(--l-line) var(--p, 50%)); accent-color: var(--l-ink); }
+.landing input[type=range].l-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 999px; background: #fff; border: 2px solid var(--l-ink); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: grab; }
+.landing input[type=range].l-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 2px solid var(--l-ink); cursor: grab; }
 
 /* Skroll zamanı görünmə effektləri (Reveal komponenti) */
 .landing .l-reveal { opacity: 0; transition: opacity .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms), transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms); will-change: opacity, transform; }
-.landing .l-up { transform: translateY(32px) scale(.98); }
-.landing .l-left { transform: translateX(-40px); }
-.landing .l-right { transform: translateX(40px); }
-.landing .l-scale { transform: scale(.9); }
+.landing .l-up { transform: translateY(28px); }
+.landing .l-left { transform: translateX(-32px); }
+.landing .l-right { transform: translateX(32px); }
+.landing .l-scale { transform: scale(.96); }
 .landing .l-reveal.is-in { opacity: 1; transform: none; }
-/* Addımları birləşdirən nöqtəli xətt görünəndə "çəkilir" */
 .landing .l-draw { transform: scaleX(0); transform-origin: left; transition: transform .9s ease .5s; }
 .landing .l-draw-y { transform: scaleY(0); transform-origin: top; transition: transform .9s ease .5s; }
 .landing .is-in .l-draw, .landing .is-in .l-draw-y { transform: none; }
 /* Kartın üzərinə gələndə qalxır */
-.landing .l-lift { transition: transform .25s ease, box-shadow .25s ease; }
-.landing .l-lift:hover { transform: translateY(-5px); box-shadow: 0 18px 36px -18px rgba(12,42,37,.35); }
-/* Hero söhbət pəncərəsi yavaşca "nəfəs alır" */
+.landing .l-lift { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.landing .l-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -24px rgba(9,9,11,.35); border-color: #d4d4d8; }
 @keyframes l-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 .landing .l-float { animation: l-float 7s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
+  .landing { scroll-behavior: auto; }
+  .landing .l-caret, .landing .l-in, .landing .l-swap, .landing .l-progress, .landing .l-marquee, .landing .l-float { animation: none; }
   .landing .l-reveal { opacity: 1; transform: none; transition: none; }
   .landing .l-draw, .landing .l-draw-y { transform: none; transition: none; }
   .landing .l-lift, .landing .l-lift:hover { transition: none; transform: none; }
-  .landing .l-float { animation: none; }
 }
 
 /* Yan menyu: nazik scroll, dayanıqlı vəziyyətdə görünmür, üzərinə gələndə menyuya uyğun açıq tonda çıxır */
