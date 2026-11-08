@@ -10,6 +10,7 @@ import {
   Search, Send, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { readiness } from "@/lib/setup-steps";
 import type { Overview } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { LangSwitch, useI18n } from "@/lib/i18n";
@@ -103,13 +104,8 @@ function Badge({ count, dot, className }: { count?: number; dot?: boolean; class
   return null;
 }
 
-/** Hazırlıq addımları (İstifadə səhifəsindəki siyahı ilə eyni) */
-function setupSteps(o: Overview | null) {
-  if (!o?.setup) return null;
-  const s = o.setup;
-  const steps = [s.dataReady, s.widgetInstalled, ...(s.queriesLogged ? [s.firstQuestion] : [])];
-  return { done: steps.filter(Boolean).length, total: steps.length };
-}
+/** Hazırlıq: sehirbazın addımları ilə eyni (lib/setup-steps.ts) */
+const setupSteps = (o: Overview | null) => readiness(o);
 
 function Ring({ done, total }: { done: number; total: number }) {
   const r = 7, c = 2 * Math.PI * r;
@@ -140,7 +136,7 @@ function TopBar({ signals, onSearch, onMenu, menuRef }: { signals: Signals; onSe
         <span className="truncate font-medium">{tenant?.businessName ?? t("Hesabım")}</span>
       </Link>
       {!isOperator && steps && steps.done < steps.total && (
-        <Link href="/dashboard" className={cn(pill, "hidden text-primary sm:flex")}>
+        <Link href="/setup" className={cn(pill, "hidden text-primary sm:flex")}>
           <Ring done={steps.done} total={steps.total} />
           <span className="font-medium">{t("Hazırlıq")}</span>
           <span className="tabular-nums text-muted-foreground">{steps.done}/{steps.total}</span>

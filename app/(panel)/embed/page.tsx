@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { hasSite } from "@/lib/site";
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, X } from "lucide-react";
 import { toast } from "sonner";
@@ -264,7 +265,7 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
             <CardDescription>{t("Vidjet yalnız bu saytlardan işləyir. Başqa sayt kodu kopyalasa belə, söhbət açılmır.")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 text-sm">
-            <p>{t("Avtomatik icazəli:")} <strong>{data.domain}</strong>, <strong>www.{data.domain.replace(/^www\./, "")}</strong> {t("və bütün alt domenlər.")}</p>
+            {hasSite(data.domain) ? <p>{t("Avtomatik icazəli:")} <strong>{data.domain}</strong>, <strong>www.{data.domain.replace(/^www\./, "")}</strong> {t("və bütün alt domenlər.")}</p> : <p>{t("Qeydiyyatda saytın olmadığını seçmisən: vidjet yalnız aşağıda əlavə etdiyin domenlərdə işləyəcək.")}</p>}
             <div className="flex flex-col gap-1">
               <Label htmlFor="origins">{t("Əlavə ünvanlar (hər sətirdə bir)")}</Label>
               <Textarea id="origins" value={origins} onChange={(e) => setOrigins(e.target.value)} placeholder={"http://localhost:3000\nhttps://test.mənim-saytim.az"} className="font-mono text-xs" />

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { hasSite } from "@/lib/site";
 import { toast } from "sonner";
 import { saveProfile, type CompanyInfo } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
@@ -55,7 +56,7 @@ function Company() {
         <CardHeader><CardTitle>{t("Biznes")}</CardTitle></CardHeader>
         <CardContent className="divide-y divide-border">
           <InfoRow label={t("Ad")}>{tenant?.businessName}</InfoRow>
-          {tenant?.domain && <InfoRow label={t("Domen")}>{tenant.domain}</InfoRow>}
+          {tenant?.domain && <InfoRow label={t("Domen")}>{hasSite(tenant.domain) ? tenant.domain : t("Sayt yoxdur: Telegram və WhatsApp")}</InfoRow>}
         </CardContent>
       </Card>
 

@@ -79,9 +79,12 @@ export function stripJsonComments(text: string): string {
   return out;
 }
 
-/** Nümunə JSON-un hər hissəsinə izahlı şərh yazılmış mətni (yalnız bu panel oxuyur: şərhlər saxlananda atılır). */
-export function makeExampleText(t: T = AZ, language = "az"): string {
-  const c: Record<string, string> = {
+/**
+ * Konfiqurasiya sahələrinin izahı (yol → mətn). Nümunə JSON təmiz saxlanılır (şərhsiz),
+ * izah isə redaktorda kursorun dayandığı sahəyə görə ayrıca göstərilir (ConfigFieldHint).
+ */
+export function configDocs(t: T = AZ): Record<string, string> {
+  return {
     businessName: t("Biznesinin adı"),
     domain: t("Saytının domeni (https:// olmadan)"),
     apiSecret: t("Elan API-nin açarı. Yalnız API tələb edirsə yaz: şifrələnib saxlanır və bir daha göstərilmir"),
@@ -104,23 +107,84 @@ export function makeExampleText(t: T = AZ, language = "az"): string {
     "source.response.fields": t("ELAN SAHƏLƏRİ: cavabda nə göstərilsin. Sağ tərəf sənin API cavabındakı yoldur (nöqtə ilə), {…} isə şablondur"),
     "source.response.fields.url": t("Elan səhifəsinin ünvanı (şablon)"),
     "source.response.fields.attributes": t("Əlavə sahələr: sol tərəf göstəriləcək ad, sağ tərəf cavabdakı yol"),
+    "source.search.method": t("GET və ya POST: API-n axtarışı necə qəbul edir"),
+    "source.search.path": t("Elanların siyahısını qaytaran yol, / ilə başlayır (məs. /api/listings)"),
+    "source.search.limitParam": t("Bir səhifədə neçə elan istənilsin parametri (filtr deyil)"),
+    "source.vocabulary.path": t("Ad və ID siyahılarını qaytaran ünvan"),
+    "source.vocabulary.lists": t("Hər filtr üçün siyahı: itemsPath (siyahının yolu), idField, nameField"),
+    "profile.language": t("Köməkçinin əsas dili: az, en, ru, tr"),
+    "profile.tone": t("Danışıq tərzi, məs. dostcasına və ya rəsmi"),
+    "profile.maxResults": t("Bir cavabda ən çox neçə elan göstərilsin"),
+    "profile.agentName": t("Köməkçinin müştəriyə təqdim olunduğu ad"),
+    "profile.answerLength": t("Cavabın uzunluğu: short (qısa), medium (orta) və ya long (ətraflı)"),
+    "profile.mode": t("Köməkçinin işi: listings (elan axtarır), support (suallara cavab), both (hər ikisi)"),
+    mode: t("Köməkçinin işi: listings (elan axtarır), support (suallara cavab), both (hər ikisi)"),
+    widget: t("Çat vidjetinin ayarları (görünüş və canlı söhbət)"),
+    "widget.live": t("Canlı söhbət: köməkçi bilmədikdə operatora ötürür"),
+    "widget.live.enabled": t("true olanda müştəri operatorla danışa bilir"),
+    "source.filters.*": t("Filtrin adı (yalnız latın hərfi və rəqəm). AI bu adı görür, aydın seç: color, city, maxPrice"),
+    "source.filters.*.type": t("Filtrin növü: string (dəqiq mətn), number, boolean, range (aralıq), multi (bir neçə dəyər), text (açar söz)"),
+    "source.filters.*.description": t("Filtr nədir: AI bunu oxuyub nə vaxt işlədəcəyini bilir. Aydın yaz, məs. “Avtomobilin rəngi”"),
+    "source.filters.*.param": t("Sənin API-nin bu filtri qəbul etdiyi parametr adı (məs. color_id)"),
+    "source.filters.*.minParam": t("Aralığın alt sərhədi üçün API parametri (məs. year_from)"),
+    "source.filters.*.maxParam": t("Aralığın üst sərhədi üçün API parametri (məs. year_to)"),
+    "source.filters.*.valueFrom": t("vocabulary: API ad yox ID gözləyir; ad siyahıdan ID-yə çevrilir. Eyni adlı siyahı vocabulary.lists-də olmalıdır"),
+    "source.vocabulary.lists.*": t("Siyahının adı filtrin adı ilə eyni olmalıdır"),
+    "source.vocabulary.lists.*.itemsPath": t("Siyahının cavabdakı yolu (məs. brands)"),
+    "source.vocabulary.lists.*.idField": t("Hər elementdə ID sahəsi"),
+    "source.vocabulary.lists.*.nameField": t("Hər elementdə ad sahəsi"),
+    "source.response.fields.*": t("Sol: bizim sahə adı. Sağ: API cavabında yol (brand.name, images[0].url) və ya şablon ({brand.name} {model.name?})"),
+    "source.response.fields.attributes.*": t("Sol: elanda göstəriləcək ad. Sağ: API cavabındakı yol"),
   };
-  const emit = (v: unknown, path: string, ind: string): string => {
-    if (!v || typeof v !== "object" || Array.isArray(v)) return JSON.stringify(v);
-    const keys = Object.keys(v as object);
-    if (!keys.length) return "{}";
-    // Kiçik obyektlər (filtr, auth, search...) bir sətirdə qalır
-    const flat = path !== "" && path.split(".").length >= 2 && !["source.response", "source.response.fields", "source.filters", "source.vocabulary", "source.vocabulary.lists"].includes(path);
-    if (flat) return JSON.stringify(v).replace(/^\{/, "{ ").replace(/\}$/, " }").replace(/":/g, '": ').replace(/,"/g, ', "');
-    const inner = ind + "  ";
-    const lines = keys.map((k, idx) => {
-      const sub = path ? `${path}.${k}` : k;
-      const note = c[sub] ? `${inner}// ${c[sub]}\n` : "";
-      return `${note}${inner}${JSON.stringify(k)}: ${emit((v as Record<string, unknown>)[k], sub, inner)}${idx < keys.length - 1 ? "," : ""}`;
-    });
-    return `{\n${lines.join("\n")}\n${ind}}`;
-  };
-  return emit(makeExample(t, language), "", "");
+}
+
+/** Kursorun yerindəki açarın tam yolu (məs. "source.filters.make"): mətn JSON kimi tam düzgün olmasa da işləyir. Massiv indeksləri atılır. */
+export function jsonPathAt(text: string, pos: number): string {
+  const stack: (string | null)[] = []; // hər açıq { və ya [ üçün: həmin obyektdə son oxunan açar
+  let lastKey: string | null = null;
+  let i = 0;
+  while (i < pos && i < text.length) {
+    const ch = text[i]!;
+    if (ch === '"') {
+      let j = i + 1, str = "";
+      while (j < text.length && text[j] !== '"') { if (text[j] === "\\") { str += text[j + 1] ?? ""; j += 2; } else { str += text[j]; j++; } }
+      // Dırnaqdan sonra ":" gəlirsə, bu açardır
+      let k = j + 1; while (k < text.length && /\s/.test(text[k]!)) k++;
+      if (text[k] === ":") lastKey = str;
+      i = j + 1;
+      continue;
+    }
+    if (ch === "/" && text[i + 1] === "/") { while (i < text.length && text[i] !== "\n") i++; continue; }
+    if (ch === "{" || ch === "[") { stack.push(lastKey); lastKey = null; }
+    else if (ch === "}" || ch === "]") { lastKey = stack.pop() ?? null; }
+    else if (ch === ",") lastKey = null;
+    i++;
+  }
+  // Kursor açarın üzərindədirsə, həmin sətrin açarı da sayılır
+  const lineEnd = text.indexOf("\n", pos);
+  const rest = text.slice(pos, lineEnd < 0 ? undefined : lineEnd);
+  const here = /^[^"]*"([^"]+)"\s*:/.exec(rest)?.[1] ?? (/"([^"]+)"\s*:/.exec(text.slice(text.lastIndexOf("\n", pos - 1) + 1, pos + 1))?.[1]);
+  const parts = [...stack.filter((x): x is string => Boolean(x)), ...(lastKey ? [lastKey] : here ? [here] : [])];
+  return parts.join(".");
+}
+
+/** Yol üçün ən yaxın izah: dəqiq yoxdursa üst yola baxılır (source.filters.color → source.filters) */
+export function docFor(docs: Record<string, string>, path: string): { path: string; text: string } | null {
+  // İstifadəçinin adları (filtr, siyahı, sahə) "*" ilə uyğunlaşdırılır: source.filters.color.param → source.filters.*.param
+  if (docs[path]) return { path, text: docs[path]! };
+  const parts0 = path.split(".");
+  for (const prefix of ["source.filters", "source.vocabulary.lists", "source.response.fields.attributes", "source.response.fields"]) {
+    const pre = prefix.split(".");
+    if (parts0.length > pre.length && pre.every((x, i) => parts0[i] === x)) {
+      const rest = parts0.slice(pre.length + 1);
+      const k = [prefix, "*", ...rest].join(".");
+      if (docs[k] && !(prefix === "source.response.fields" && parts0[pre.length] === "attributes")) return { path: [prefix, parts0[pre.length], ...rest].join("."), text: docs[k]! };
+    }
+  }
+  const p = path.split(".");
+  // Filtr və siyahı adları istifadəçinindir: source.filters.<ad>.param → "source.filters" izahı
+  while (p.length) { const k = p.join("."); if (docs[k]) return { path: k, text: docs[k]! }; p.pop(); }
+  return null;
 }
 
 export type Parsed = { config: ConfigJson } | { error: string };

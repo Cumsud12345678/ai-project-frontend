@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShoppingBag, Upload } from "lucide-react";
+import { hasSite } from "@/lib/site";
+import { BookOpen, CircleCheck, ShoppingBag, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { activate, ApiError, testConfig, updateConfig, type ConfigJson, type TestResult } from "@/lib/api";
-import { makeExampleText, stripJsonComments, isLegacyConfig, normalizeConfig, parseConfigText } from "@/lib/config-file";
+import { makeExample, stripJsonComments, isLegacyConfig, normalizeConfig, parseConfigText } from "@/lib/config-file";
 import { jsonErrorLocation, lintConfig, type Issue } from "@/lib/config-edit";
 import { useI18n } from "@/lib/i18n";
 import { ConfigGuide } from "@/components/config-guide";
+import { ConfigFieldHint, ConfigReference } from "@/components/config-field-hint";
+import { ApiBuilder } from "@/components/api-builder";
 import { ConfigTools } from "@/components/config-tools";
 import { FeedSetup } from "@/components/feed-setup";
 import { Segmented } from "@/components/ui/segmented";
@@ -17,7 +21,7 @@ import { ListingTable } from "@/components/listing-table";
 import { useSession } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 
 const MAX_FILE = 200 * 1024;
@@ -33,8 +37,16 @@ function ListingsSetup() {
   const [issuedKey, setIssuedKey] = useState("");
   const [busy, setBusy] = useState<"" | "test" | "save">("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [cursor, setCursor] = useState<number | null>(null);
   const [confirmEx, setConfirmEx] = useState(false);
-  const [way, setWay] = useState<"api" | "feed">((tenant?.config?.source as { type?: string } | undefined)?.type === "feed" ? "feed" : "api");
+  const noSite = Boolean(tenant) && !hasSite(tenant?.domain);
+  // Quraşdırma sehirbazından gəlibsə, uğurlu saxlamadan sonra ora qayıtmaq düyməsi göstərilir
+  const router = useRouter();
+  const [fromSetup, setFromSetup] = useState(false);
+  useEffect(() => { try { setFromSetup(new URLSearchParams(window.location.search).get("from") === "setup"); } catch { /* */ } }, []);
+  // Əsas yol: forma (vizual qurucu). JSON redaktoru proqramçılar üçün ikinci seçimdir.
+  const srcType = (tenant?.config?.source as { type?: string } | undefined)?.type;
+  const [way, setWay] = useState<"form" | "api" | "feed">(srcType === "feed" ? "feed" : "form");
 
   // Canlı yoxlama: JSON səhvi (sətir/sütun ilə) və ya konfiqurasiya xəbərdarlıqları
   const live = useMemo<{ json?: string; issues: Issue[]; legacy?: boolean } | null>(() => {
@@ -117,14 +129,22 @@ function ListingsSetup() {
       <header>
         <h1 className="text-2xl font-semibold">{t("Elan mənbəyi")}</h1>
         <p className="text-sm text-muted-foreground">
-          {tenant
-            ? t("Konfiqurasiya JSON-unu dəyişib yenidən yoxla və yenilə.")
-            : t("Saytının elan, məhsul və ya xidmət API-sini JSON konfiqurasiya ilə təsvir et və ya API yoxdursa CSV/JSON/XML fayl və ya link ver. Yoxlamadan keçəndə məsləhətçi aktiv olur və API açarını alırsan.")}
+          {t("Köməkçi elanları haradan oxusun: saytının API-si (ünvanı yapışdır, sahə və filtrlər avtomatik təklif olunur) və ya fayl, link. Hər dəyişiklik saxlanmadan əvvəl real sorğu ilə yoxlanır.")}
         </p>
       </header>
 
+      {tenant && srcType && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm">
+          <span className="grid size-8 place-items-center rounded-lg bg-emerald-50 text-emerald-700"><CircleCheck size={16} aria-hidden /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">{srcType === "feed" ? t("Fayl və ya link ilə qoşulub") : t("API ilə qoşulub")}</span>
+            <span className="block truncate text-xs text-muted-foreground">{sourceLabel(tenant.config.source, t)}</span>
+          </span>
+        </div>
+      )}
+
       <Segmented value={way} onChange={setWay} label={t("Qoşulma yolu")}
-        options={[{ value: "api", label: t("API ilə (JSON)") }, { value: "feed", label: t("Fayl və ya link ilə (CSV, JSON, XML)") }]} />
+        options={[{ value: "form", label: t("API ilə (forma)") }, { value: "feed", label: t("Fayl və ya link ilə (CSV, JSON, XML)") }, { value: "api", label: t("JSON redaktoru (proqramçı üçün)") }]} />
 
       {tenant?.config.profile?.mode === "support" && (
         <p role="status" className="rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 text-sm">
@@ -132,7 +152,19 @@ function ListingsSetup() {
         </p>
       )}
 
-      {way === "api" && <><ConfigAssist text={text} onChange={adopt} /><ConfigGuide /></>}
+      {way === "form" && (
+        <section className="flex flex-col gap-5 rounded-lg border border-border bg-card p-5">
+          {!tenant && (
+            <div className="grid gap-4 border-b border-border pb-5 sm:grid-cols-2">
+              <div className="flex flex-col gap-1"><Label htmlFor="bn-a">{t("Biznes adı")}</Label><Input id="bn-a" maxLength={120} value={businessName} onChange={(e) => setBusinessName(e.target.value)} /></div>
+              <div className="flex flex-col gap-1"><Label htmlFor="dm-a">{t("Sayt domeni")}</Label><Input id="dm-a" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
+            </div>
+          )}
+          <ApiBuilder businessName={businessName} domain={domain} onIssuedKey={setIssuedKey} onSaved={() => { if (fromSetup) router.push("/setup"); }} />
+        </section>
+      )}
+
+      {way === "api" && <><ConfigAssist text={text} onChange={adopt} /><ConfigGuide /><ConfigReference /></>}
 
       {issuedKey && <KeyReveal apiKey={issuedKey} title={t("Aktivləşdi. Bu sənin API açarındır")} onDone={() => setIssuedKey("")} />}
 
@@ -140,7 +172,7 @@ function ListingsSetup() {
         <>
           <section className="grid gap-4 rounded-lg border border-border bg-card p-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1"><Label htmlFor="bn-f">{t("Biznes adı")}</Label><Input id="bn-f" maxLength={120} value={businessName} onChange={(e) => setBusinessName(e.target.value)} /></div>
-            <div className="flex flex-col gap-1"><Label htmlFor="dm-f">{t("Sayt domeni")}</Label><Input id="dm-f" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
+            {noSite ? <div className="flex flex-col gap-1"><Label>{t("Sayt domeni")}</Label><p className="flex h-10 items-center text-sm text-muted-foreground">{t("Sayt yoxdur: Telegram və WhatsApp")}</p></div> : <div className="flex flex-col gap-1"><Label htmlFor="dm-f">{t("Sayt domeni")}</Label><Input id="dm-f" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>}
           </section>
           <FeedSetup businessName={businessName} domain={domain} onIssuedKey={setIssuedKey} />
         </>
@@ -149,7 +181,7 @@ function ListingsSetup() {
       {way === "api" && <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1"><Label htmlFor="bn">{t("Biznes adı")}</Label><Input id="bn" maxLength={120} value={businessName} onChange={(e) => setBusinessName(e.target.value)} /></div>
-          <div className="flex flex-col gap-1"><Label htmlFor="dm">{t("Sayt domeni")}</Label><Input id="dm" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
+          {noSite ? <div className="flex flex-col gap-1"><Label>{t("Sayt domeni")}</Label><p className="flex h-10 items-center text-sm text-muted-foreground">{t("Sayt yoxdur: Telegram və WhatsApp")}</p></div> : <div className="flex flex-col gap-1"><Label htmlFor="dm">{t("Sayt domeni")}</Label><Input id="dm" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -158,7 +190,7 @@ function ListingsSetup() {
             <div className="flex gap-2">
               <Button type="button" size="sm" variant="ghost" onClick={() => {
                 if (text.trim() && !confirmEx) { setConfirmEx(true); return; }
-                setConfirmEx(false); adopt(makeExampleText(t, locale));
+                setConfirmEx(false); adopt(JSON.stringify(makeExample(t, locale), null, 2));
               }} onBlur={() => setConfirmEx(false)}>{text.trim() ? (confirmEx ? t("Bəli, nümunə ilə əvəz et") : t("Nümunəni göstər")) : t("Nümunəni doldur")}</Button>
               <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}><Upload size={14} aria-hidden /> {t("JSON faylı seç")}</Button>
               <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={onFile} aria-label={t("JSON faylı seç")} />
@@ -166,10 +198,18 @@ function ListingsSetup() {
           </div>
           <ConfigTools text={text} onChange={adopt} />
           <Textarea id="json" spellCheck={false} rows={18} className="font-mono text-xs leading-relaxed" placeholder='{ "source": { "type": "rest", "baseUrl": "https://…", … } }'
-            value={text} onChange={(e) => adopt(e.target.value)} />
+            value={text} onChange={(e) => { adopt(e.target.value); setCursor(e.target.selectionStart); }}
+            onSelect={(e) => setCursor(e.currentTarget.selectionStart)} onClick={(e) => setCursor(e.currentTarget.selectionStart)} onKeyUp={(e) => setCursor(e.currentTarget.selectionStart)} />
+          <ConfigFieldHint text={text} pos={cursor} />
           {live && (
             <div className="flex flex-col gap-1 text-sm" aria-live="polite">
               {live.json && <p role="alert" className="text-destructive">{t("JSON səhvi:")} {live.json}</p>}
+              {!live.json && /\/\/|\/\*/.test(text) && stripJsonComments(text) !== text && (
+                <p className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                  <span>{t("JSON-da şərh sətirləri var. Saxlananda atılır, amma təmiz JSON daha oxunaqlıdır.")}</span>
+                  <Button type="button" size="sm" variant="outline" onClick={() => { const p = parseConfigText(text, t); if ("config" in p) adopt(JSON.stringify(p.config, null, 2)); }}>{t("Şərhləri sil və formatla")}</Button>
+                </p>
+              )}
               {live.legacy && (
                 <p className="flex flex-wrap items-center gap-2">
                   <span>{t("Bu konfiqurasiya köhnə qısa yazılışdan istifadə edir (bəzi filtrlərdə yalnız param var).")}</span>
@@ -185,7 +225,7 @@ function ListingsSetup() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            {t("Fayl seç və ya JSON-u bura yapışdır.")} {t("JSON-da // ilə şərh yaza bilərsən.")} <code className="font-mono">apiSecret</code> {t("yalnız API-n açar tələb edirsə lazımdır: şifrələnib saxlanır və bir daha göstərilmir.")}
+            {t("Fayl seç və ya JSON-u bura yapışdır.")} <code className="font-mono">apiSecret</code> {t("yalnız API-n açar tələb edirsə lazımdır: şifrələnib saxlanır və bir daha göstərilmir.")}
             {tenant && ` ${t("Dəyişmək istəmirsənsə JSON-a əlavə etmə, köhnəsi qalır.")}`}
           </p>
         </div>
@@ -206,6 +246,12 @@ function ListingsSetup() {
       {way === "api" && busy && <CardSkeleton rows={2} />}
       {way === "api" && !busy && result && (
         <div className="flex flex-col gap-3">
+          {fromSetup && tenant && tenant.config.profile?.mode !== "support" && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-600/25 bg-emerald-50 p-3 text-sm text-emerald-900">
+              <span>{t("Kataloq qoşuldu. Quraşdırmanın qalan addımlarına qayıt.")}</span>
+              <Link href="/setup" className={buttonVariants({ size: "sm" })}>{t("Quraşdırmaya qayıt")}</Link>
+            </div>
+          )}
           <p className="text-sm"><strong>{result.sampleCount}</strong> {t("qeyd oxundu")}{result.debug?.dropped?.length ? <span className="text-destructive">. {t("Atılan qeydlər:")} {[...new Set(result.debug.dropped)].join(", ")}.</span> : "."}</p>
           {result.supportedFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 text-sm">{t("Dəstəklənən süzgəclər:")} {result.supportedFilters.map((f) => <Badge key={f}>{f}</Badge>)}</div>}
           {result.sampleListings.length > 0 && <ListingTable listings={result.sampleListings} />}
@@ -259,6 +305,14 @@ function SupportSetup({ onBack }: { onBack: () => void }) {
       </div>
     </form>
   );
+}
+
+/** Qoşulmanın qısa təsviri: ünvan və filtr sayı */
+function sourceLabel(src: unknown, t: (k: string, v?: Record<string, string | number>) => string): string {
+  const o = (src ?? {}) as { type?: string; baseUrl?: string; search?: { path?: string }; filters?: Record<string, unknown>; feed?: { url?: string; fileName?: string } };
+  if (o.type === "feed") return o.feed?.url ?? o.feed?.fileName ?? "";
+  const n = Object.keys(o.filters ?? {}).filter((k) => k !== "sort" && k !== "limit").length;
+  return `${(o.baseUrl ?? "").replace(/^https?:\/\//, "")}${(o.search?.path ?? "").split("?")[0]}${n ? ` · ${t("{n} filtr", { n })}` : ""}`;
 }
 
 export default function ConnectionPage() {

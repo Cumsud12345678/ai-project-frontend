@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, Check, CircleHelp, Coins, Gauge, CircleCheck, PhoneCall, ThumbsUp, UserRound, Wallet, Zap } from "lucide-react";
 import { getFeedback, getOverview, getUsage, type FeedbackSummary, type Overview, type Usage } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { factsFromOverview, setupSteps } from "@/lib/setup-steps";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
 import { DashboardSkeleton } from "@/components/skeletons";
@@ -33,7 +34,7 @@ export default function DashboardPage() {
   if (!usage && !error) return <DashboardSkeleton />;
 
   const used = usage?.requests ?? 0;
-  const limit = usage?.limits.monthlyRequests ?? 0;
+  const limit = usage?.limits?.monthlyRequests ?? 0;
   const left = limit ? Math.max(0, limit - used) : null;
   const pct = limit ? (used / limit) * 100 : 0;
   // Əsas məhdudiyyət balansdır (AZN, hər sorğunun real xərcinə görə). Sorğu sayı yalnız məlumat üçündür.
@@ -53,11 +54,9 @@ export default function DashboardPage() {
     noResults: { text: t("Son 30 gündə {n} sorğuya uyğun elan tapılmadı.", { n: att.find((a) => a.kind === "noResults")?.count ?? 0 }), href: "/queries" },
   };
   const s = overview?.setup;
-  const steps = s ? [
-    { done: s.dataReady, label: overview!.mode === "listings" ? t("Elan mənbəyi qoşulub") : t("Bilik bazasına məlumat əlavə et (fayl, sayt linki və ya mətn)"), href: overview!.mode === "listings" ? "/connection" : "/knowledge" },
-    { done: s.widgetInstalled, label: t("Çat scriptini saytına qoy"), href: "/embed", hint: t("Əvvəlcə “Sınaq söhbəti”ndə yoxlaya bilərsən.") },
-    ...(s.queriesLogged ? [{ done: s.firstQuestion, label: t("İlk real sual gəlsin"), href: "/playground", hint: t("Saytında çatı özün sına.") }] : []),
-  ] : [];
+  // Quraşdırma sehirbazı ilə eyni addımlar, adlar və şərtlər (lib/setup-steps.ts)
+  const facts = factsFromOverview(overview);
+  const steps = s && facts ? setupSteps(facts, t) : [];
   const nextIdx = steps.findIndex((x) => !x.done);
   const q = overview?.quality;
 
@@ -94,14 +93,14 @@ export default function DashboardPage() {
           <CardHeader><CardTitle>{t("Quraşdırma")}</CardTitle><CardDescription>{t("{done}/{total} addım tamamlandı", { done: steps.filter((x) => x.done).length, total: steps.length })}</CardDescription></CardHeader>
           <ol className="divide-y divide-border">
             {steps.map((st, i) => (
-              <li key={i}>
+              <li key={st.id}>
                 <Link href={st.href} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50">
                   <span className={cn("grid size-6 shrink-0 place-items-center rounded-full border text-xs font-medium", st.done ? "border-primary bg-primary text-primary-foreground" : i === nextIdx ? "border-primary text-primary" : "border-border text-muted-foreground")}>
                     {st.done ? <Check size={14} aria-hidden /> : i + 1}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={cn("block text-sm", st.done && "text-muted-foreground line-through")}>{st.label}</span>
-                    {!st.done && i === nextIdx && "hint" in st && st.hint && <span className="block text-xs text-muted-foreground">{st.hint}</span>}
+                    <span className="block text-xs text-muted-foreground">{st.note}</span>
                   </span>
                   {!st.done && <ArrowRight size={16} className="shrink-0 text-muted-foreground" aria-hidden />}
                 </Link>
@@ -140,7 +139,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {fb && fb.bad.length > 0 && (
+      {fb && (fb.bad?.length ?? 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>{t("Faydalı olmayan cavablar")}</CardTitle>

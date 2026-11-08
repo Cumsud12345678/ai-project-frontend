@@ -9,6 +9,7 @@ import { RequireTenant, useSession } from "@/components/session";
 import { KnowledgeGaps } from "@/components/knowledge-gaps";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { factsFromOverview, setupSteps } from "@/lib/setup-steps";
 
 type Kpi = { label: string; hint: string; cur: number | null; prev: number | null; pct?: boolean; better: "up" | "down" };
 
@@ -60,10 +61,10 @@ function Assistant() {
 
   // İşə salma addımları
   const s = ov?.setup;
-  const steps = s ? [
-    { done: s.dataReady, title: mode === "support" ? t("Bilik bazasına məlumat əlavə et") : t("Elan və ya məhsul mənbəyini qoş"), desc: t("Köməkçi yalnız sənin məlumatından cavab verir."), href: mode === "support" ? "/knowledge" : "/connection", cta: t("Mənbə əlavə et") },
-    { done: s.firstQuestion, title: t("Köməkçini yoxla"), desc: t("Sınaq çatında bir neçə sual ver və cavabların sənə uyğun olduğuna bax."), href: "/assistant/profile", cta: t("Sınaq et") },
-    { done: s.widgetInstalled && s.widgetEnabled, title: t("Vidjeti sayta qoş"), desc: t("Bir sətir kodu saytına əlavə et, köməkçi ziyarətçilərə cavab verməyə başlasın."), href: "/embed", cta: t("Kodu götür") },
+  const facts = factsFromOverview(ov);
+  // Quraşdırma sehirbazı ilə eyni addımlar, adlar və şərtlər (lib/setup-steps.ts): bir yerdə görülən iş hər yerdə görünür
+  const steps = s && facts ? [
+    ...setupSteps(facts, t).map((x) => ({ done: x.done, title: x.label, desc: x.note, href: x.href, cta: t("Davam et") })),
     { done: Boolean(w && (w.widget.live?.enabled)), optional: true, title: t("Operatorla canlı söhbəti aç (ixtiyari)"), desc: t("Köməkçi cavab verə bilməyəndə söhbəti komandana ötürsün."), href: "/assistant/skills", cta: t("Bacarıqlara keç") },
   ] : [];
   const required = steps.filter((x) => !("optional" in x && x.optional));

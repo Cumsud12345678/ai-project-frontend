@@ -1,32 +1,22 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { chat, type ChatMessage } from "@/lib/api";
-import { useSampleIdeas } from "@/components/assistant-preview";
+import { chat, getWidget, type ChatMessage } from "@/lib/api";
+import { Rich, useSampleIdeas } from "@/components/assistant-preview";
 import { useI18n } from "@/lib/i18n";
-import { ListingTable } from "@/components/listing-table";
+import { ListingCards } from "@/components/listing-cards";
 import { RequireTenant, useSession } from "@/components/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-// **qalın** və [mətn](link) üçün kiçik render; kənar kitabxana lazım deyil.
-function Rich({ text }: { text: string }) {
-  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
-  return (
-    <p className="whitespace-pre-wrap">
-      {parts.map((p, i) => {
-        if (p.startsWith("**")) return <strong key={i}>{p.slice(2, -2)}</strong>;
-        const m = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-        return m ? <a key={i} href={m[2].replace(/ /g, "%20")} target="_blank" rel="noreferrer" className="text-primary underline">{m[1]}</a> : p;
-      })}
-    </p>
-  );
-}
 
 function Playground() {
   const { t } = useI18n();
   const { tenant } = useSession();
   const mode = tenant?.config.profile?.mode ?? "listings";
+  // Kartlar vidjetin rəngində: müştərinin saytda görəcəyi kimi
+  const [accent, setAccent] = useState<string | undefined>();
+  useEffect(() => { getWidget().then((w) => setAccent(w.widget.color)).catch(() => {}); }, []);
   const ideas = useSampleIdeas();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -81,7 +71,7 @@ function Playground() {
             {m.role === "user" ? m.text : (
               <>
                 <div className="rounded-lg border border-border bg-card px-4 py-3"><Rich text={m.text} /></div>
-                {m.listings && m.listings.length > 0 && <ListingTable listings={m.listings} />}
+                {m.listings && m.listings.length > 0 && <div className="max-w-sm"><ListingCards listings={m.listings} accent={accent} /></div>}
                 {m.sources && m.sources.length > 0 && (
                   <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">{t("Mənbə:")}{" "}
                     {m.sources.map((s, k) => s.url ? <a key={k} href={s.url} target="_blank" rel="noreferrer" className="text-primary underline">{s.title}</a> : <span key={k}>{s.title}</span>)}</p>

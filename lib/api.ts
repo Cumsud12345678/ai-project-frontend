@@ -53,6 +53,8 @@ export type TenantInfo = {
   createdAt: string; updatedAt: string; keyRotatedAt: string | null;
   /** Admin hesabı dayandırıbsa: vidjet və kanallar işləmir */
   suspended?: { at: string; reason: string } | null;
+  /** Sehirbaz: seçilmiş məqsədlər və real məlumatla sınaq edilibmi (köhnə backend-də yoxdur) */
+  setup?: { goals: ("answer" | "catalog")[]; tested: boolean };
 };
 export type TenantResponse = { tenant: TenantInfo | null; advisorUrl: string; role?: "owner" | "operator" };
 
@@ -65,7 +67,8 @@ export type Listing = {
 export type Usage = { month: string; requests: number; tokens: number; limits: { monthlyRequests?: number; ratePerMinute?: number }; daily?: { date: string; requests: number }[] };
 export type Source = { title: string; url?: string };
 export type ChatMessage = { role: "user" | "model"; text: string; listings?: Listing[]; sources?: Source[]; unanswered?: boolean };
-export type TestResult = { ok: boolean; sampleCount: number; sampleListings: Listing[]; supportedFilters: string[]; debug?: { dropped?: string[]; rawCount?: number } };
+export type TestResult = { ok: boolean; sampleCount: number; sampleListings: Listing[]; supportedFilters: string[]; filters?: { name: string; kind: string; description: string }[]; debug?: { dropped?: string[]; rawCount?: number; request?: string | null; note?: string | null } };
+export type SampleRequest = { url: string; method?: "GET" | "POST"; body?: string; auth?: { type: string; name?: string }; apiSecret?: string };
 
 export type AdminUser = {
   id: string; email: string; verified: boolean; isAdmin: boolean; isOwner?: boolean; createdAt: string; twoFactor?: boolean;
@@ -102,17 +105,17 @@ const post = <T,>(path: string, body?: unknown) => call<T>(path, { method: "POST
 // Kanallar (Telegram)
 export type TelegramStatus = { connected: boolean; enabled: boolean; botUsername: string | null; connectedAt: string | null; httpsReady: boolean; keyReady: boolean };
 export const getTelegram = () => call<TelegramStatus>("/tenant/channels/telegram");
-export const connectTelegram = (token: string) => call<TelegramStatus>("/tenant/channels/telegram", { method: "PUT", body: { token } });
-export const setTelegramEnabled = (enabled: boolean) => call<TelegramStatus>("/tenant/channels/telegram", { method: "PATCH", body: { enabled } });
-export const disconnectTelegram = () => call<{ ok: true }>("/tenant/channels/telegram", { method: "DELETE" });
+export const connectTelegram = (token: string) => pinged(call<TelegramStatus>("/tenant/channels/telegram", { method: "PUT", body: { token } }));
+export const setTelegramEnabled = (enabled: boolean) => pinged(call<TelegramStatus>("/tenant/channels/telegram", { method: "PATCH", body: { enabled } }));
+export const disconnectTelegram = () => pinged(call<{ ok: true }>("/tenant/channels/telegram", { method: "DELETE" }));
 
 // Kanallar (WhatsApp, QR ilə)
 export type WhatsAppState = "off" | "connecting" | "qr" | "open" | "error" | "replaced";
 export type WhatsAppStatus = { connected: boolean; enabled: boolean; phone: string | null; connectedAt: string | null; state: WhatsAppState; qr: string | null; error: string | null; pauseOnOwnReply: boolean; keyReady: boolean };
 export const getWhatsApp = () => call<WhatsAppStatus>("/tenant/channels/whatsapp");
 export const connectWhatsApp = () => call<WhatsAppStatus>("/tenant/channels/whatsapp/connect", { method: "POST", body: { ack: true } });
-export const patchWhatsApp = (patch: { enabled?: boolean; pauseOnOwnReply?: boolean }) => call<WhatsAppStatus>("/tenant/channels/whatsapp", { method: "PATCH", body: patch });
-export const disconnectWhatsApp = () => call<{ ok: true }>("/tenant/channels/whatsapp", { method: "DELETE" });
+export const patchWhatsApp = (patch: { enabled?: boolean; pauseOnOwnReply?: boolean }) => pinged(call<WhatsAppStatus>("/tenant/channels/whatsapp", { method: "PATCH", body: patch }));
+export const disconnectWhatsApp = () => pinged(call<{ ok: true }>("/tenant/channels/whatsapp", { method: "DELETE" }));
 
 // Hesab
 /** ref: partnyor kodu; refSource=link: linkdən gəlib (səhv kod xəta vermir), code: istifadəçi özü yazıb */
@@ -157,7 +160,9 @@ export const deleteMyAccount = (password: string) => post<{ ok: true }>("/auth/d
 
 // Müştəri paneli
 export const getTenant = () => call<TenantResponse>("/tenant");
-export const testConfig = (config: ConfigJson) => post<TestResult>("/tenant/config/test", { config });
+export const testConfig = (config: ConfigJson, testFilters?: Record<string, string | number | boolean>) => post<TestResult>("/tenant/config/test", { config, ...(testFilters && { testFilters }) });
+/** Qoşulma sehirbazı: API ünvanının xam cavabını server gətirir (brauzerdə CORS olmur) */
+export const fetchSample = (req: SampleRequest) => post<{ ok: boolean; json: unknown; ms: number }>("/tenant/config/sample", req);
 export const activate = (config: ConfigJson) => post<{ apiKey: string; tenant: TenantInfo; sampleListings: Listing[] }>("/tenant", { config });
 export const updateConfig = (config: ConfigJson) => call<{ tenant: TenantInfo; sampleListings: Listing[]; modeChanged?: "listings" | "support" | "both" }>("/tenant/config", { method: "PUT", body: { config } });
 // Fayl/link ilə qoşulma (CSV, JSON, XML)
@@ -176,13 +181,13 @@ export const uploadWidgetImage = (kind: WidgetImageKind, data: string) => call<W
 export const deleteWidgetImage = (kind: WidgetImageKind) => call<WidgetResponse>(`/tenant/widget/${kind}`, { method: "DELETE" });
 export const uploadWidgetLogo = (data: string) => uploadWidgetImage("logo", data);
 export const deleteWidgetLogo = () => deleteWidgetImage("logo");
-export const saveWidget = (patch: Partial<Omit<WidgetSettings, "key">>) => call<WidgetResponse>("/tenant/widget", { method: "PUT", body: patch });
+export const saveWidget = (patch: Partial<Omit<WidgetSettings, "key">>) => pinged(call<WidgetResponse>("/tenant/widget", { method: "PUT", body: patch }));
 export const rotateWidgetKey = () => post<WidgetResponse>("/tenant/widget/rotate");
 export const getUsage = () => call<Usage>("/tenant/usage");
 export const getListings = (q: Record<string, string>) =>
   call<{ count: number; listings: Listing[] }>(`/tenant/listings?${new URLSearchParams(Object.entries(q).filter(([, v]) => v))}`);
 export const chat = (message: string, history: ChatMessage[]) =>
-  post<{ answer: string; listings: Listing[]; sources?: Source[]; unanswered?: boolean; usage?: { tokens: number }; billing?: { billedAzn?: number; balanceAzn?: number } }>("/tenant/chat", { message, history: history.map(({ role, text }) => ({ role, text })) });
+  pinged(post<{ answer: string; listings: Listing[]; sources?: Source[]; unanswered?: boolean; usage?: { tokens: number }; billing?: { billedAzn?: number; balanceAzn?: number } }>("/tenant/chat", { message, history: history.map(({ role, text }) => ({ role, text })) }));
 
 // Admin
 export type UserFilter = "all" | "tenants" | "unverified" | "admins" | "lowbal" | "suspended";
@@ -410,8 +415,8 @@ async function toBase64(file: File): Promise<string> {
 }
 export const kbUploadFile = async (file: File) =>
   post<{ source: KbSource }>("/tenant/kb/files", { name: file.name, mime: file.type, data: await toBase64(file) });
-export const kbAddUrl = (url: string, crawl: boolean) => post<{ source: KbSource }>("/tenant/kb/urls", { url, crawl });
-export const kbAddText = (title: string, text: string) => post<{ source: KbSource }>("/tenant/kb/texts", { title, text });
+export const kbAddUrl = (url: string, crawl: boolean) => pinged(post<{ source: KbSource }>("/tenant/kb/urls", { url, crawl }));
+export const kbAddText = (title: string, text: string) => pinged(post<{ source: KbSource }>("/tenant/kb/texts", { title, text }));
 export const kbAddQa = (questions: string[], answer: string) => post<{ source: KbSource }>("/tenant/kb/qa", { questions, answer });
 export const kbAddProc = (name: string, triggers: string[], steps: string) => post<{ source: KbSource }>("/tenant/kb/proc", { name, triggers, steps });
 export const kbUpdateProc = (id: string, name: string, triggers: string[], steps: string) => call<{ source: KbSource }>(`/tenant/kb/proc/${id}`, { method: "PUT", body: { name, triggers, steps } });
@@ -433,7 +438,12 @@ export const deleteLead = (id: string) => call<{ ok: true }>(`/tenant/kb/leads/$
 // İlk səhifə: quraşdırma, diqqət tələb edənlər, keyfiyyət
 export type Overview = {
   mode: Mode;
-  setup: { dataReady: boolean; dataCount: number; widgetInstalled: boolean; widgetEnabled: boolean; firstQuestion: boolean; queriesLogged: boolean };
+  setup: {
+    dataReady: boolean; dataCount: number; widgetInstalled: boolean; widgetEnabled: boolean; firstQuestion: boolean; queriesLogged: boolean;
+    /** Yeni backend: sehirbazın addımları ilə eyni hazırlıq siqnalları (köhnə backend-də olmaya bilər) */
+    catalogReady?: boolean; kbReady?: boolean; tested?: boolean; launched?: boolean; hasSite?: boolean; channels?: { telegram: boolean; whatsapp: boolean };
+    goals?: string[]; goalsSet?: boolean;
+  };
   attention: { kind: "widgetOff" | "live" | "leads" | "unanswered" | "sourceErrors" | "noResults"; count: number }[];
   quality: { total: number; noResults: number; errors: number; answerRate: number | null; handoffs: number | null };
   top: { message: string; count: number }[];
@@ -443,6 +453,12 @@ export type Overview = {
   billing?: { state: BillingState; balanceAzn: number; freeAzn: number; paidAzn: number; monthAzn: number; enforced: boolean } | null;
 };
 export const getOverview = () => call<Overview>("/tenant/overview");
+/** Sehirbazın "Məqsəd" addımı (serverdə saxlanır) */
+export const saveSetupGoals = (goals: ("answer" | "catalog")[]) => pinged(call<{ goals: ("answer" | "catalog")[] }>("/tenant/setup", { method: "PUT", body: { goals } }));
+/** Uğurlu sorğudan sonra hazırlıq göstəricisini yeniləyir (cavabı dəyişmir) */
+function pinged<T>(p: Promise<T>): Promise<T> { return p.then((r) => { pingOverview(); return r; }); }
+/** Hazırlıq dəyişə biləcək bir iş görüləndə (məlumat əlavə, sınaq, kanal) yuxarı zolaqdakı göstərici dərhal yenilənsin */
+export const pingOverview = () => { try { window.dispatchEvent(new Event("ca:overview")); } catch { /* server tərəfi */ } };
 
 // Canlı operator söhbəti və cavablara rəy
 export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; at: string; by?: string; /** göndərilən fayl: ziyarətçinin şəkli və ya operatorun şəkli/PDF-i */ file?: { id: string; mime: string; name?: string } };

@@ -1,8 +1,9 @@
 "use client";
+import { ListingCards } from "@/components/listing-cards";
 // Köməkçinin canlı önizləməsi (Profil və Bacarıqlar səhifələrinin sağında): dəyişikliyi saxlayıb dərhal yoxlamaq üçün.
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, RotateCcw, Sparkles } from "lucide-react";
-import { chat, getListings, type ChatMessage, type Listing } from "@/lib/api";
+import { chat, getListings, getWidget, type ChatMessage, type Listing } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
 import { cn } from "@/lib/utils";
@@ -34,7 +35,7 @@ export function useSampleIdeas(): string[] {
 }
 
 /** **qalın** və [mətn](link) */
-function Rich({ text }: { text: string }) {
+export function Rich({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
   return (
     <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">
@@ -48,9 +49,11 @@ function Rich({ text }: { text: string }) {
 }
 
 export function AssistantPreview({ name, className }: { name: string; className?: string }) {
-  const { t, num } = useI18n();
+  const { t } = useI18n();
   const ideas = useSampleIdeas();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [accent, setAccent] = useState<string | undefined>();
+  useEffect(() => { getWidget().then((w) => setAccent(w.widget.color)).catch(() => {}); }, []);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -85,18 +88,9 @@ export function AssistantPreview({ name, className }: { name: string; className?
           {messages.map((m, i) => m.role === "user"
             ? <li key={i} className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-primary-foreground">{m.text}</li>
             : (
-              <li key={i} className="flex max-w-[92%] flex-col gap-2">
+              <li key={i} className="flex w-full min-w-0 flex-col gap-2">
                 <div className="rounded-2xl rounded-bl-md bg-card px-3.5 py-2.5 ring-1 ring-border/60"><Rich text={m.text} /></div>
-                {!!m.listings?.length && (
-                  <ul className="flex flex-col gap-1">
-                    {m.listings.slice(0, 5).map((l) => (
-                      <li key={l.id} className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-1.5 text-xs ring-1 ring-border/60">
-                        <span className="min-w-0 flex-1 truncate">{l.url ? <a href={l.url} target="_blank" rel="noreferrer" className="hover:underline">{l.title}</a> : l.title}</span>
-                        {typeof l.price === "number" && <span className="shrink-0 font-medium tabular-nums">{num(l.price)} {l.currency ?? ""}</span>}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {!!m.listings?.length && <div className="w-full min-w-0"><ListingCards listings={m.listings} accent={accent} /></div>}
                 {m.unanswered && <p className="text-xs text-amber">{t("Cavab tapılmadı: sual “Bilik boşluqları”na düşdü.")}</p>}
               </li>
             ))}

@@ -22,7 +22,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ErrorReporter />
           <Toaster />
         </LocaleProvider>
-        <script src="http://localhost:4000/widget.js" data-key="wk_60f6cd81c9437893b9c2c2b70fa04d4b" defer></script>
+        <script src="http://localhost:4000/widget.js" data-key="wk_f3ee83903158050aa61d9009298f16c6" defer></script>
       </body>
     </html>
   );

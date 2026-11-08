@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { hasSite } from "@/lib/site";
 import { useRouter } from "next/navigation";
 import { Bell, Building2, ChevronRight, Code, Hash, LayoutGrid, ShieldCheck, Users } from "lucide-react";
 import { deleteMyAccount } from "@/lib/api";
@@ -44,7 +45,7 @@ export default function AccountPage() {
           <CardHeader><CardTitle>{t("Biznes")}</CardTitle><CardDescription>{t("Ad və domen qurulum zamanı təyin olunub, köməkçi özünü bu adla təqdim edir.")}</CardDescription></CardHeader>
           <CardContent className="divide-y divide-border">
             <InfoRow label={t("Ad")}>{tenant.businessName}</InfoRow>
-            {tenant.domain && <InfoRow label={t("Domen")}>{tenant.domain}</InfoRow>}
+            <InfoRow label={t("Domen")}>{hasSite(tenant.domain) ? tenant.domain : t("Sayt yoxdur: Telegram və WhatsApp")}</InfoRow>
             <InfoRow label={t("Yaradılıb")}>{day(tenant.createdAt)}</InfoRow>
           </CardContent>
         </Card>

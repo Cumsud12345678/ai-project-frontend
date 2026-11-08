@@ -45,6 +45,14 @@ function Shell({ children }: { children: React.ReactNode }) {
     lastOverview.current = Date.now();
     getOverview().then(setOverview).catch(() => {});
   }, [tenant, isOperator, pathname]);
+  // Hesab dəyişəndə (mənbə qoşuldu, ad dəyişdi) və ya səhifə xəbər verəndə (pingOverview: sınaq, bilik, kanal) gözləmədən yenilənir
+  useEffect(() => {
+    if (!tenant || isOperator) return;
+    const f = () => { lastOverview.current = Date.now(); getOverview().then(setOverview).catch(() => {}); };
+    f();
+    window.addEventListener("ca:overview", f);
+    return () => window.removeEventListener("ca:overview", f);
+  }, [tenant?.updatedAt, isOperator]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <PanelFrame signals={{ waiting, overview }}>
