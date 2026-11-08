@@ -28,7 +28,8 @@ function route(req: NextRequest): NextResponse {
     headers.set("x-locale", locale);
     return NextResponse.next({ request: { headers } });
   }
-  if (PUBLIC.includes(pathname) || req.cookies.has("ca_session")) return NextResponse.next();
+  // Hüquqi sənədlər hamı üçün açıqdır (ödəniş sistemi və məktublardakı linklər girişsiz açılmalıdır)
+  if (PUBLIC.includes(pathname) || pathname.startsWith("/legal/") || req.cookies.has("ca_session")) return NextResponse.next();
   return NextResponse.redirect(new URL("/login", req.url));
 }
 

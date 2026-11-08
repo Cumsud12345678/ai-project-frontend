@@ -459,15 +459,17 @@ function Cta({ signedIn }: { signedIn: boolean }) {
 }
 
 function Footer({ signedIn }: { signedIn: boolean }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const lq = locale === "az" ? "" : `?lang=${locale}`;
   const cols: [string, [string, string][]][] = [
     [t("Məhsul"), [["#nece", t("Necə işləyir")], ["#imkanlar", t("İmkanlar")], ["#daha", t("Daha çox")], ["#sinaq", t("Özün sına")]]],
     [t("Məlumat"), [["#qiymet", t("Qiymətlər")], ["#sual", t("Sual-cavab")], ["#hamisi", t("Hamısı bir siyahıda")]]],
     [t("Hesab"), signedIn ? [["/dashboard", t("Panelə keç")]] : [["/login", t("Daxil ol")], ["/register", t("Qeydiyyat")]]],
+    [t("Hüquqi"), [[`/legal/terms${lq}`, t("İstifadə şərtləri")], [`/legal/privacy${lq}`, t("Məxfilik siyasəti")], [`/legal/refund${lq}`, t("Ödəniş və geri qaytarma")]]],
   ];
   return (
     <footer className="border-t border-[var(--l-line)] bg-[var(--l-mist)]/40">
-      <div className={`${wrap} grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]`}>
+      <div className={`${wrap} grid gap-10 py-12 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]`}>
         <div className="flex flex-col gap-3">
           <Logo />
           <p className="max-w-xs text-sm leading-relaxed text-[var(--l-sub)]">{t("Saytına qoşulan AI köməkçi: axtarır, cavab verir, lazım olanda operatora yönləndirir.")}</p>

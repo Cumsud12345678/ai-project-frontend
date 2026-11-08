@@ -77,7 +77,11 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
           {children}
           {footer && <div className="border-t border-border pt-5 text-sm text-muted-foreground">{footer}</div>}
         </div>
-        <p className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Car Advisor</p>
+        <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-xs text-muted-foreground">
+          <span>© {new Date().getFullYear()} Car Advisor</span>
+          <Link href="/legal/terms" className="hover:text-foreground">{t("İstifadə şərtləri")}</Link>
+          <Link href="/legal/privacy" className="hover:text-foreground">{t("Məxfilik siyasəti")}</Link>
+        </p>
       </main>
     </div>
   );

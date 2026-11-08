@@ -103,6 +103,13 @@ export default function RegisterPage() {
         )}
         {error && <FormError>{error}</FormError>}
         <Button disabled={busy} className="h-11 w-full text-[15px]">{busy ? t("Göndərilir…") : t("Davam et")}</Button>
+        {/* Razılıq: düyməni basmaqla şərtlər qəbul olunur (ödəniş sistemləri bu qeydi tələb edir) */}
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          {t("Davam etməklə {terms} və {privacy} qəbul edirsən.").split(/(\{terms\}|\{privacy\})/).map((part, i) =>
+            part === "{terms}" ? <Link key={i} href="/legal/terms" target="_blank" className={authLink}>{t("İstifadə şərtlərini")}</Link>
+              : part === "{privacy}" ? <Link key={i} href="/legal/privacy" target="_blank" className={authLink}>{t("Məxfilik siyasətini")}</Link>
+                : part)}
+        </p>
       </form>
     </AuthShell>
   );

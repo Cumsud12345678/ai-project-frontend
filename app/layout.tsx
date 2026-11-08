@@ -22,7 +22,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ErrorReporter />
           <Toaster />
         </LocaleProvider>
-        <script src="http://localhost:4000/widget.js" data-key="wk_f3ee83903158050aa61d9009298f16c6" defer></script>
+        {/* Öz saytımızda çat vidjeti: yalnız .env-də verilibsə (əvvəl localhost ünvanı birbaşa yazılmışdı, production-da sınırdı) */}
+        {process.env.NEXT_PUBLIC_SELF_WIDGET_SRC && process.env.NEXT_PUBLIC_SELF_WIDGET_KEY && (
+          <script src={process.env.NEXT_PUBLIC_SELF_WIDGET_SRC} data-key={process.env.NEXT_PUBLIC_SELF_WIDGET_KEY} defer></script>
+        )}
       </body>
     </html>
   );

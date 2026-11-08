@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Wallet } from "lucide-react";
 import { toast } from "sonner";
@@ -52,7 +53,7 @@ function Body() {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-semibold">{t("Balans")}</h1>
-        <p className="text-sm text-muted-foreground">{t("Çat yalnız istifadə etdiyin qədər xərcləyir. Aylıq abunə və gizli ödəniş yoxdur.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Çat yalnız istifadə etdiyin qədər xərcləyir. Aylıq abunə və gizli ödəniş yoxdur.")} <Link href="/legal/refund" target="_blank" className="font-medium text-foreground underline-offset-2 hover:underline">{t("Ödəniş və geri qaytarma")}</Link></p>
       </header>
 
       <Card>

@@ -3179,4 +3179,11 @@ export const en: Record<string, string> = {
   "Tapılan elanlar": "Listings found",
   "Ad və sayt qeyd olunub. Səhv seçmisənsə, dəyişə bilərsən.": "Name and site are saved. If you chose wrong, you can change them.",
   "Biznes məlumatını dəyiş": "Edit business info",
+  "Davam etməklə {terms} və {privacy} qəbul edirsən.": "By continuing, you accept the {terms} and {privacy}.",
+  "Hüquqi": "Legal",
+  "Məxfilik siyasəti": "Privacy Policy",
+  "Məxfilik siyasətini": "Privacy Policy",
+  "Ödəniş və geri qaytarma": "Payments & Refunds",
+  "İstifadə şərtləri": "Terms of Service",
+  "İstifadə şərtlərini": "Terms of Service",
 };
