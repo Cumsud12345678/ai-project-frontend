@@ -7,13 +7,20 @@ import { Input } from "@/components/ui/input";
 export function PasswordInput({ className, ...p }: Omit<React.ComponentProps<"input">, "type">) {
   const t = useT();
   const [show, setShow] = useState(false);
+  const [caps, setCaps] = useState(false);
+  // Caps Lock açıqdırsa xəbərdarlıq: parol səhv görünməsin deyə
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => { setCaps(e.getModifierState?.("CapsLock") ?? false); };
   return (
+    <div className="flex flex-col gap-1">
     <div className="relative">
-      <Input {...p} type={show ? "text" : "password"} className={`h-11 pr-11 ${className ?? ""}`} />
+      <Input {...p} type={show ? "text" : "password"} className={`h-11 pr-11 ${className ?? ""}`} onKeyDown={(e) => { onKey(e); p.onKeyDown?.(e); }} onKeyUp={onKey} onBlur={(e) => { setCaps(false); p.onBlur?.(e); }} />
+
       <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? t("Parolu gizlət") : t("Parolu göstər")} aria-pressed={show}
         className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 cursor-pointer place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
         {show ? <EyeOff size={17} aria-hidden /> : <Eye size={17} aria-hidden />}
       </button>
+    </div>
+    {caps && <p role="status" className="text-xs font-medium text-amber">{t("Caps Lock açıqdır")}</p>}
     </div>
   );
 }
@@ -33,7 +40,7 @@ export function PasswordStrength({ value }: { value: string }) {
   const t = useT();
   const s = strengthOf(value);
   const label = [t("Ən azı 8 simvol."), t("Zəif"), t("Orta"), t("Yaxşı"), t("Güclü")][s];
-  const colors = ["bg-border", "bg-destructive", "bg-amber", "bg-chart-2", "bg-chart-2"];
+  const colors = ["bg-border", "bg-destructive", "bg-amber", "bg-emerald-500", "bg-emerald-600"];
   return (
     <div className="flex flex-col gap-1.5" aria-live="polite">
       <div className="flex gap-1.5" aria-hidden>{[1, 2, 3, 4].map((i) => <span key={i} className={`h-1 flex-1 rounded-full transition-colors ${s >= i ? colors[s] : "bg-border"}`} />)}</div>

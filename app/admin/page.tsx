@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Ban, Bug, ChevronRight, CircleCheck, CircleX, Coins, Hourglass, MailWarning, MessagesSquare, PauseCircle, RefreshCw, Store, UserPlus, Users, WalletCards } from "lucide-react";
+import { Ban, Bug, ChevronRight, Globe, CircleCheck, CircleX, Coins, Hourglass, MailWarning, MessagesSquare, PauseCircle, RefreshCw, Store, UserPlus, Users, WalletCards } from "lucide-react";
 import { adminHealth, adminOverview, type AdminHealth, type AdminOverview } from "@/lib/api";
 import { AdminUsage } from "@/components/admin-usage";
 import { TrendChart, compact } from "@/components/charts";
@@ -46,6 +46,7 @@ function Attention({ o, h }: { o: AdminOverview; h: AdminHealth | null }) {
   const items = [
     o.aiControl?.paused && { icon: PauseCircle, tone: "red", title: t("AI bütün müştərilər üçün dayandırılıb"), note: o.aiControl.reason ?? "", href: "/admin/settings" },
     h && (!h.database.ok || !h.ai.ok) && { icon: CircleX, tone: "red", title: t("Sistemdə nasazlıq var"), note: [!h.database.ok && t("Verilənlər bazası"), !h.ai.ok && t("AI servisi")].filter(Boolean).join(" · "), href: "/admin/errors" },
+    (o.domains?.suspicious ?? 0) > 0 && { icon: Globe, tone: "amber", title: t("{n} domen bir neçə hesabda işlənib", { n: o.domains!.suspicious }), note: t("Eyni sayt fərqli e-poçtlarla qoşulub: pulsuz balans sui-istifadəsi ola bilər."), href: "/admin/domains" },
     o.pendingTopups > 0 && { icon: Hourglass, tone: "amber", title: t("{n} yükləmə sorğusu təsdiq gözləyir", { n: o.pendingTopups }), note: t("Müştəri pulu köçürüb, balans hələ artırılmayıb."), href: "/admin/payments" },
     o.errors.last24h > 0 && { icon: Bug, tone: "amber", title: t("Son 24 saatda {n} xəta", { n: num(o.errors.last24h) }), note: t("Təkrarlanan xətalar qruplaşdırılıb."), href: "/admin/errors" },
     o.tenants.emptyBalance > 0 && { icon: WalletCards, tone: "muted", title: t("{n} saytın balansı bitib", { n: num(o.tenants.emptyBalance) }), note: t("Köməkçi bu saytlarda cavab vermir; xəbərdarlıq etmək olar."), href: "/admin/users?f=lowbal" },

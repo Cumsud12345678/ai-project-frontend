@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Activity, Bug, Coins, CornerUpLeft, HandCoins, LayoutDashboard, Megaphone, Menu, MessagesSquare, PauseCircle, ReceiptText, ScrollText, Search, Settings, Shield, Users, Wallet } from "lucide-react";
+import { Activity, Bug, Globe, Coins, CornerUpLeft, HandCoins, LayoutDashboard, Megaphone, Menu, MessagesSquare, PauseCircle, ReceiptText, ScrollText, Search, Settings, Shield, Users, Wallet } from "lucide-react";
 import { SessionProvider, useSession } from "@/components/session";
 import { Frame, type NavGroup } from "@/components/panel-shell";
 import { adminOverview, type AdminOverview } from "@/lib/api";
@@ -34,7 +34,10 @@ function TwoFactorGate() {
 // Müştəri panelindəki kimi: sol zolaqda əsas bölmələr, içəridə alt səhifələr
 const GROUPS: NavGroup[] = [
   { id: "home", label: "Ümumi", icon: LayoutDashboard, items: [{ href: "/admin", label: "Ümumi baxış", icon: LayoutDashboard }] },
-  { id: "users", label: "Müştərilər", icon: Users, items: [{ href: "/admin/users", label: "İstifadəçilər", icon: Users }] },
+  { id: "users", label: "Müştərilər", icon: Users, items: [
+    { href: "/admin/users", label: "İstifadəçilər", icon: Users },
+    { href: "/admin/domains", label: "Domenlər", icon: Globe },
+  ] },
   { id: "money", label: "Maliyyə", icon: Wallet, items: [
     { href: "/admin/payments", label: "Ödənişlər", icon: ReceiptText },
     { href: "/admin/finance", label: "Gəlir və xərc", icon: Coins },
@@ -94,7 +97,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     const i = setInterval(f, 60_000);
     return () => { on = false; clearInterval(i); };
   }, [pathname]);
-  const sig = (href: string) => href === "/admin/errors" ? { count: o?.errors.last24h ?? 0 } : href === "/admin/payments" ? { count: o?.pendingTopups ?? 0 } : href === "/admin/settings" ? { dot: Boolean(o?.aiControl?.paused) } : {};
+  const sig = (href: string) => href === "/admin/errors" ? { count: o?.errors.last24h ?? 0 } : href === "/admin/payments" ? { count: o?.pendingTopups ?? 0 } : href === "/admin/settings" ? { dot: Boolean(o?.aiControl?.paused) } : href === "/admin/domains" ? { count: o?.domains?.suspicious ?? 0 } : {};
   return (
     <Frame groups={GROUPS} sig={sig} home="/admin" wide
       cross={{ href: "/dashboard", label: "Panel", icon: CornerUpLeft }}

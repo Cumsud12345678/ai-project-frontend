@@ -1,10 +1,11 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { CircleCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, getMe, login, loginTwoFactor } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { AuthShell } from "@/components/auth-shell";
+import { AuthShell, FormError, authLink } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
@@ -56,7 +57,7 @@ function LoginForm() {
 
   if (ticket) return (
     <AuthShell title={t("İki addımlı giriş")} subtitle={t("Authenticator tətbiqindəki 6 rəqəmli kodu yaz.")}
-      footer={<button type="button" className="cursor-pointer text-primary underline" onClick={() => { setTicket(""); setCode(""); setError(""); }}>{t("Başqa hesabla daxil ol")}</button>}>
+      footer={<button type="button" className={`cursor-pointer ${authLink}`} onClick={() => { setTicket(""); setCode(""); setError(""); }}>{t("Başqa hesabla daxil ol")}</button>}>
       <form onSubmit={submitCode} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="code">{t("Kod")}</Label>
@@ -64,7 +65,7 @@ function LoginForm() {
             onChange={(e) => setCode(e.target.value.replace(/[^0-9a-zA-Z-]/g, "").slice(0, 9))} />
           <p className="text-xs text-muted-foreground">{t("Telefon yanında deyilsə, ehtiyat kodlardan birini yaz (məs. abcd-efgh).")}</p>
         </div>
-        {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+        {error && <FormError>{error}</FormError>}
         <Button disabled={busy || code.length < 6} className="h-11 w-full text-[15px]">{busy ? t("Yoxlanılır…") : t("Təsdiqlə")}</Button>
       </form>
     </AuthShell>
@@ -72,18 +73,18 @@ function LoginForm() {
 
   return (
     <AuthShell title={t("Daxil ol")} subtitle={t("Email və parolunla panelə daxil ol.")}
-      footer={<>{t("Hesabın yoxdur?")} <Link href="/register" className="text-primary underline">{t("Hesab aç")}</Link></>}>
-      {params.get("reset") && <p role="status" className="rounded-lg border border-chart-2/30 bg-chart-2/10 px-3 py-2 text-sm">{t("Parol dəyişdirildi. Yeni parolla daxil ol.")}</p>}
+      footer={<>{t("Hesabın yoxdur?")} <Link href="/register" className={authLink}>{t("Hesab aç")}</Link></>}>
+      {params.get("reset") && <p role="status" className="flex items-center gap-2 rounded-lg border border-emerald-600/25 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"><CircleCheck size={16} aria-hidden className="shrink-0" />{t("Parol dəyişdirildi. Yeni parolla daxil ol.")}</p>}
       <form onSubmit={submit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">{t("Email")}</Label>
           <Input id="email" type="email" autoComplete="email" required autoFocus className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-baseline justify-between"><Label htmlFor="password">{t("Parol")}</Label><Link href="/forgot" className="text-sm text-primary hover:underline">{t("Parolu unutdun?")}</Link></div>
+          <div className="flex items-baseline justify-between"><Label htmlFor="password">{t("Parol")}</Label><Link href="/forgot" className="text-sm font-medium text-muted-foreground hover:text-foreground hover:underline">{t("Parolu unutdun?")}</Link></div>
           <PasswordInput id="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+        {error && <FormError>{error}</FormError>}
         <Button disabled={busy} className="h-11 w-full text-[15px]">{busy ? t("Daxil olunur…") : t("Daxil ol")}</Button>
       </form>
     </AuthShell>

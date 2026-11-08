@@ -221,6 +221,7 @@ export const adminFinance = (months = 6) => call<AdminFinance>(`/admin/finance?m
 export type AdminOverview = {
   users: { total: number; verified: number; admins: number; last7d: number; last30d: number };
   tenants: { total: number; modes: Record<string, number>; widgetActive7d: number; emptyBalance: number; suspended?: number };
+  domains?: { suspicious: number; blocked: number };
   usage: { today: UsagePoint & { date: string }; thisMonth: UsagePoint & { month: string }; lastMonth: UsagePoint & { month: string } } | null;
   pendingTopups: number;
   /** Balansa daxil olan real pul (cəmi). AI servisi cavab verməyəndə null. */
@@ -269,7 +270,7 @@ export type ChannelRow = {
 export const adminChannels = () => call<{ rows: ChannelRow[]; summary: { telegram: number; whatsapp: number; waOpen: number; problems: number; waCapacity: { used: number; max: number } } }>("/admin/channels");
 
 // Xəbərdarlıqlar və AI açarı
-export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit";
+export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit" | "domain";
 export type AlertSettings = { email: boolean; telegram: boolean; kinds: Record<AlertKind, boolean>; errorThreshold: number };
 export type AlertsView = {
   settings: AlertSettings; kinds: AlertKind[];
@@ -286,10 +287,24 @@ export const adminAlertsTest = () => post<{ telegram: number; email: number }>("
 export type AiControl = { paused: boolean; reason?: string; by?: string; at?: string };
 export const adminAiControl = () => call<AiControl>("/admin/ai-control");
 export const adminSetAiControl = (paused: boolean, reason = "") => call<AiControl>("/admin/ai-control", { method: "PUT", body: { paused, reason } });
-export type Announcement = { text: string; level: "info" | "warn" | "critical"; active: boolean; updatedAt: string; by: string };
-export const adminAnnouncement = () => call<{ announcement: Announcement | null }>("/admin/announcement");
-export const adminSetAnnouncement = (a: { text: string; level: Announcement["level"]; active: boolean }) => call<{ announcement: Announcement }>("/admin/announcement", { method: "PUT", body: a });
-export const adminDeleteAnnouncement = () => call<{ ok: true }>("/admin/announcement", { method: "DELETE" });
+export type Announcement = { text: string; level: "info" | "warn" | "critical"; active: boolean; updatedAt: string; by: string; expiresAt?: string | null };
+export type AnnouncementHistory = { id: string; text: string; level: Announcement["level"]; by: string; at: string };
+export type AnnouncementView = { announcement: Announcement | null; expired: boolean; history: AnnouncementHistory[] };
+export const adminAnnouncement = () => call<AnnouncementView>("/admin/announcement");
+/** expiresInH: avtomatik gizlənmə (saat), null = müddətsiz, verilməsə əvvəlki qalır */
+export const adminSetAnnouncement = (a: { text: string; level: Announcement["level"]; active: boolean; expiresInH?: number | null }) => call<AnnouncementView>("/admin/announcement", { method: "PUT", body: a });
+export const adminDeleteAnnouncement = () => call<AnnouncementView>("/admin/announcement", { method: "DELETE" });
+export const adminDeleteAnnouncementHistory = (id: string) => call<AnnouncementView>(`/admin/announcement/history/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+// ---- Domenlər: eyni sayt fərqli hesablarda (pulsuz balans sui-istifadəsi), domen bloku ----
+export type DomainAccount = { tenantId: string; userId: string; email: string; host: string; businessName: string; current: boolean; deleted: boolean; suspended: boolean; firstAt: string };
+export type DomainBlock = { domain: string; reason: string; by: string; at: string; suspended: string[] };
+export type DomainGroup = { root: string; accounts: DomainAccount[]; emails: number; block: DomainBlock | null; ok: { domain: string; accounts: number; by: string; at: string } | null; suspicious: boolean; lastAt: string };
+export type DomainFilter = "dup" | "blocked" | "ok" | "all";
+export const adminDomains = (q: { f: DomainFilter; q?: string }) => call<{ groups: DomainGroup[]; counts: Record<DomainFilter, number> }>(`/admin/domains?f=${q.f}${q.q ? `&q=${encodeURIComponent(q.q)}` : ""}`);
+export const adminBlockDomain = (b: { domain: string; reason: string; suspend: boolean }) => call<{ ok: true; block: DomainBlock }>("/admin/domains/block", { method: "POST", body: b });
+export const adminUnblockDomain = (domain: string, restore = true) => call<{ ok: true; restored: number }>("/admin/domains/unblock", { method: "POST", body: { domain, restore } });
+export const adminDomainOk = (domain: string, ok = true) => call<{ ok: true }>("/admin/domains/ok", { method: "POST", body: { domain, ok } });
 export const getAnnouncement = () => call<{ announcement: { text: string; level: Announcement["level"] } | null }>("/announcement");
 /** Brauzer xətasını jurnala göndərir. Heç vaxt xəta atmır və cavab gözlənilmir. */
 export const reportClientError = (e: { message: string; stack?: string; page?: string }) => {

@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const bannerTone = {
-  info: "border-primary/30 bg-primary/10 text-primary",
+  info: "border-border bg-muted text-foreground",
   warn: "border-amber/40 bg-amber/10 text-amber",
   critical: "border-destructive/40 bg-destructive/10 text-destructive",
 } as const;

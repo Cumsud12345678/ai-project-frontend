@@ -5,12 +5,23 @@ import { useRouter } from "next/navigation";
 import { Gift } from "lucide-react";
 import { checkRefCode, register } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { AuthShell } from "@/components/auth-shell";
+import { AuthShell, FormError, authLink } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { PasswordInput, PasswordStrength } from "@/components/password-input";
 
 const REF_RE = /^[A-Za-z0-9_-]{3,20}$/;
+// Tez-tez səhv yazılan e-poçt domenləri: kod səhv ünvana getməsin deyə düzəliş təklif olunur
+const TYPOS: Record<string, string> = {
+  "gmial.com": "gmail.com", "gmai.com": "gmail.com", "gmal.com": "gmail.com", "gmail.co": "gmail.com", "gmail.con": "gmail.com", "gmail.cm": "gmail.com", "gamil.com": "gmail.com", "gnail.com": "gmail.com", "gmail.ru": "gmail.com",
+  "hotmial.com": "hotmail.com", "hotmai.com": "hotmail.com", "hotmail.co": "hotmail.com", "outlok.com": "outlook.com", "outlook.co": "outlook.com",
+  "yaho.com": "yahoo.com", "yahoo.co": "yahoo.com", "yandex.r": "yandex.ru", "mail.r": "mail.ru", "iclod.com": "icloud.com", "icloud.co": "icloud.com",
+};
+function emailFix(email: string): string | null {
+  const m = /^([^@\s]+)@([^@\s]+)$/.exec(email.trim().toLowerCase());
+  const fix = m ? TYPOS[m[2]!] : undefined;
+  return fix ? `${m![1]}@${fix}` : null;
+}
 /** Partnyor linkindən gələn kod (middleware kukiyə yazır) */
 function linkCode(): string {
   try {
@@ -44,6 +55,7 @@ export default function RegisterPage() {
   }, [code]);
 
   const typed = code.trim().toUpperCase();
+  const fix = emailFix(email);
   const source: "link" | "code" = typed && typed === fromLink ? "link" : "code";
   const codeBad = Boolean(typed) && (!REF_RE.test(typed) || (check?.code === typed && !check.valid));
 
@@ -62,12 +74,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthShell title={t("Hesab aç")} subtitle={t("Emailinə təsdiq kodu göndəriləcək.")}
-      footer={<>{t("Artıq hesabın var?")} <Link href="/login" className="text-primary underline">{t("Daxil ol")}</Link></>}>
+    <AuthShell title={t("Hesab aç")} subtitle={t("Pulsuz başla: kart lazım deyil, hər ay 2 AZN balans verilir. Emailinə təsdiq kodu göndəriləcək.")}
+      footer={<>{t("Artıq hesabın var?")} <Link href="/login" className={authLink}>{t("Daxil ol")}</Link></>}>
       <form onSubmit={submit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">{t("Email")}</Label>
-          <Input id="email" type="email" autoComplete="email" required autoFocus className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input id="email" type="email" autoComplete="email" required autoFocus className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} aria-describedby={fix ? "email-fix" : undefined} />
+          {fix && <p id="email-fix" className="text-xs text-muted-foreground">{t("Bunu nəzərdə tuturdun:")} <button type="button" onClick={() => setEmail(fix)} className={`cursor-pointer ${authLink}`}>{fix}</button>?</p>}
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">{t("Parol")}</Label>
@@ -81,14 +94,14 @@ export default function RegisterPage() {
               onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20))} aria-invalid={codeBad || undefined} aria-describedby="ref-hint" />
             <p id="ref-hint" className="min-h-5 text-xs" aria-live="polite">
               {check?.code === typed && check.valid
-                ? <span className="flex items-center gap-1.5 text-chart-2"><Gift size={13} aria-hidden />{check.bonusPct > 0 ? t("Kod qəbul olundu: ilk yükləmədə +{p}% bonus balans (ən çox {cap} AZN).", { p: check.bonusPct, cap: check.bonusCapAzn }) : t("Kod qəbul olundu.")}</span>
+                ? <span className="flex items-center gap-1.5 text-emerald-700"><Gift size={13} aria-hidden />{check.bonusPct > 0 ? t("Kod qəbul olundu: ilk yükləmədə +{p}% bonus balans (ən çox {cap} AZN).", { p: check.bonusPct, cap: check.bonusCapAzn }) : t("Kod qəbul olundu.")}</span>
                 : codeBad && source === "code" ? <span className="text-destructive">{t("Promo kod tapılmadı")}</span> : null}
             </p>
           </div>
         ) : (
-          <button type="button" onClick={() => setShowCode(true)} className="-mt-2 cursor-pointer self-start text-sm text-primary underline">{t("Promo kodun var?")}</button>
+          <button type="button" onClick={() => setShowCode(true)} className={`-mt-2 cursor-pointer self-start text-sm ${authLink}`}>{t("Promo kodun var?")}</button>
         )}
-        {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+        {error && <FormError>{error}</FormError>}
         <Button disabled={busy} className="h-11 w-full text-[15px]">{busy ? t("Göndərilir…") : t("Davam et")}</Button>
       </form>
     </AuthShell>

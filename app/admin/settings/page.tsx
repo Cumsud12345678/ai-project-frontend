@@ -96,6 +96,7 @@ export default function AdminSettingsPage() {
     topup: [t("Yeni yükləmə sorğusu"), t("Müştəri balans yükləmək istəyəndə.")],
     channel: [t("Kanal qırıldı"), t("Müştərinin WhatsApp bağlantısı düşəndə (müştəri üzrə 6 saatda bir).")],
     limit: [t("Gündəlik limit"), t("Müştəri gündəlik xərc limitinə çatanda: qəfil artım ola bilər.")],
+    domain: [t("Eyni domen yeni hesabda"), t("Artıq başqa e-poçtla işlənmiş sayt yeni hesabla qoşulanda: pulsuz balans sui-istifadəsi ola bilər.")],
   };
   const th = Number(threshold);
 

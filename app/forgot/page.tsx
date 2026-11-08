@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { forgot, resetPassword } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { AuthShell } from "@/components/auth-shell";
+import { AuthShell, FormError, authLink } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { OtpInput } from "@/components/otp-input";
@@ -19,6 +19,8 @@ export default function ForgotPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [wait, setWait] = useState(0);
+  useEffect(() => { if (wait <= 0) return; const id = setTimeout(() => setWait((w) => w - 1), 1000); return () => clearTimeout(id); }, [wait]);
 
   async function run(fn: () => Promise<void>) {
     setBusy(true);
@@ -28,20 +30,21 @@ export default function ForgotPage() {
 
   if (step === "email") return (
     <AuthShell title={t("Parolu sıfırla")} subtitle={t("Emailini yaz, sənə kod göndərək.")}
-      footer={<Link href="/login" className="text-primary underline">{t("Girişə qayıt")}</Link>}>
-      <form onSubmit={(e) => { e.preventDefault(); void run(async () => { await forgot(email); setStep("code"); }); }} className="flex flex-col gap-5">
+      footer={<Link href="/login" className={authLink}>{t("Girişə qayıt")}</Link>}>
+      <form onSubmit={(e) => { e.preventDefault(); void run(async () => { await forgot(email); setStep("code"); setWait(60); }); }} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">{t("Email")}</Label>
           <Input id="email" type="email" autoComplete="email" required autoFocus className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
-        {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+        {error && <FormError>{error}</FormError>}
         <Button disabled={busy} className="h-11 w-full text-[15px]">{busy ? t("Göndərilir…") : t("Kod göndər")}</Button>
       </form>
     </AuthShell>
   );
 
   return (
-    <AuthShell title={t("Yeni parol təyin et")} subtitle={t("Bu email üçün hesab varsa, {email} ünvanına kod göndərildi.", { email })}>
+    <AuthShell title={t("Yeni parol təyin et")} subtitle={t("Bu email üçün hesab varsa, {email} ünvanına kod göndərildi.", { email })}
+      footer={<button type="button" className={`cursor-pointer ${authLink}`} onClick={() => { setStep("email"); setCode(""); setPassword(""); setError(""); }}>{t("Emaili dəyiş")}</button>}>
       <form onSubmit={(e) => { e.preventDefault(); void run(async () => { await resetPassword(email, code, password); router.push("/login?reset=1"); }); }} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2"><Label htmlFor="code">{t("Kod")}</Label><OtpInput value={code} onChange={setCode} autoFocus /></div>
         <div className="flex flex-col gap-2">
@@ -49,8 +52,9 @@ export default function ForgotPage() {
           <PasswordInput id="password" autoComplete="new-password" required minLength={8} maxLength={128} value={password} onChange={(e) => setPassword(e.target.value)} />
           <PasswordStrength value={password} />
         </div>
-        {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-        <Button disabled={busy || code.length !== 6} className="h-11 w-full text-[15px]">{busy ? t("Yoxlanır…") : t("Parolu dəyiş")}</Button>
+        {error && <FormError>{error}</FormError>}
+        <Button disabled={busy || code.length !== 6 || password.length < 8} className="h-11 w-full text-[15px]">{busy ? t("Yoxlanır…") : t("Parolu dəyiş")}</Button>
+        <Button type="button" variant="ghost" disabled={wait > 0 || busy} onClick={() => void run(async () => { await forgot(email); setWait(60); })}>{wait > 0 ? t("Kodu yenidən göndər ({n} san)", { n: wait }) : t("Kodu yenidən göndər")}</Button>
       </form>
     </AuthShell>
   );

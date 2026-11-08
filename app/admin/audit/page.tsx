@@ -27,9 +27,10 @@ export default function AdminAuditPage() {
     "tenant.suspend": t("Müştəri dayandırıldı"), "tenant.unsuspend": t("Müştəri bərpa olundu"), "user.revoke_sessions": t("İstifadəçi cihazlardan çıxarıldı"), "user.reset_2fa": t("2FA sıfırlandı"),
     "branding.set": t("Brend yazısı dəyişdi"), "alerts.settings": t("Xəbərdarlıq ayarları dəyişdi"), "ai.pause": t("AI dayandırıldı"), "ai.resume": t("AI yenidən açıldı"), "payments.export": t("Ödənişlər yükləndi"),
     "partner.create": t("Partnyor əlavə olundu"), "partner.update": t("Partnyor dəyişdi"), "partner.payout": t("Partnyora ödəniş"), "partner.adjust": t("Partnyor balansı düzəldildi"),
+    "domain.block": t("Domen bloklandı"), "domain.unblock": t("Domen bloku götürüldü"), "domain.ok": t("Domen normal sayıldı"), "domain.unok": t("Domen yenidən yoxlanacaq"),
     "partner.attach": t("Müştəri partnyora bağlandı"), "partner.detach": t("Müştəri partnyordan ayrıldı"), "partner.settings": t("Partnyor qaydaları dəyişdi"),
   };
-  const groups: [string, string][] = [["", t("Hamısı")], ["billing", t("Balans")], ["tenant", t("Müştəri")], ["user", t("İstifadəçi")], ["ai", "AI"], ["partner", t("Partnyor")], ["alerts", t("Xəbərdarlıq")], ["announcement", t("Elan")], ["errors", t("Xətalar")]];
+  const groups: [string, string][] = [["", t("Hamısı")], ["billing", t("Balans")], ["tenant", t("Müştəri")], ["user", t("İstifadəçi")], ["ai", "AI"], ["partner", t("Partnyor")], ["domain", t("Domen")], ["alerts", t("Xəbərdarlıq")], ["announcement", t("Elan")], ["errors", t("Xətalar")]];
 
   const load = useCallback(async (before?: string) => {
     setBusy(true);
