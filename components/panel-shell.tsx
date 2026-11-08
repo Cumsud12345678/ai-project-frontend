@@ -17,6 +17,13 @@ import { LangSwitch, useI18n } from "@/lib/i18n";
 type Mode = "listings" | "support" | "both";
 type Item = { href: string; label: string; icon: LucideIcon; only?: Mode[]; when?: "noTenant" | "partner"; /** menyuda bu bənddən əvvəl alt başlıq */ section?: string };
 type Group = { id: string; label: string; icon: LucideIcon; items: Item[]; bottom?: boolean };
+/** Çərçivənin ümumi tipləri: müştəri paneli və admin panel eyni çərçivəni işlədir */
+export type NavItem = { href: string; label: string; icon: LucideIcon; section?: string };
+export type NavGroup = { id: string; label: string; icon: LucideIcon; items: NavItem[]; bottom?: boolean };
+/** Menyu bəndi üçün qırmızı sayğac və ya nöqtə */
+export type NavSignal = (href: string) => { count?: number; dot?: boolean };
+/** Digər panelə keçid (Panel → Admin və ya Admin → Panel) və avatar menyusundakı linklər */
+export type NavLink = { href: string; label: string; icon: LucideIcon };
 
 // label: Azərbaycan açarı, render zamanı tərcümə olunur. only: göstərildiyi rejimlər.
 const GROUPS: Group[] = [
@@ -160,7 +167,7 @@ function TopBar({ signals, onSearch, onMenu, menuRef }: { signals: Signals; onSe
 }
 
 // ---------------------------------------------------------------- sol ikon zolağı
-function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups>; active: string; signals: Signals }) {
+function Rail({ groups, active, sig, cross, menuLinks }: { groups: NavGroup[]; active: string; sig: NavSignal; cross?: NavLink; menuLinks: NavLink[] }) {
   const { t } = useI18n();
   const { me, signOut } = useSession();
   // Hesab menyusu: ikon zolağı sürüşən (overflow) olduğu üçün kart orada kəsilirdi və aşağıda sürüşmə yaranırdı.
@@ -184,9 +191,9 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
 
   const link = (g: (typeof groups)[number]) => {
     const on = g.id === active;
-    const sig = g.items.map((i) => itemSignal(i.href, signals));
-    const count = sig.reduce((n, s) => n + (s.count ?? 0), 0);
-    const dot = sig.some((s) => s.dot);
+    const sigs = g.items.map((i) => sig(i.href));
+    const count = sigs.reduce((n, s) => n + (s.count ?? 0), 0);
+    const dot = sigs.some((s) => s.dot);
     return (
       <Link key={g.id} href={g.items[0]!.href} aria-current={on ? "page" : undefined} title={t(g.label)}
         className={cn("group relative flex w-full flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[11px] leading-tight transition-colors", on ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
@@ -203,9 +210,9 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
     <nav aria-label={t("Panel")} className="no-scrollbar hidden w-[84px] shrink-0 flex-col items-center gap-1 overflow-y-auto overflow-x-hidden px-1.5 pb-3 md:flex">
       {groups.filter((g) => !g.bottom).map(link)}
       <div className="mt-auto flex w-full flex-col items-center gap-1 pt-3">
-        {me.role === "admin" && (
-          <Link href="/admin" title={t("Admin")} className="group flex w-full flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[11px] text-muted-foreground hover:text-foreground">
-            <span className="grid size-10 place-items-center rounded-xl group-hover:bg-card/60"><Shield size={20} strokeWidth={1.8} aria-hidden /></span>{t("Admin")}
+        {cross && (
+          <Link href={cross.href} title={t(cross.label)} className="group flex w-full flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+            <span className="grid size-10 place-items-center rounded-xl group-hover:bg-card/60"><cross.icon size={20} strokeWidth={1.8} aria-hidden /></span><span className="max-w-full truncate">{t(cross.label)}</span>
           </Link>
         )}
         {groups.filter((g) => g.bottom).map(link)}
@@ -221,8 +228,7 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
                 <span className="min-w-0 truncate text-sm font-medium">{me.email}</span>
               </div>
               <div className="my-1 h-px bg-border" />
-              <Link role="menuitem" href="/settings" onClick={() => setMenu(null)} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"><Settings size={15} aria-hidden />{t("Ayarlar")}</Link>
-              <Link role="menuitem" href="/settings/notifications" onClick={() => setMenu(null)} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"><Bell size={15} aria-hidden />{t("Bildirişlər")}</Link>
+              {menuLinks.map((l) => <Link key={l.href} role="menuitem" href={l.href} onClick={() => setMenu(null)} className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-muted"><l.icon size={15} aria-hidden />{t(l.label)}</Link>)}
               <div className="my-1 h-px bg-border" />
               <button role="menuitem" type="button" onClick={signOut} className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-muted"><LogOut size={15} aria-hidden />{t("Çıxış")}</button>
             </div>, document.body,
@@ -234,7 +240,7 @@ function Rail({ groups, active, signals }: { groups: ReturnType<typeof useGroups
 }
 
 // ---------------------------------------------------------------- bölmənin menyusu
-function SectionNav({ group, signals, onNavigate, className, compact }: { group: ReturnType<typeof useGroups>[number]; signals: Signals; onNavigate?: () => void; className?: string; compact?: boolean }) {
+function SectionNav({ group, sig, onNavigate, className, compact }: { group: NavGroup; sig: NavSignal; onNavigate?: () => void; className?: string; compact?: boolean }) {
   const { t } = useI18n();
   const pathname = usePathname();
   // Ən uzun uyğun ünvan seçilir: /assistant/profile açıqdırsa "Ümumi baxış" (/assistant) da yanmasın
@@ -246,7 +252,7 @@ function SectionNav({ group, signals, onNavigate, className, compact }: { group:
       <ul className="flex flex-col gap-0.5">
         {group.items.map((i) => {
           const on = i.href === current;
-          const s = itemSignal(i.href, signals);
+          const s = sig(i.href);
           return (
             <li key={i.href}>
               {i.section && <p className="px-3 pb-1 pt-4 text-[13px] font-semibold text-foreground">{t(i.section)}</p>}
@@ -265,9 +271,9 @@ function SectionNav({ group, signals, onNavigate, className, compact }: { group:
 }
 
 // ---------------------------------------------------------------- Ctrl+K
-function CommandPalette({ open, onClose, groups }: { open: boolean; onClose: () => void; groups: ReturnType<typeof useGroups> }) {
+function CommandPalette({ open, onClose, groups, cross }: { open: boolean; onClose: () => void; groups: NavGroup[]; cross?: NavLink }) {
   const { t } = useI18n();
-  const { me, signOut } = useSession();
+  const { signOut } = useSession();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(0);
@@ -276,10 +282,10 @@ function CommandPalette({ open, onClose, groups }: { open: boolean; onClose: () 
 
   const all = useMemo(() => {
     const pages = groups.flatMap((g) => g.items.map((i) => ({ key: i.href, label: t(i.label), group: t(g.label), icon: i.icon, run: () => router.push(i.href) })));
-    if (me.role === "admin") pages.push({ key: "/admin", label: t("Admin"), group: t("Hesab"), icon: Shield, run: () => router.push("/admin") });
+    if (cross) pages.push({ key: cross.href, label: t(cross.label), group: t("Hesab"), icon: cross.icon, run: () => router.push(cross.href) });
     pages.push({ key: "logout", label: t("Çıxış"), group: t("Hesab"), icon: LogOut, run: signOut });
     return pages;
-  }, [groups, me.role, router, signOut, t]);
+  }, [groups, cross, router, signOut, t]);
   const norm = (s: string) => s.toLocaleLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/ı/g, "i").replace(/ə/g, "e");
   const list = all.filter((x) => !q.trim() || norm(`${x.label} ${x.group}`).includes(norm(q.trim())));
   const go = (i: number) => { const x = list[i]; if (!x) return; onClose(); x.run(); };
@@ -318,14 +324,33 @@ function CommandPalette({ open, onClose, groups }: { open: boolean; onClose: () 
 }
 
 // ---------------------------------------------------------------- çərçivə
+/** Müştəri paneli: öz bölmələri, siqnalları və yuxarı zolağı ilə ümumi çərçivə */
 export function PanelFrame({ signals, children }: { signals: Signals; children: React.ReactNode }) {
+  const groups = useGroups();
+  const { me } = useSession();
+  const pathname = usePathname();
+  return (
+    <Frame groups={groups} sig={(h) => itemSignal(h, signals)} home={groups[0]?.items[0]?.href ?? "/dashboard"}
+      cross={me.role === "admin" ? { href: "/admin", label: "Admin", icon: Shield } : undefined}
+      menuLinks={[{ href: "/settings", label: "Ayarlar", icon: Settings }, { href: "/settings/notifications", label: "Bildirişlər", icon: Bell }]}
+      bleed={FULL_BLEED.some((p) => isActive(pathname, p))}
+      topBar={(p) => <TopBar signals={signals} {...p} />}>
+      {children}
+    </Frame>
+  );
+}
+
+/** Ümumi çərçivə: yuxarı zolaq, sol ikon zolağı, bölmə menyusu, telefonda yan menyu və Ctrl+K. Admin panel də bunu işlədir. */
+export function Frame({ groups, sig, home, cross, menuLinks, bleed, wide, topBar, children }: {
+  groups: NavGroup[]; sig: NavSignal; home: string; cross?: NavLink; menuLinks: NavLink[]; bleed?: boolean; /** geniş cədvəlli səhifələr (admin) */ wide?: boolean;
+  topBar: (p: { onSearch: () => void; onMenu: () => void; menuRef: React.RefObject<HTMLButtonElement | null> }) => React.ReactNode; children: React.ReactNode;
+}) {
   const { t } = useI18n();
   const pathname = usePathname();
-  const groups = useGroups();
   const { me, signOut } = useSession();
-  const active = groups.find((g) => g.items.some((i) => isActive(pathname, i.href)))?.id ?? "";
+  // Ən uzun uyğun ünvanın qrupu aktivdir (/admin hər şeyə uyğun gəlməsin)
+  const active = groups.flatMap((g) => g.items.map((i) => ({ g: g.id, h: i.href }))).filter((x) => isActive(pathname, x.h)).sort((a, b) => b.h.length - a.h.length)[0]?.g ?? "";
   const activeGroup = groups.find((g) => g.id === active);
-  const bleed = FULL_BLEED.some((p) => isActive(pathname, p));
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -349,20 +374,20 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
   return (
     <div className="flex h-dvh flex-col bg-shell text-foreground">
       <div className="flex min-w-0 shrink-0 items-center">
-        <Link href={groups[0]?.items[0]?.href ?? "/dashboard"} aria-label={t("Ana səhifə")} className="hidden w-[84px] shrink-0 justify-center md:flex">
+        <Link href={home} aria-label={t("Ana səhifə")} className="hidden w-[84px] shrink-0 justify-center md:flex">
           <span className="grid size-9 place-items-center rounded-xl bg-foreground text-background shadow-sm"><Bot size={19} aria-hidden /></span>
         </Link>
-        <div className="min-w-0 flex-1"><TopBar signals={signals} onSearch={() => setPalette(true)} onMenu={() => setDrawer(true)} menuRef={menuRef} /></div>
+        <div className="min-w-0 flex-1">{topBar({ onSearch: () => setPalette(true), onMenu: () => setDrawer(true), menuRef })}</div>
       </div>
       <div className="flex min-h-0 flex-1">
-        <Rail groups={groups} active={active} signals={signals} />
+        <Rail groups={groups} active={active} sig={sig} cross={cross} menuLinks={menuLinks} />
         {activeGroup && activeGroup.items.length > 1 && (
-          <SectionNav group={activeGroup} signals={signals} className="hidden w-56 shrink-0 overflow-y-auto pr-3 pb-3 md:block" />
+          <SectionNav group={activeGroup} sig={sig} className="hidden w-56 shrink-0 overflow-y-auto pr-3 pb-3 md:block" />
         )}
         <main ref={main} className={cn("min-w-0 flex-1 border-border bg-card md:mr-2 md:mb-2 md:rounded-2xl md:border md:shadow-[0_1px_2px_rgba(15,23,42,.04)]", bleed ? "flex flex-col overflow-hidden" : "overflow-y-auto")}>
           {/* Müraciətlər kimi iş səhifələri bütün sahəni tutur (öz sütunları və sürüşməsi var) */}
           {bleed ? <div className="flex min-h-0 flex-1 flex-col [&>*:last-child]:min-h-0 [&>*:last-child]:flex-1">{children}</div>
-            : <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">{children}</div>}
+            : <div className={cn("mx-auto w-full px-4 py-6 md:px-8 md:py-8", wide ? "max-w-6xl" : "max-w-5xl")}>{children}</div>}
         </main>
       </div>
 
@@ -376,8 +401,8 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
             <button ref={closeRef} type="button" onClick={() => { setDrawer(false); menuRef.current?.focus(); }} aria-label={t("Menyunu bağla")} className="grid size-9 cursor-pointer place-items-center rounded-lg hover:bg-card"><X size={20} aria-hidden /></button>
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-3">
-            {groups.map((g) => <SectionNav key={g.id} group={g} signals={signals} onNavigate={() => setDrawer(false)} compact className={g.items.length === 1 ? "pt-2" : ""} />)}
-            {me.role === "admin" && <Link href="/admin" className="mt-2 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-card"><Shield size={16} aria-hidden />{t("Admin")}</Link>}
+            {groups.map((g) => <SectionNav key={g.id} group={g} sig={sig} onNavigate={() => setDrawer(false)} compact className={g.items.length === 1 ? "pt-2" : ""} />)}
+            {cross && <Link href={cross.href} onClick={() => setDrawer(false)} className="mt-2 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-card"><cross.icon size={16} aria-hidden />{t(cross.label)}</Link>}
           </div>
           <div className="border-t border-border px-2 py-2">
             <p className="truncate px-3 py-1 text-xs text-muted-foreground">{me.email}</p>
@@ -386,7 +411,7 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
         </aside>
       </div>
 
-      <CommandPalette open={palette} onClose={() => setPalette(false)} groups={groups} />
+      <CommandPalette open={palette} onClose={() => setPalette(false)} groups={groups} cross={cross} />
     </div>
   );
 }

@@ -2,11 +2,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bug, Coins, HandCoins, LayoutDashboard, LogOut, Megaphone, MessagesSquare, ReceiptText, ScrollText, Settings, Shield, Users } from "lucide-react";
+import { Activity, Bug, Coins, CornerUpLeft, HandCoins, LayoutDashboard, Megaphone, Menu, MessagesSquare, PauseCircle, ReceiptText, ScrollText, Search, Settings, Shield, Users, Wallet } from "lucide-react";
 import { SessionProvider, useSession } from "@/components/session";
-import { adminOverview } from "@/lib/api";
+import { Frame, type NavGroup } from "@/components/panel-shell";
+import { adminOverview, type AdminOverview } from "@/lib/api";
 import { LangSwitch, useT } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 import { TwoFactorCard } from "@/components/two-factor";
 
 /** ADMIN_2FA=required olanda 2FA qurmamış admin panelin əvəzinə bunu görür. */
@@ -16,7 +16,7 @@ function TwoFactorGate() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-5 px-5 py-10">
       <div className="flex items-center gap-3">
-        <span aria-hidden className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground"><Shield size={20} /></span>
+        <span aria-hidden className="grid size-10 place-items-center rounded-xl bg-foreground text-background"><Shield size={20} /></span>
         <div>
           <h1 className="text-xl font-semibold">{t("Admin panel üçün iki addımlı giriş lazımdır")}</h1>
           <p className="text-sm text-muted-foreground">{t("Admin hesabı balansları və istifadəçiləri idarə edir. Davam etmək üçün authenticator tətbiqini qoş.")}</p>
@@ -31,76 +31,77 @@ function TwoFactorGate() {
   );
 }
 
-const tabs = [
-  { href: "/admin", label: "Ümumi baxış", icon: LayoutDashboard },
-  { href: "/admin/users", label: "İstifadəçilər", icon: Users },
-  { href: "/admin/payments", label: "Ödənişlər", icon: ReceiptText },
-  { href: "/admin/finance", label: "Maliyyə", icon: Coins },
-  { href: "/admin/partners", label: "Partnyorlar", icon: HandCoins },
-  { href: "/admin/channels", label: "Kanallar", icon: MessagesSquare },
-  { href: "/admin/errors", label: "Xətalar", icon: Bug },
-  { href: "/admin/audit", label: "Audit jurnalı", icon: ScrollText },
-  { href: "/admin/announcement", label: "Elan", icon: Megaphone },
-  { href: "/admin/settings", label: "Ayarlar", icon: Settings },
+// Müştəri panelindəki kimi: sol zolaqda əsas bölmələr, içəridə alt səhifələr
+const GROUPS: NavGroup[] = [
+  { id: "home", label: "Ümumi", icon: LayoutDashboard, items: [{ href: "/admin", label: "Ümumi baxış", icon: LayoutDashboard }] },
+  { id: "users", label: "Müştərilər", icon: Users, items: [{ href: "/admin/users", label: "İstifadəçilər", icon: Users }] },
+  { id: "money", label: "Maliyyə", icon: Wallet, items: [
+    { href: "/admin/payments", label: "Ödənişlər", icon: ReceiptText },
+    { href: "/admin/finance", label: "Gəlir və xərc", icon: Coins },
+    { href: "/admin/partners", label: "Partnyorlar", icon: HandCoins },
+  ] },
+  { id: "system", label: "Sistem", icon: Activity, items: [
+    { href: "/admin/channels", label: "Kanallar", icon: MessagesSquare },
+    { href: "/admin/errors", label: "Xətalar", icon: Bug },
+    { href: "/admin/audit", label: "Audit jurnalı", icon: ScrollText },
+  ] },
+  { id: "settings", label: "Ayarlar", icon: Settings, bottom: true, items: [
+    { href: "/admin/settings", label: "Ümumi ayarlar", icon: Settings },
+    { href: "/admin/announcement", label: "Elan", icon: Megaphone },
+  ] },
 ];
 
-/** Yan menyu (kompüter) və üfüqi sürüşən menyu (telefon). Xətalar bölməsində son 24 saatın sayı qırmızı nişanla görünür. */
-function Shell({ children }: { children: React.ReactNode }) {
-  const { me, signOut } = useSession();
-  const pathname = usePathname();
+function AdminTopBar({ o, onSearch, onMenu, menuRef }: { o: AdminOverview | null; onSearch: () => void; onMenu: () => void; menuRef: React.RefObject<HTMLButtonElement | null> }) {
   const t = useT();
-  const [errors, setErrors] = useState(0);
+  const pill = "flex h-9 shrink-0 items-center gap-2 rounded-full bg-card/70 px-3 text-sm ring-1 ring-border/70 transition-colors hover:bg-card";
+  return (
+    <header className="flex h-14 min-w-0 items-center gap-2 px-2 md:px-3">
+      <button ref={menuRef} type="button" onClick={onMenu} aria-label={t("Menyu")} className="relative grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg hover:bg-card md:hidden">
+        <Menu size={20} aria-hidden />
+        {!!o && (o.errors.last24h > 0 || o.pendingTopups > 0) && <span className="absolute top-2 right-2 size-2 rounded-full bg-destructive" />}
+      </button>
+      <Link href="/admin" className={`${pill} pl-1.5`}>
+        <span aria-hidden className="grid size-6 place-items-center rounded-full bg-foreground text-background"><Shield size={13} /></span>
+        <span className="font-medium">{t("Admin panel")}</span>
+      </Link>
+      {o?.aiControl?.paused && (
+        <Link href="/admin/settings" className={`${pill} hidden text-destructive sm:flex`}><PauseCircle size={15} aria-hidden /><span className="font-medium">{t("AI dayandırılıb")}</span></Link>
+      )}
+      {!!o && o.pendingTopups > 0 && (
+        <Link href="/admin/payments" className={`${pill} hidden text-amber lg:flex`}><ReceiptText size={15} aria-hidden /><span className="font-medium">{t("{n} təsdiq gözləyir", { n: o.pendingTopups })}</span></Link>
+      )}
+      <div className="flex min-w-0 flex-1 justify-end md:justify-center">
+        <button type="button" onClick={onSearch} aria-label={t("Axtar və ya keç")} aria-keyshortcuts="Control+K Meta+K"
+          className="flex h-9 cursor-pointer items-center gap-2 rounded-full bg-card/70 px-3 text-sm text-muted-foreground ring-1 ring-border/70 transition-colors hover:bg-card md:w-full md:max-w-md">
+          <Search size={16} aria-hidden />
+          <span className="hidden md:inline">{t("Axtar və ya keç…")}</span>
+          <kbd className="ml-auto hidden rounded border border-border bg-muted px-1.5 font-sans text-[11px] md:inline">Ctrl K</kbd>
+        </button>
+      </div>
+      <LangSwitch className="shrink-0" />
+    </header>
+  );
+}
+
+/** Admin çərçivəsi müştəri paneli ilə eynidir; Xətalar və Ödənişlər yanında qırmızı sayğac görünür. */
+function Shell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [o, setO] = useState<AdminOverview | null>(null);
   useEffect(() => {
     let on = true;
-    const f = () => adminOverview().then((o) => { if (on) setErrors(o.errors.last24h); }).catch(() => {});
+    const f = () => adminOverview().then((r) => { if (on) setO(r); }).catch(() => {});
     f();
     const i = setInterval(f, 60_000);
     return () => { on = false; clearInterval(i); };
   }, [pathname]);
-  const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
-
+  const sig = (href: string) => href === "/admin/errors" ? { count: o?.errors.last24h ?? 0 } : href === "/admin/payments" ? { count: o?.pendingTopups ?? 0 } : href === "/admin/settings" ? { dot: Boolean(o?.aiControl?.paused) } : {};
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[15rem_1fr]">
-      <aside className="hidden bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen md:flex-col md:gap-4 md:p-4">
-        <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-          <span aria-hidden className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground"><Shield size={20} /></span>
-          <div className="min-w-0"><p className="truncate text-sm font-semibold">{t("Car Advisor admin")}</p><p className="truncate text-xs text-sidebar-muted">{me.email}</p></div>
-        </div>
-        <nav aria-label={t("Admin bölmələri")} className="flex flex-col gap-1">
-          {tabs.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined}
-              className={cn("flex items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-sm transition-colors", isActive(href) ? "border-white bg-sidebar-accent font-medium text-white" : "border-transparent text-sidebar-muted hover:bg-sidebar-accent hover:text-white")}>
-              <Icon size={16} aria-hidden /> {t(label)}
-              {href === "/admin/errors" && errors > 0 && <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-white" aria-label={t("Son 24 saatda {n} xəta", { n: errors })}>{errors > 99 ? "99+" : errors}</span>}
-            </Link>
-          ))}
-        </nav>
-        <Link href="/dashboard" className="mt-auto rounded-md px-3 py-2.5 text-sm text-sidebar-muted hover:bg-sidebar-accent hover:text-white">← {t("Panelə qayıt")}</Link>
-        <LangSwitch className="self-start" up alignRight={false} showName />
-        <button onClick={signOut} className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-sidebar-muted hover:bg-sidebar-accent hover:text-white"><LogOut size={16} aria-hidden /> {t("Çıxış")}</button>
-      </aside>
-
-      <div className="min-w-0">
-        <header className="sticky top-0 z-30 border-b border-border bg-card md:hidden">
-          <div className="flex h-12 items-center gap-3 px-4">
-            <p className="flex-1 truncate font-semibold">{t("Car Advisor admin")}</p>
-            <Link href="/dashboard" className="text-sm text-muted-foreground hover:underline">{t("Panelə qayıt")}</Link>
-            <LangSwitch />
-            <button className="cursor-pointer text-sm text-muted-foreground hover:underline" onClick={signOut}>{t("Çıxış")}</button>
-          </div>
-          <nav aria-label={t("Admin bölmələri")} className="flex gap-1 overflow-x-auto px-3">
-            {tabs.map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined}
-                className={cn("-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm", isActive(href) ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground")}>
-                <Icon size={16} aria-hidden /> {t(label)}
-                {href === "/admin/errors" && errors > 0 && <span className="rounded-full bg-destructive px-1.5 text-xs font-semibold text-white">{errors > 99 ? "99+" : errors}</span>}
-              </Link>
-            ))}
-          </nav>
-        </header>
-        <main className="mx-auto w-full max-w-6xl px-5 py-6 md:py-8">{children}</main>
-      </div>
-    </div>
+    <Frame groups={GROUPS} sig={sig} home="/admin" wide
+      cross={{ href: "/dashboard", label: "Panel", icon: CornerUpLeft }}
+      menuLinks={[{ href: "/dashboard", label: "Panelə qayıt", icon: CornerUpLeft }, { href: "/settings/security", label: "Giriş və təhlükəsizlik", icon: Shield }]}
+      topBar={(p) => <AdminTopBar o={o} {...p} />}>
+      {children}
+    </Frame>
   );
 }
 

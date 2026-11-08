@@ -7,9 +7,9 @@ import { X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-export function Modal({ open, onClose, title, description, children, footer, size = "md", busy }: {
+export function Modal({ open, onClose, title, description, children, footer, size = "md", busy, focusFirst = true }: {
   open: boolean; onClose: () => void; title: React.ReactNode; description?: React.ReactNode; children: React.ReactNode; footer?: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl"; /** iş gedərkən fona klik və Esc bağlamasın */ busy?: boolean;
+  size?: "sm" | "md" | "lg" | "xl"; /** iş gedərkən fona klik və Esc bağlamasın */ busy?: boolean; /** false: ilk sahəyə fokuslanmasın (uzun baxış pəncərəsi aşağı sürüşməsin) */ focusFirst?: boolean;
 }) {
   const { t } = useI18n();
   const id = useId();
@@ -22,7 +22,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     // İlk sahəyə fokus (yoxdursa pəncərənin özünə)
-    const first = box.current?.querySelector<HTMLElement>("input:not([type=hidden]):not([disabled]),textarea:not([disabled]),select:not([disabled])");
+    const first = !focusFirst ? null : box.current?.querySelector<HTMLElement>("input:not([type=hidden]):not([disabled]),textarea:not([disabled]),select:not([disabled])");
     (first ?? box.current)?.focus();
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busy) { e.stopPropagation(); close.current(); }
@@ -36,7 +36,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     };
     document.addEventListener("keydown", key);
     return () => { document.removeEventListener("keydown", key); document.body.style.overflow = overflow; prev?.focus?.(); };
-  }, [open, busy]);
+  }, [open, busy, focusFirst]);
   if (!open || typeof document === "undefined") return null;
   const w = { sm: "max-w-md", md: "max-w-xl", lg: "max-w-3xl", xl: "max-w-5xl" }[size];
   return createPortal(

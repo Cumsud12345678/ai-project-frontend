@@ -13,6 +13,7 @@ const EXTRA = [
   "Avtomatika", "Avtomatlaşdırmalar",
   "Ayarlar", "Bildirişlər", "Şirkət məlumatı", "Komanda", "Komanda üzvləri", "Bütün kanallar", "Söhbət qutusu", "Hazır cavablar", "Təhlükəsizlik", "Giriş və təhlükəsizlik", "İnteqrasiyalar", "API girişi", "Ödəniş",
   "Telefon", "WhatsApp", "E-poçt", "Sayt", "Şəhər", "Ünvan", "İş saatları", "Instagram", "Facebook",
+  "Ümumi baxış", "İstifadəçilər", "Ödənişlər", "Gəlir və xərc", "Partnyorlar", "Kanallar", "Xətalar", "Audit jurnalı", "Elan", "Ümumi ayarlar", "Maliyyə", "Sistem", "Panel", "Panelə qayıt",
   "Ümumi baxış", "Profil", "Bacarıqlar",
   "Müştərilər",
   "Əməliyyat tapılmadı",

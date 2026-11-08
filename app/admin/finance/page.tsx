@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Banknote, Coins, PiggyBank, TrendingDown, TrendingUp } from "lucide-react";
 import { adminFinance, type AdminFinance } from "@/lib/api";
+import { FilterPills, PageHeader } from "@/components/page-header";
 import { StatTile } from "@/components/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ export default function AdminFinancePage() {
   const [f, setF] = useState<AdminFinance | null>(null);
   const [error, setError] = useState("");
   const [losingOnly, setLosingOnly] = useState(false);
+  const [tab, setTab] = useState<"months" | "tenants" | "models">("months");
 
   useEffect(() => {
     setF(null); setError("");
@@ -39,13 +41,8 @@ export default function AdminFinancePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">{t("Maliyyə")}</h1>
-          <p className="text-sm text-muted-foreground">{t("Daxil olan pul, AI xərci və mənfəət. Məbləğlər AZN ilədir.")}</p>
-        </div>
-        <Segmented value={range} onChange={setRange} label={t("Dövr")} options={[{ value: "3", label: t("{n} ay", { n: 3 }) }, { value: "6", label: t("{n} ay", { n: 6 }) }, { value: "12", label: t("{n} ay", { n: 12 }) }]} />
-      </header>
+      <PageHeader title={t("Gəlir və xərc")} description={t("Daxil olan pul, AI xərci və mənfəət. Məbləğlər AZN ilədir.")}
+        actions={<Segmented value={range} onChange={setRange} label={t("Dövr")} options={[{ value: "3", label: t("{n} ay", { n: 3 }) }, { value: "6", label: t("{n} ay", { n: 6 }) }, { value: "12", label: t("{n} ay", { n: 12 }) }]} />} />
 
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
@@ -62,7 +59,18 @@ export default function AdminFinancePage() {
         </div>
       )}
 
-      <Card>
+      <FilterPills value={tab} onChange={setTab} label={t("Gəlir və xərc")} items={[
+        { value: "months", label: t("Aylar üzrə") },
+        { value: "tenants", label: t("Müştərilər"), count: f?.tenants.length },
+        { value: "models", label: t("Modellər"), count: f?.models.length },
+      ]} />
+      {f && losing > 0 && tab !== "tenants" && (
+        <button type="button" onClick={() => { setTab("tenants"); setLosingOnly(true); }} className="flex cursor-pointer items-center gap-2 self-start rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10">
+          <TrendingDown size={15} aria-hidden />{t("{n} müştəri zərərə işləyir: xərci gəlirindən çoxdur.", { n: losing })}
+        </button>
+      )}
+
+      {tab === "months" && <Card>
         <CardHeader>
           <CardTitle>{t("Aylar üzrə")}</CardTitle>
           <CardDescription>{t("Gəlir: istifadəyə görə müştəriyə yazılan məbləğ, pulsuz aylıq hissə çıxılmaqla. Mənfəət: gəlir − AI xərci.")}</CardDescription>
@@ -77,9 +85,9 @@ export default function AdminFinancePage() {
                   <YAxis tick={axis} tickLine={false} axisLine={false} width={52} />
                   <Tooltip formatter={(v: number) => azn(v)} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" iconSize={8} />
-                  <Bar dataKey="cash" name={t("Daxil olan pul")} fill="var(--chart-2)" radius={[4, 4, 0, 0]} maxBarSize={22} />
-                  <Bar dataKey="revenue" name={t("Gəlir")} fill="var(--chart-1)" radius={[4, 4, 0, 0]} maxBarSize={22} />
-                  <Bar dataKey="cost" name={t("AI xərci")} fill="var(--chart-5)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                  <Bar dataKey="cash" name={t("Daxil olan pul")} fill="var(--foreground)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                  <Bar dataKey="revenue" name={t("Gəlir")} fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                  <Bar dataKey="cost" name={t("AI xərci")} fill="var(--destructive)" radius={[4, 4, 0, 0]} maxBarSize={22} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -111,7 +119,7 @@ export default function AdminFinancePage() {
                       <td className="px-3 py-2.5 text-right text-muted-foreground">{azn(m.freeAzn)}</td>
                       <td className="px-3 py-2.5 text-right">{azn(m.revenueAzn)}</td>
                       <td className="px-3 py-2.5 text-right">{azn(m.costAzn)}</td>
-                      <td className={cn("px-3 py-2.5 text-right font-medium", m.profitAzn < 0 ? "text-destructive" : "text-chart-2")}>{azn(m.profitAzn)}</td>
+                      <td className={cn("px-3 py-2.5 text-right font-medium", m.profitAzn < 0 ? "text-destructive" : "text-foreground")}>{azn(m.profitAzn)}</td>
                       <td className="px-5 py-2.5 text-right text-muted-foreground">{m.marginPct == null ? "–" : `${m.marginPct}%`}</td>
                     </tr>
                   ))}
@@ -121,10 +129,9 @@ export default function AdminFinancePage() {
           )}
           <p className="text-xs text-muted-foreground">{t("AI xərci provayderin qiymət cədvəlinə görə hesablanır (AI_PRICES). Pulsuz hissə bu yeniləmədən sonra ayrıca yazılır: əvvəlki aylarda gəlirə daxildir.")}</p>
         </CardContent>
-      </Card>
+      </Card>}
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
-        <Card>
+      {tab === "models" && <Card>
           <CardHeader>
             <CardTitle>{t("Model üzrə xərc")}</CardTitle>
             <CardDescription>{t("Seçilmiş dövrdə hər modelə gedən real xərc.")}</CardDescription>
@@ -140,7 +147,7 @@ export default function AdminFinancePage() {
                         <span className="min-w-0 truncate font-mono text-[13px]">{m.model}</span>
                         <span className="shrink-0 font-medium tabular-nums">{azn(m.costAzn)}</span>
                       </div>
-                      <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full" style={{ width: `${Math.max(2, pct)}%`, background: m.provider === "anthropic" ? "var(--chart-4)" : m.provider === "google" ? "var(--chart-1)" : "var(--chart-3)" }} /></div>
+                      <div className="mt-1.5 h-2 rounded-full bg-muted"><div className="h-2 rounded-full" style={{ width: `${Math.max(2, pct)}%`, background: m.provider === "anthropic" ? "var(--foreground)" : m.provider === "google" ? "var(--muted-foreground)" : "var(--border)" }} /></div>
                       <p className="mt-1 text-xs text-muted-foreground tabular-nums">{pct}% · {m.calls.toLocaleString()} {t("çağırış")} · {m.provider === "anthropic" ? "Anthropic" : m.provider === "google" ? "Google" : t("digər")}</p>
                     </li>
                   );
@@ -148,9 +155,9 @@ export default function AdminFinancePage() {
               </ul>
             )}
           </CardContent>
-        </Card>
+        </Card>}
 
-        <Card>
+      {tab === "tenants" && <Card>
           <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
             <div>
               <CardTitle>{t("Müştərilər (son 30 gün)")}</CardTitle>
@@ -180,7 +187,7 @@ export default function AdminFinancePage() {
                         </td>
                         <td className="px-3 py-2.5 text-right">{azn(x.revenueAzn)}{x.freeAzn > 0 && <span className="block text-xs text-muted-foreground">{t("pulsuz")} {azn(x.freeAzn)}</span>}</td>
                         <td className="px-3 py-2.5 text-right">{azn(x.costAzn)}</td>
-                        <td className={cn("px-3 py-2.5 text-right font-medium", x.profitAzn < 0 ? "text-destructive" : "text-chart-2")}>{azn(x.profitAzn)}</td>
+                        <td className={cn("px-3 py-2.5 text-right font-medium", x.profitAzn < 0 ? "text-destructive" : "text-foreground")}>{azn(x.profitAzn)}</td>
                         <td className="px-5 py-2.5 text-right">×{x.markup}{x.customMarkup && <span className="block text-xs text-muted-foreground">{t("fərdi")}</span>}</td>
                       </tr>
                     ))}
@@ -189,8 +196,7 @@ export default function AdminFinancePage() {
               </div>
             )}
           </CardContent>
-        </Card>
-      </div>
+        </Card>}
     </div>
   );
 }
