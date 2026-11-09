@@ -13,8 +13,8 @@ import { Segmented } from "@/components/ui/segmented";
 import { SwitchRow } from "@/components/ui/switch";
 
 type Theme = "light" | "dark" | "auto";
-// Standart vidjet rəngi (narıncı) birinci gəlir
-const SWATCHES = [DEFAULT_ACCENT, "#2563eb", "#16a34a", "#7c3aed", "#db2777", "#18181b"];
+// Standart vidjet rəngi (qara #18181b) birinci gəlir
+const SWATCHES = [DEFAULT_ACCENT, "#ea580c", "#2563eb", "#16a34a", "#7c3aed", "#db2777"];
 const LOGO_MAX = 100 * 1024;
 // Vidjetdəki paletlə eyni (widget.js: PAL). Sahib yalnız əsas rəngi seçir, gecə/gündüz stili hazırdır.
 const PAL = { light: { bg: "#ffffff", fg: "#111827" }, dark: { bg: "#1f2937", fg: "#f3f4f6" } };
