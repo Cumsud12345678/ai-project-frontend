@@ -14,7 +14,7 @@ const EXTRA = [
   "Ayarlar", "Bildirişlər", "Şirkət məlumatı", "Komanda", "Komanda üzvləri", "Bütün kanallar", "Söhbət qutusu", "Hazır cavablar", "Təhlükəsizlik", "Giriş və təhlükəsizlik", "İnteqrasiyalar", "API girişi", "Ödəniş",
   "Telefon", "WhatsApp", "E-poçt", "Sayt", "Şəhər", "Ünvan", "İş saatları", "Instagram", "Facebook",
   "Ümumi baxış", "İstifadəçilər", "Domenlər", "Özüm silənə qədər", "1 saat", "6 saat", "1 gün", "3 gün", "1 həftə", "Ödənişlər", "Gəlir və xərc", "Partnyorlar", "Kanallar", "Xətalar", "Audit jurnalı", "Elan", "Ümumi ayarlar", "Maliyyə", "Sistem", "Panel", "Panelə qayıt",
-  "Ümumi baxış", "Profil", "Bacarıqlar",
+  "Ümumi baxış", "Profil", "Bacarıqlar", "Davranış", "Bilik", "Saytınla əlaqə",
   "Müştərilər",
   "Əməliyyat tapılmadı",
   "Əvvəlcə əməliyyatları saxlayın",

@@ -5,6 +5,7 @@ import { ArrowLeft, Ban, BookPlus, Clock, FileText, Paperclip, Globe, Hand, Inbo
 import { toast } from "sonner";
 import { blockLive, deleteLive, liveFileUrl, sendLiveFile, addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
+import { useResizable } from "@/components/resizable";
 import { useI18n } from "@/lib/i18n";
 import { sendTyping, useLiveEvents } from "@/lib/live-socket";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,8 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
   const [first, setFirst] = useState("");
   const [items, setItems] = useState<LiveItem[] | null>(null);
   const [sel, setSel] = useState(openId ?? "");
+  const listW = useResizable("list", 320, 260, 480, "right");
+  const infoW = useResizable("info", 320, 260, 480, "left", "xl");
   useEffect(() => { if (openId) setSel(openId); }, [openId]);
   useEffect(() => { setSel((s) => (s && s === openId ? s : "")); setStarting(false); }, [status, who, ch]); // eslint-disable-line react-hooks/exhaustive-deps
   const [chat, setChat] = useState<LiveChat | null>(null);
@@ -201,7 +204,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
   const chLabel = (c?: "telegram" | "whatsapp" | null) => (c === "telegram" ? "Telegram" : c === "whatsapp" ? "WhatsApp" : t("Sayt"));
 
   const list = (
-    <section aria-label={title} className={cn("flex min-h-0 w-full shrink-0 flex-col border-border md:w-80 md:border-r", sel && "hidden md:flex")}>
+    <section aria-label={title} style={listW.style} className={cn("relative flex min-h-0 w-full shrink-0 flex-col border-border md:w-[var(--pane-w)] md:border-r", sel && "hidden md:flex")}>{listW.handle}
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
         <h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{title}</h2>
         {status === "open" && <Button size="sm" variant="outline" onClick={openStart} aria-label={t("Yeni söhbət")} title={t("Yeni söhbət")}><MessageSquarePlus size={15} aria-hidden /></Button>}
@@ -277,7 +280,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
   );
 
   const info = chat && (
-    <aside aria-label={t("Müştəri məlumatı")} className={cn("min-h-0 w-80 shrink-0 flex-col overflow-y-auto border-l border-border bg-card", infoOpen ? "absolute inset-y-0 right-0 z-20 flex shadow-xl" : "hidden", "xl:static xl:flex xl:shadow-none")}>
+    <aside aria-label={t("Müştəri məlumatı")} style={infoW.style} className={cn("min-h-0 w-80 shrink-0 xl:w-[var(--pane-w)] flex-col overflow-y-auto border-l border-border bg-card", infoOpen ? "absolute inset-y-0 right-0 z-20 flex shadow-xl" : "hidden", "xl:static xl:flex xl:shadow-none")}>
       <div className="flex items-start gap-3 border-b border-border p-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-base font-semibold text-primary">{initial(chat.name)}</span>
         <div className="min-w-0 flex-1">
@@ -461,6 +464,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
             </form>
           ) : <p className="shrink-0 border-t border-border p-3 text-center text-sm text-muted-foreground">{t("Bu söhbət bağlanıb.")}</p>}
           </div>
+          {info && <div className="relative hidden w-0 shrink-0 xl:block">{infoW.handle}</div>}
           {info}
         </>
       )}

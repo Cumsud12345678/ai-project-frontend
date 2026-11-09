@@ -6,13 +6,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  Activity, BarChart3, Bell, Bot, Building2, Globe, Hash, LayoutGrid, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Rocket,
+  Activity, BarChart3, Bell, Bot, Building2, Globe, Hash, LayoutGrid, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
   Search, Send, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { readiness } from "@/lib/setup-steps";
 import type { Overview } from "@/lib/api";
 import { useSession } from "@/components/session";
+import { TestDock, TestDockTab, useTestDock } from "@/components/test-chat-dock";
 import { LangSwitch, useI18n } from "@/lib/i18n";
 
 type Mode = "listings" | "support" | "both";
@@ -35,31 +36,35 @@ const GROUPS: Group[] = [
   { id: "inbox", label: "Müraciətlər", icon: Inbox, items: [{ href: "/inbox", label: "Müraciətlər", icon: Inbox }] },
   { id: "customers", label: "Müştərilər", icon: Users, items: [{ href: "/customers", label: "Müştərilər", icon: Users }] },
   { id: "ai", label: "Köməkçi", icon: Bot, items: [
+    // 9 səhifə bölmələrə ayrılıb: necə danışır → nəyi bilir → saytınla nə edir
     { href: "/assistant", label: "Ümumi baxış", icon: Activity },
-    { href: "/assistant/profile", label: "Profil", icon: UserRound },
+    { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
+    { href: "/assistant/profile", label: "Profil", icon: UserRound, section: "Davranış" },
     { href: "/assistant/skills", label: "Bacarıqlar", icon: Wand2 },
-    { href: "/knowledge", label: "Bilik bazası", icon: BookOpen },
+    { href: "/knowledge", label: "Bilik bazası", icon: BookOpen, section: "Bilik" },
     { href: "/listings", label: "Kataloq", icon: List, only: ["listings", "both"] },
     { href: "/connection", label: "Elan mənbəyi", icon: Plug, only: ["listings", "both"] },
-    { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck },
+    { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck, section: "Saytınla əlaqə" },
     { href: "/actions", label: "Əməliyyatlar", icon: Zap },
-    { href: "/playground", label: "Sınaq söhbəti", icon: MessageSquare },
   ] },
+  // Kanallar əvvəl Ayarların içində idi: müştərinin harada yazdığı əsas işdir, ayrıca bölmədə daha tez tapılır (ünvanlar dəyişmədi)
+  { id: "channels", label: "Kanallar", icon: Radio, items: [
+    { href: "/settings/channels", label: "Bütün kanallar", icon: LayoutGrid },
+    { href: "/embed", label: "Sayt vidjeti", icon: Globe },
+    { href: "/channels", label: "Telegram və WhatsApp", icon: Send },
+  ] },
+  { id: "automations", label: "Avtomatika", icon: Workflow, items: [{ href: "/automations", label: "Avtomatlaşdırmalar", icon: Workflow }] },
   { id: "reports", label: "Hesabatlar", icon: BarChart3, items: [
     { href: "/reports", label: "Ümumi baxış", icon: Activity },
     { href: "/reports/ai", label: "AI köməkçi", icon: Sparkles },
     { href: "/reports/team", label: "Komanda performansı", icon: Users },
     { href: "/queries", label: "Sorğu jurnalı", icon: MessagesSquare },
   ] },
-  { id: "automations", label: "Avtomatika", icon: Workflow, items: [{ href: "/automations", label: "Avtomatlaşdırmalar", icon: Workflow }] },
   { id: "account", label: "Ayarlar", icon: Settings, bottom: true, items: [
     { href: "/settings", label: "Hesab", icon: UserRound },
     { href: "/settings/notifications", label: "Bildirişlər", icon: Bell },
     { href: "/settings/company", label: "Şirkət məlumatı", icon: Building2 },
     { href: "/settings/team", label: "Komanda üzvləri", icon: Users, section: "Komanda" },
-    { href: "/settings/channels", label: "Bütün kanallar", icon: LayoutGrid, section: "Kanallar" },
-    { href: "/embed", label: "Sayt vidjeti", icon: Globe },
-    { href: "/channels", label: "Telegram və WhatsApp", icon: Send },
     { href: "/settings/canned", label: "Hazır cavablar", icon: Hash, section: "Söhbət qutusu" },
     { href: "/settings/security", label: "Giriş və təhlükəsizlik", icon: ShieldCheck, section: "Təhlükəsizlik" },
     { href: "/settings/api", label: "API girişi", icon: Code, section: "İnteqrasiyalar" },
@@ -325,8 +330,9 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
   const groups = useGroups();
   const { me } = useSession();
   const pathname = usePathname();
+  const dock = useTestDock();
   return (
-    <Frame groups={groups} sig={(h) => itemSignal(h, signals)} home={groups[0]?.items[0]?.href ?? "/dashboard"}
+    <Frame side={dock.available ? <>{!dock.open && <TestDockTab onOpen={() => dock.setOpen(true)} />}<TestDock open={dock.open} onClose={() => dock.setOpen(false)} /></> : null} groups={groups} sig={(h) => itemSignal(h, signals)} home={groups[0]?.items[0]?.href ?? "/dashboard"}
       cross={me.role === "admin" ? { href: "/admin", label: "Admin", icon: Shield } : undefined}
       menuLinks={[{ href: "/settings", label: "Ayarlar", icon: Settings }, { href: "/settings/notifications", label: "Bildirişlər", icon: Bell }]}
       bleed={FULL_BLEED.some((p) => isActive(pathname, p))}
@@ -337,7 +343,8 @@ export function PanelFrame({ signals, children }: { signals: Signals; children: 
 }
 
 /** Ümumi çərçivə: yuxarı zolaq, sol ikon zolağı, bölmə menyusu, telefonda yan menyu və Ctrl+K. Admin panel də bunu işlədir. */
-export function Frame({ groups, sig, home, cross, menuLinks, bleed, wide, topBar, children }: {
+export function Frame({ groups, sig, home, cross, menuLinks, bleed, wide, topBar, side, children }: {
+  /** Səhifənin sağında açılan əlavə panel (məs. sınaq çatı) */ side?: React.ReactNode;
   groups: NavGroup[]; sig: NavSignal; home: string; cross?: NavLink; menuLinks: NavLink[]; bleed?: boolean; /** geniş cədvəlli səhifələr (admin) */ wide?: boolean;
   topBar: (p: { onSearch: () => void; onMenu: () => void; menuRef: React.RefObject<HTMLButtonElement | null> }) => React.ReactNode; children: React.ReactNode;
 }) {
@@ -385,6 +392,7 @@ export function Frame({ groups, sig, home, cross, menuLinks, bleed, wide, topBar
           {bleed ? <div className="flex min-h-0 flex-1 flex-col [&>*:last-child]:min-h-0 [&>*:last-child]:flex-1">{children}</div>
             : <div className={cn("mx-auto w-full px-4 py-6 md:px-8 md:py-8", wide ? "max-w-6xl" : "max-w-5xl")}>{children}</div>}
         </main>
+        {side}
       </div>
 
       {/* Telefon: yandan açılan menyu (bütün bölmələr qruplarla) */}

@@ -2,6 +2,7 @@
 // Qovluqlu səhifə çərçivəsi (Müraciətlər, Müştərilər): solda qruplanmış qovluqlar saylarla, telefonda üfüqi düymələr.
 import { useState } from "react";
 import { ChevronDown, type LucideIcon } from "lucide-react";
+import { useResizable } from "@/components/resizable";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -27,10 +28,11 @@ export function FolderPane<T extends string>({ title, groups, value, onPick, foo
 }) {
   const { t } = useI18n();
   const [closed, setClosed] = useState<string[]>([]);
+  const navW = useResizable("folders", 240, 190, 360, "right");
   const all = groups.flatMap((g) => g.items);
   return (
     <div className="flex h-full min-h-0">
-      <nav aria-label={t("Qovluqlar")} className="hidden w-60 shrink-0 flex-col border-r border-border bg-shell/50 md:flex">
+      <nav aria-label={t("Qovluqlar")} style={navW.style} className="relative hidden w-[var(--pane-w)] shrink-0 flex-col border-r border-border bg-shell/50 md:flex">{navW.handle}
         <PaneHeader title={title} />
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {groups.map((g) => {

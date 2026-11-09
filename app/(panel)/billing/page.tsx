@@ -28,8 +28,11 @@ function Body() {
   if (error) return <p role="alert" className="text-sm text-destructive">{error}</p>;
   if (!b) return <CardSkeleton />;
 
-  const per = b.spend.avgPerRequestAzn ?? b.spend.defaultAvgAzn;
-  const approx = (n: number) => Math.max(1, Math.round(n / per / 10) * 10);
+  // Bir mesajın (köməkçinin bir cavabının) real orta qiyməti: əvvəl öz tarixçən, azdırsa bütün müştərilərin ortası
+  const per = b.spend.estimateAzn ?? b.spend.avgPerRequestAzn ?? b.spend.defaultAvgAzn;
+  const src = b.spend.estimateSource ?? (b.spend.avgPerRequestAzn ? "own" : "default");
+  /** Məbləğə düşən təxmini mesaj sayı: böyük ədədlər yuvarlaqlaşdırılır ki, dəqiq vəd kimi görünməsin */
+  const approx = (n: number) => { const x = n / per; const step = x >= 10000 ? 500 : x >= 1000 ? 100 : 10; return Math.max(1, Math.floor(x / step) * step); };
   const amt = Number(amount.replace(",", "."));
   const valid = Number.isFinite(amt) && amt >= b.minTopupAzn && amt <= b.maxTopupAzn;
   const stateBadge = b.state === "empty" ? <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Balans bitib")}</Badge>
@@ -80,13 +83,15 @@ function Body() {
         <CardHeader>
           <CardTitle>{t("Orta xərc")}</CardTitle>
           <CardDescription>
-            {b.spend.avgPerRequestAzn
-              ? t("Son 30 gündə bir sorğunun orta qiyməti {p} AZN olub.", { p: per.toFixed(3) })
-              : t("Hələ real məlumat yoxdur. Təxmini bir sorğu {p} AZN-dir.", { p: per.toFixed(3) })}
+            {src === "own"
+              ? t("Son 30 gündə köməkçinin bir cavabının orta qiyməti {p} AZN olub ({n} cavab əsasında).", { p: per.toFixed(4), n: num(b.spend.estimateRequests ?? b.spend.last30Requests) })
+              : src === "platform"
+                ? t("Sənin hələ kifayət qədər söhbətin yoxdur. Bütün müştərilərin son 30 gündə real orta qiyməti: bir cavab {p} AZN.", { p: per.toFixed(4) })
+                : t("Hələ real məlumat yoxdur. Təxmini bir cavab {p} AZN-dir.", { p: per.toFixed(4) })}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-1 text-sm">
-          <p>{t("{a} AZN təxminən {n} sorğuya çatır.", { a: 10, n: num(approx(10)) })}</p>
+          <p>{t("{a} AZN təxminən {n} mesaja çatır.", { a: 10, n: num(approx(10)) })}</p>
           {b.spend.projectedMonthAzn != null && <p className="text-muted-foreground">{t("Bu tempdə ay sonuna təxmini xərc: {a} AZN.", { a: b.spend.projectedMonthAzn.toFixed(2) })}</p>}
         </CardContent>
       </Card>
@@ -96,12 +101,13 @@ function Body() {
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             {[10, 20, 50].filter((n) => n >= b.minTopupAzn).map((n) => (
-              <Button key={n} type="button" size="sm" variant={amt === n ? "default" : "outline"} onClick={() => setAmount(String(n))}>{n} AZN</Button>
+              <Button key={n} type="button" size="sm" variant={amt === n ? "default" : "outline"} onClick={() => setAmount(String(n))}>{n} AZN <span className={amt === n ? "font-normal text-background/70" : "font-normal text-muted-foreground"}>≈ {num(approx(n))}</span></Button>
             ))}
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="amt">{t("Məbləğ (AZN)")}</Label>
             <Input id="amt" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="max-w-40" aria-invalid={!valid} />
+            {valid && <p className="text-sm" aria-live="polite">{t("≈ {n} mesaj", { n: num(approx(amt)) })} <span className="text-muted-foreground">· {t("köməkçinin bir cavabı = 1 mesaj, real orta qiymətlə hesablanıb")}</span></p>}
             {!valid && <p className="text-xs text-destructive">{t("Məbləğ {min} ilə {max} AZN arasında olmalıdır.", { min: b.minTopupAzn, max: b.maxTopupAzn })}</p>}
           </div>
           <div><Button onClick={submit} disabled={!valid || busy}>{t("Yükləmə sorğusu göndər")}</Button></div>

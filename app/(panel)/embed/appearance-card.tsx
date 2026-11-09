@@ -224,8 +224,8 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
             </div>
             <SwitchRow checked={pulse} onChange={setPulse} on={t("Açıq")} off={t("Bağlı")} title={t("Dalğa effekti")}
               description={t("Çat düyməsinin ətrafında rəngi ilə yumşaq dalğa yayılır.")} />
-            <SwitchRow checked={bounce} onChange={setBounce} on={t("Açıq")} off={t("Bağlı")} title={t("Atılma effekti")}
-              description={t("Çat düyməsi bir neçə saniyədən bir yüngülcə yuxarı-aşağı atılır.")} />
+            <SwitchRow checked={bounce} onChange={setBounce} on={t("Açıq")} off={t("Bağlı")} title={t("Süzülmə effekti")}
+              description={t("Çat düyməsi yerində çox yavaş, yumşaq şəkildə yuxarı-aşağı süzülür.")} />
             <ImageField img={logo} kind="logo" label={t("Çat düyməsinin loqosu")} fallback={<MessageCircle size={20} aria-hidden />}
               hint={t("Saytında küncdəki çat düyməsində göstərilir. Yüklənməsə, standart çat ikonu çıxır.")} />
             <ImageField img={avatar} kind="avatar" label={t("Profil şəkli")} fallback={<Bot size={20} aria-hidden />}

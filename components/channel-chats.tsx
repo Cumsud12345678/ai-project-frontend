@@ -7,6 +7,7 @@ import { ArrowLeft, Bot, Headset, Phone, Send, TriangleAlert, UserRound } from "
 import { toast } from "sonner";
 import { getChannelChats, getConversation, startLiveChat, type ChannelChat, type ConversationMsg, type ConvListing, type Listing } from "@/lib/api";
 import { ListingCards } from "@/components/listing-cards";
+import { useResizable } from "@/components/resizable";
 import { useI18n } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,8 @@ const toListing = (l: ConvListing, i: number): Listing => ({ id: l.id ?? `l${i}`
 
 export function ChannelChats({ channel, title, liveEnabled, onLive }: { channel: "telegram" | "whatsapp"; title: string; liveEnabled: boolean; onLive: (liveId: string) => void }) {
   const { t, locale } = useI18n();
+  // Siyahının eni bütün söhbət səhifələrində ortaqdır və yadda qalır
+  const listW = useResizable("list", 320, 260, 480, "right");
   const [items, setItems] = useState<ChannelChat[] | null>(null);
   const [connected, setConnected] = useState(true);
   const [sel, setSel] = useState("");
@@ -85,7 +88,7 @@ export function ChannelChats({ channel, title, liveEnabled, onLive }: { channel:
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1">
-      <section aria-label={title} className={cn("flex min-h-0 w-full shrink-0 flex-col border-border md:w-80 md:border-r", sel && "hidden md:flex")}>
+      <section aria-label={title} style={listW.style} className={cn("relative flex min-h-0 w-full shrink-0 flex-col border-border md:w-[var(--pane-w)] md:border-r", sel && "hidden md:flex")}>{listW.handle}
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4"><h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{title}</h2></div>
         <p className="border-b border-border px-4 py-2.5 text-xs text-muted-foreground">{t("{ch}-da botla yazışan müştərilər (son 14 gün). Yazışmaya bax, lazım olsa söhbəti ələ al.", { ch: name })}</p>
         <div className="min-h-0 flex-1 overflow-y-auto p-2">

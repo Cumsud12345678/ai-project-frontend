@@ -550,7 +550,9 @@ export type Billing = {
   state: BillingState;
   allowance: { freeAzn: number; period: "monthly" | "once" };
   minTopupAzn: number; maxTopupAzn: number; lowAzn: number; enforced: boolean;
-  spend: { monthAzn: number; monthRequests: number; last30Azn: number; last30Requests: number; avgPerRequestAzn: number | null; defaultAvgAzn: number; projectedMonthAzn: number | null };
+  spend: { monthAzn: number; monthRequests: number; last30Azn: number; last30Requests: number; avgPerRequestAzn: number | null; defaultAvgAzn: number; projectedMonthAzn: number | null;
+    /** Təxmin üçün bir mesajın qiyməti: own = öz son 30 günü, platform = bütün müştərilərin real ortası, default = hələ heç bir tarixçə yoxdur */
+    estimateAzn?: number; estimateSource?: "own" | "platform" | "default"; estimateRequests?: number };
   pendingRequests: TopupRequest[];
   days?: { date: string; spentAzn: number; requests: number }[];
   ledger?: { id: string; at: string; type: string; amountAzn: number; note: string }[];
