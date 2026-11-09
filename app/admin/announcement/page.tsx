@@ -55,7 +55,7 @@ export default function AdminAnnouncementPage() {
                 {cur.expiresAt && <> · <Clock size={12} className="inline -translate-y-px" aria-hidden /> {v?.expired ? t("müddəti bitib") : t("{d} tarixində gizlənəcək", { d: date(cur.expiresAt) })}</>}
               </CardDescription>
             </div>
-            <Badge className={live ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}>{live ? t("İndi yayımdadır") : v?.expired ? t("Müddəti bitib") : t("Hazırda gizlidir")}</Badge>
+            <Badge className={live ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" : "bg-muted text-muted-foreground"}>{live ? t("İndi yayımdadır") : v?.expired ? t("Müddəti bitib") : t("Hazırda gizlidir")}</Badge>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <AnnouncementView text={cur.text} level={cur.level} />

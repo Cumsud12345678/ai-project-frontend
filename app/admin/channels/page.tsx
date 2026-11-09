@@ -27,8 +27,8 @@ export default function AdminChannelsPage() {
   useEffect(() => { void load(); }, [load]);
 
   const waLabel: Record<WhatsAppState, [string, string]> = {
-    open: [t("qoşulub"), "bg-muted text-foreground"], connecting: [t("qoşulur"), "bg-amber/15 text-amber"], qr: [t("QR gözləyir"), "bg-amber/15 text-amber"],
-    error: [t("qırılıb"), "bg-destructive/10 text-destructive"], replaced: [t("başqa yerdə açılıb"), "bg-destructive/10 text-destructive"], off: [t("işləmir"), "bg-destructive/10 text-destructive"],
+    open: [t("qoşulub"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"], connecting: [t("qoşulur"), "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"], qr: [t("QR gözləyir"), "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"],
+    error: [t("qırılıb"), "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"], replaced: [t("başqa yerdə açılıb"), "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"], off: [t("işləmir"), "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"],
   };
   const problemText: Record<ChannelRow["problems"][number], string> = {
     wa_down: t("WhatsApp bağlantısı yoxdur"), wa_connecting: t("WhatsApp yenidən qoşulur"), errors: t("24 saatda çox xəta"), suspended: t("hesab dayandırılıb"),

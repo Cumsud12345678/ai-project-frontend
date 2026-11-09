@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { chat, getWidget, type ChatMessage } from "@/lib/api";
 import { Rich, useSampleIdeas } from "@/components/assistant-preview";
+import { accentStyle } from "@/lib/accent";
 import { useI18n } from "@/lib/i18n";
 import { ListingCards } from "@/components/listing-cards";
 import { RequireTenant, useSession } from "@/components/session";
@@ -67,7 +68,7 @@ function Playground() {
 
       <ol className="flex flex-col gap-4">
         {messages.map((m, i) => (
-          <li key={i} className={m.role === "user" ? "self-end max-w-[85%] rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground" : "flex flex-col gap-3 text-sm"}>
+          <li key={i} className={m.role === "user" ? "self-end max-w-[85%] rounded-lg px-4 py-2 text-sm" : "flex flex-col gap-3 text-sm"} style={m.role === "user" ? accentStyle(accent) : undefined}>
             {m.role === "user" ? m.text : (
               <>
                 <div className="rounded-lg border border-border bg-card px-4 py-3"><Rich text={m.text} /></div>

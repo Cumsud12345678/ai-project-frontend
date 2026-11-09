@@ -24,6 +24,8 @@ export type WidgetSettings = {
   color: string;
   bg?: string; // əlavə edildi
   theme?: "light" | "dark" | "auto";
+  /** Çat düyməsinin effektləri: rəngli dalğa (pulse) və yüngül atılma (bounce) */
+  effects?: { pulse: boolean; bounce: boolean };
   logoUrl?: string | null;
   /** Çatın içindəki profil şəkli (başlıq və bot mesajları). null: standart robot ikonu. */
   avatarUrl?: string | null;

@@ -169,8 +169,8 @@ function SourceRow({ s, onChange }: { s: KbSource; onChange: () => void }) {
       </div>
       <div className="flex items-center gap-2 pl-8 sm:pl-0">
         {s.status === "processing" && <Badge className="gap-1"><Loader2 size={12} className="animate-spin" aria-hidden />{t("Oxunur…")}</Badge>}
-        {s.status === "ready" && <Badge className="bg-primary/15 text-primary">{t("Hazırdır")}</Badge>}
-        {s.status === "failed" && <Badge className="bg-destructive/15 text-destructive">{t("Alınmadı")}</Badge>}
+        {s.status === "ready" && <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Hazırdır")}</Badge>}
+        {s.status === "failed" && <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Alınmadı")}</Badge>}
         {(s.type === "url" || s.type === "site") && s.status !== "processing" && (
           <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => kbRefresh(s.id), t("Yenidən oxunur…"))} aria-label={t("Yenilə")}><RefreshCw size={14} aria-hidden /><span className="hidden sm:inline">{t("Yenilə")}</span></Button>
         )}

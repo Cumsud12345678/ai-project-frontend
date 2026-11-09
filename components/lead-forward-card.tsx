@@ -88,9 +88,9 @@ export function LeadForwardCard({ bare, onChange }: { bare?: boolean; onChange?:
         <p className="text-xs text-muted-foreground">{t("Yeni müraciət (ad, əlaqə, sual) paneldən və e-poçtdan əlavə, burada seçdiyin yerə də dərhal göndərilsin. Heç bir rəsmi icazə lazım deyil.")}</p>
       </div>}
 
-      {v.telegramAvailable && (
-        <Row icon={<Send size={15} aria-hidden className="text-primary" />} title={t("Telegram qrupu")}>
-          {v.telegram ? <Linked text={v.telegram.title || t("Qrup qoşulub")} onRemove={() => remove("telegram")} label={t("Ayır")} />
+      <Row icon={<Send size={15} aria-hidden className="text-primary" />} title={t("Telegram qrupu")}>
+          {!v.telegramAvailable && !v.telegram ? <p className="text-xs text-muted-foreground">{t("Telegram qrupuna göndərmə hazırda əlçatan deyil. Tezliklə açılacaq; o vaxta qədər Bitrix24, Google Sheets və ya e-poçtdan istifadə et.")}</p>
+          : v.telegram ? <Linked text={v.telegram.title || t("Qrup qoşulub")} onRemove={() => remove("telegram")} label={t("Ayır")} />
             : (
               <>
                 <p className="text-xs text-muted-foreground">{t("Satış komandanın Telegram qrupu varsa: düyməni bas, açılan pəncərədə qrupu seç. Bot qrupa əlavə olunur və müraciətləri ora yazır.")}</p>
@@ -99,7 +99,6 @@ export function LeadForwardCard({ bare, onChange }: { bare?: boolean; onChange?:
             )}
           {res("telegram")}
         </Row>
-      )}
 
       <Row icon={<Sheet size={15} aria-hidden className="text-primary" />} title="Bitrix24">
         {v.bitrix ? <Linked text={v.bitrix.host} onRemove={() => remove("bitrix")} label={t("Ayır")} />

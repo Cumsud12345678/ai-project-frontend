@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 function GroupCard({ g, onBlock, onUnblock, onOk }: { g: DomainGroup; onBlock: () => void; onUnblock: () => void; onOk: (ok: boolean) => void }) {
   const { t, day } = useI18n();
   const status = (a: DomainGroup["accounts"][number]) =>
-    a.deleted ? [t("Silinib"), "bg-muted text-muted-foreground"] : a.suspended ? [t("Dayandırılıb"), "bg-destructive/10 text-destructive"] : !a.current ? [t("Domenini dəyişib"), "bg-muted text-muted-foreground"] : [t("Aktiv"), "bg-foreground text-background"];
+    a.deleted ? [t("Silinib"), "bg-muted text-muted-foreground"] : a.suspended ? [t("Dayandırılıb"), "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"] : !a.current ? [t("Domenini dəyişib"), "bg-muted text-muted-foreground"] : [t("Aktiv"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"];
   return (
     <article className={cn("overflow-hidden rounded-2xl border bg-card", g.block ? "border-destructive/40" : g.suspicious ? "border-amber/50" : "border-border")}>
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
@@ -26,8 +26,8 @@ function GroupCard({ g, onBlock, onUnblock, onOk }: { g: DomainGroup; onBlock: (
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-2">
             <a href={`https://${g.root}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold hover:underline">{g.root}<ExternalLink size={13} aria-hidden /></a>
-            {g.block && <Badge className="bg-destructive/10 text-destructive">{t("Bloklanıb")}</Badge>}
-            {g.suspicious && <Badge className="bg-amber/15 text-amber">{t("Şübhəli")}</Badge>}
+            {g.block && <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Bloklanıb")}</Badge>}
+            {g.suspicious && <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("Şübhəli")}</Badge>}
             {g.ok && <Badge className="bg-muted text-foreground">{t("Normal sayılıb")}</Badge>}
           </p>
           <p className="text-xs text-muted-foreground">

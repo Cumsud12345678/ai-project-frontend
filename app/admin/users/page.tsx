@@ -263,8 +263,8 @@ function StatusBadges({ u }: { u: AdminUser }) {
     <>
       {u.isAdmin && <Badge className="bg-foreground text-background">{u.isOwner ? t("Əsas admin") : t("Admin")}</Badge>}
       {u.twoFactor && <Badge className="gap-1 bg-muted text-foreground"><ShieldCheck size={12} aria-hidden />2FA</Badge>}
-      {u.tenant?.suspended && <Badge className="bg-destructive/10 text-destructive">{t("Dayandırılıb")}</Badge>}
-      {!u.verified && <Badge className="bg-amber/15 text-amber">{t("Təsdiqlənməyib")}</Badge>}
+      {u.tenant?.suspended && <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Dayandırılıb")}</Badge>}
+      {!u.verified && <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("Təsdiqlənməyib")}</Badge>}
     </>
   );
 }

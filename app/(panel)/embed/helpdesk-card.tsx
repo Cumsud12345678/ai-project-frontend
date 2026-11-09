@@ -30,9 +30,16 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
   const dirty = liveOn !== Boolean(w.live?.enabled) || csat !== (w.live?.csat !== false) || JSON.stringify(hours) !== JSON.stringify(w.live?.hours ?? null);
   const setDay = (i: number, v: { from: string; to: string } | null) => hours && setHours({ ...hours, days: hours.days.map((d, j) => (j === i ? v : d)) });
 
+  // Boş saat, səhv saat qurşağı və ya iş günü seçilməməsi saxlanmadan əvvəl tutulur
+  const tzOk = (z: string) => { try { new Intl.DateTimeFormat("en", { timeZone: z }); return true; } catch { return false; } };
+  const hoursErr = !hours ? "" : !hours.tz || !tzOk(hours.tz) ? t("Saat qurşağı düzgün deyil (məs. Asia/Baku).")
+    : hours.days.every((d) => !d) ? t("Ən azı bir iş günü seç.")
+    : hours.days.some((d) => d && (!d.from || !d.to)) ? t("Seçilmiş günlərdə başlanğıc və bitiş saatını yaz.")
+    : hours.days.some((d) => d && d.from === d.to && d.from !== "00:00") ? t("Başlanğıc və bitiş eyni ola bilməz (bütün gün üçün 00:00–00:00).") : "";
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!dirty || busy) return;
+    if (hoursErr) { toast.error(hoursErr); return; }
     setBusy(true);
     try {
       onChange(await saveWidget({ live: { enabled: liveOn, csat, hours } }));
@@ -82,6 +89,7 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
                 <p className="text-xs text-muted-foreground">{t("Gecə növbəsi üçün bitişi başlanğıcdan kiçik yaz (məs. 22:00–02:00, ertəsi gün bitir). 00:00–00:00 bütün gün deməkdir.")}</p>
               </div>
             )}
+            {hoursErr && <p role="alert" className="text-xs text-destructive">{hoursErr}</p>}
             {!liveOn && hours && <p className="text-xs text-muted-foreground">{t("Canlı operator bağlıdır: işçi saatları yadda qalır, amma operator açılana qədər təsir etmir.")}</p>}
           </div>
 

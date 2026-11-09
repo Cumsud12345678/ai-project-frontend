@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Bot, ImagePlus, MessageCircle, MoreHorizontal, Paperclip, Smile, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { deleteWidgetImage, saveWidget, uploadWidgetImage, type WidgetImageKind, type WidgetResponse } from "@/lib/api";
+import { DEFAULT_ACCENT } from "@/lib/accent";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import { Segmented } from "@/components/ui/segmented";
 import { SwitchRow } from "@/components/ui/switch";
 
 type Theme = "light" | "dark" | "auto";
+// Standart vidjet rəngi (narıncı) birinci gəlir
+const SWATCHES = [DEFAULT_ACCENT, "#2563eb", "#16a34a", "#7c3aed", "#db2777", "#18181b"];
 const LOGO_MAX = 100 * 1024;
 // Vidjetdəki paletlə eyni (widget.js: PAL). Sahib yalnız əsas rəngi seçir, gecə/gündüz stili hazırdır.
 const PAL = { light: { bg: "#ffffff", fg: "#111827" }, dark: { bg: "#1f2937", fg: "#f3f4f6" } };
@@ -36,7 +39,7 @@ async function shrink(file: File): Promise<string> {
 }
 
 /** Saytdakı vidjetin kiçik surəti: yazılar, rəng, loqo, profil şəkli və rejim dəyişəndə dərhal dəyişir. */
-function Preview({ mode, setMode, accent, title, greeting, label, logo, avatar, side }: { mode: "light" | "dark"; setMode: (m: "light" | "dark") => void; accent: string; title: string; greeting: string; label: string; logo: string | null; avatar: string | null; side: "right" | "left" }) {
+function Preview({ mode, setMode, accent, title, greeting, label, logo, avatar, side, pulse, bounce }: { mode: "light" | "dark"; setMode: (m: "light" | "dark") => void; accent: string; title: string; greeting: string; label: string; logo: string | null; avatar: string | null; side: "right" | "left"; pulse: boolean; bounce: boolean }) {
   const { t } = useI18n();
   const { bg, fg } = PAL[mode];
   const onAccent = textFor(accent);
@@ -84,7 +87,7 @@ function Preview({ mode, setMode, accent, title, greeting, label, logo, avatar, 
           </div>
         </div>
         <div className={cn("flex items-center gap-2", side === "left" ? "flex-row" : "flex-row-reverse")}>
-          <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-full shadow-md" style={{ background: logo ? bg : accent, color: onAccent }}>
+          <span className={cn("grid size-11 shrink-0 place-items-center overflow-hidden rounded-full shadow-md", pulse && "fx-pulse", bounce && "fx-bounce")} style={{ background: logo ? bg : accent, color: onAccent, ["--accent" as string]: accent }}>
             {logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="" className="size-full object-cover" />
@@ -157,6 +160,8 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
   const [color, setColor] = useState(w.color);
   const [label, setLabel] = useState(w.label ?? "");
   const [theme, setTheme] = useState<Theme>(w.theme ?? "light");
+  const [pulse, setPulse] = useState(Boolean(w.effects?.pulse));
+  const [bounce, setBounce] = useState(Boolean(w.effects?.bounce));
   const [prev, setPrev] = useState<"light" | "dark">(w.theme === "dark" ? "dark" : "light");
   const [busy, setBusy] = useState(false);
   // Loqo (çat düyməsi) və profil şəkli (çatın içi) ayrıdır; seçiləndə yalnız önbaxışda dəyişir, "Saxla" ilə göndərilir
@@ -164,7 +169,7 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
   const avatar = useImagePick(w.avatarUrl);
 
   const colorOk = /^#[0-9a-fA-F]{6}$/.test(color);
-  const dirty = enabled !== w.enabled || title !== w.title || greeting !== w.greeting || color !== w.color || label !== (w.label ?? "") || theme !== (w.theme ?? "light") || logo.pending !== undefined || avatar.pending !== undefined;
+  const dirty = enabled !== w.enabled || title !== w.title || greeting !== w.greeting || color !== w.color || label !== (w.label ?? "") || theme !== (w.theme ?? "light") || pulse !== Boolean(w.effects?.pulse) || bounce !== Boolean(w.effects?.bounce) || logo.pending !== undefined || avatar.pending !== undefined;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -176,7 +181,7 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
         if (img.pending === undefined) continue;
         if (img.pending === null) await deleteWidgetImage(kind); else await uploadWidgetImage(kind, img.pending);
       }
-      onChange(await saveWidget({ enabled, title, greeting, color, label, theme }));
+      onChange(await saveWidget({ enabled, title, greeting, color, label, theme, effects: { pulse, bounce } }));
       logo.reset(); avatar.reset();
       toast.success(t("Saxlandı. Dəyişiklik saytda səhifə yenilənəndə görünəcək.")); }
     catch (err) { toast.error((err as Error).message); }
@@ -195,9 +200,15 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
             <div className="flex flex-col gap-1"><Label htmlFor="title">{t("Başlıq")}</Label><Input id="title" required maxLength={60} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="color">{t("Rəng")}</Label>
-              <div className="flex gap-2">
-                <input aria-label={t("Rəng seçici")} type="color" value={colorOk ? color : "#ea580c"} onChange={(e) => setColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded-md border border-border bg-card p-1" />
-                <Input id="color" pattern="#[0-9a-fA-F]{6}" maxLength={7} value={color} onChange={(e) => setColor(e.target.value)} className="font-mono" aria-invalid={!colorOk} />
+              <div className="flex flex-wrap gap-2">
+                <input aria-label={t("Rəng seçici")} type="color" value={colorOk ? color : DEFAULT_ACCENT} onChange={(e) => setColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded-md border border-border bg-card p-1" />
+                <Input id="color" pattern="#[0-9a-fA-F]{6}" maxLength={7} value={color} onChange={(e) => setColor(e.target.value)} className="w-28 font-mono" aria-invalid={!colorOk} />
+                <div className="flex items-center gap-1.5" role="group" aria-label={t("Hazır rənglər")}>
+                  {SWATCHES.map((c) => (
+                    <button key={c} type="button" onClick={() => setColor(c)} aria-label={c === DEFAULT_ACCENT ? t("Standart rəng") : c} aria-pressed={color.toLowerCase() === c} title={c === DEFAULT_ACCENT ? t("Standart rəng") : c}
+                      className={cn("size-6 cursor-pointer rounded-full ring-offset-2 ring-offset-card transition-shadow", color.toLowerCase() === c ? "ring-2 ring-foreground" : "hover:ring-2 hover:ring-border")} style={{ background: c }} />
+                  ))}
+                </div>
               </div>
               <p className="text-xs text-muted-foreground">{t("Əsas rəng. Gecə rejimi bu rəngə uyğun avtomatik hazırlanır.")}</p>
             </div>
@@ -211,6 +222,10 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
               <Segmented value={theme} onChange={changeTheme} label={t("Açılış rejimi")} options={[{ value: "light", label: t("Gündüz") }, { value: "dark", label: t("Gecə") }, { value: "auto", label: t("Avtomatik") }]} />
               <p className="text-xs text-muted-foreground">{t("Ziyarətçi çatı ilk açanda necə görünsün. “Avtomatik” onun cihaz ayarına uyğun olur. İstəsə düymə ilə dəyişir.")}</p>
             </div>
+            <SwitchRow checked={pulse} onChange={setPulse} on={t("Açıq")} off={t("Bağlı")} title={t("Dalğa effekti")}
+              description={t("Çat düyməsinin ətrafında rəngi ilə yumşaq dalğa yayılır.")} />
+            <SwitchRow checked={bounce} onChange={setBounce} on={t("Açıq")} off={t("Bağlı")} title={t("Atılma effekti")}
+              description={t("Çat düyməsi bir neçə saniyədən bir yüngülcə yuxarı-aşağı atılır.")} />
             <ImageField img={logo} kind="logo" label={t("Çat düyməsinin loqosu")} fallback={<MessageCircle size={20} aria-hidden />}
               hint={t("Saytında küncdəki çat düyməsində göstərilir. Yüklənməsə, standart çat ikonu çıxır.")} />
             <ImageField img={avatar} kind="avatar" label={t("Profil şəkli")} fallback={<Bot size={20} aria-hidden />}
@@ -219,7 +234,7 @@ export function AppearanceCard({ data, onChange }: { data: WidgetResponse; onCha
             <div className="flex flex-col gap-1 sm:col-span-2"><Label htmlFor="greeting">{t("Salamlama mesajı")}</Label><Textarea id="greeting" required maxLength={300} value={greeting} onChange={(e) => setGreeting(e.target.value)} /></div>
           </div>
           <div className="lg:sticky lg:top-4 lg:self-start">
-            <Preview mode={prev} setMode={setPrev} accent={colorOk ? color : "#ea580c"} title={title.trim()} greeting={greeting.trim()} label={label.trim()} logo={logo.shown} avatar={avatar.shown} side="right" />
+            <Preview mode={prev} setMode={setPrev} accent={colorOk ? color : DEFAULT_ACCENT} title={title.trim()} greeting={greeting.trim()} label={label.trim()} logo={logo.shown} avatar={avatar.shown} side="right" pulse={pulse} bounce={bounce} />
           </div>
         </CardContent>
         <div className="flex items-center justify-end gap-3 border-t border-border px-5 py-3">

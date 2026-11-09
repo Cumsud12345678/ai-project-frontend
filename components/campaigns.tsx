@@ -1,7 +1,7 @@
 "use client";
 // Kampaniyalar: ziyarətçi yazmamış çat düyməsinin yanında göstərilən kart (başlıq, mətn, düymələr) və şərtləri.
 // Saxlanma vidjet ayarlarının "proactive" hissəsinə gedir; statistika ayrıca sayılır (göstərilib / klik / söhbət).
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowUp, BarChart3, CalendarClock, Copy, Eye, Headset, Megaphone, MonitorSmartphone, Pause, Pencil, Play, Plus, Repeat, RotateCcw, Timer, Trash2, Users, X } from "lucide-react";
@@ -108,8 +108,25 @@ function Editor({ init, color, name, liveOn, onCancel, onSave }: { init: Draft; 
   const btns = r.buttons ?? [];
   const setBtn = (i: number, p: Partial<CampaignButton>) => set({ buttons: btns.map((b, j) => (j === i ? { ...b, ...p } : b)) });
   const kinds: { v: CampaignButton["kind"]; l: string }[] = [{ v: "chat", l: t("Çatı açır") }, { v: "send", l: t("Yazısını sual kimi göndərir") }, { v: "close", l: t("Kartı bağlayır") }];
+  // datetime-local yarımçıq doldurulanda (tarix var, saat yox) brauzer boş dəyər qaytarır: əvvəllər kampaniya vaxtsız saxlanırdı
+  const startRef = useRef<HTMLInputElement>(null);
+  const endRef = useRef<HTMLInputElement>(null);
+  const [tried, setTried] = useState(false);
+  const [partial, setPartial] = useState({ start: false, end: false });
+  const errs = {
+    text: r.text.trim().length < 3 ? t("Mesajı yaz (ən azı 3 simvol).") : "",
+    start: partial.start ? t("Tarixi və saatı tam seç.") : "",
+    end: partial.end ? t("Tarixi və saatı tam seç.") : r.startAt && r.endAt && Date.parse(r.endAt) <= Date.parse(r.startAt) ? t("Bitmə vaxtı başlamadan sonra olmalıdır.") : r.endAt && !init.endAt && Date.parse(r.endAt) < Date.now() ? t("Bitmə vaxtı keçmişdədir.") : "",
+    buttons: btns.some((b) => !b.label.trim()) ? t("Düymənin yazısını yaz və ya düyməni sil.") : "",
+  };
+  const firstErr = Object.values(errs).find(Boolean) ?? "";
+  const checkPartial = () => setPartial({ start: Boolean(startRef.current?.validity.badInput), end: Boolean(endRef.current?.validity.badInput) });
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setTried(true);
+    const bad = { start: Boolean(startRef.current?.validity.badInput), end: Boolean(endRef.current?.validity.badInput) };
+    setPartial(bad);
+    if (firstErr || bad.start || bad.end) return;
     setBusy(true);
     try { await onSave({ ...r, buttons: btns.filter((b) => b.label.trim()), title: r.title?.trim() || undefined, name: r.name?.trim() || undefined }); }
     finally { setBusy(false); }
@@ -126,7 +143,7 @@ function Editor({ init, color, name, liveOn, onCancel, onSave }: { init: Draft; 
             <h4 className="font-medium">{t("Məzmun")}</h4>
             <div className="flex flex-col gap-1"><Label htmlFor="c-name">{t("Kampaniyanın adı (yalnız paneldə görünür)")}</Label><Input id="c-name" value={r.name ?? ""} maxLength={60} onChange={(e) => set({ name: e.target.value })} placeholder={t("məs. Yeni gələnləri salamla")} /></div>
             <div className="flex flex-col gap-1"><Label htmlFor="c-title">{t("İri başlıq (ixtiyari)")}</Label><Input id="c-title" value={r.title ?? ""} maxLength={40} onChange={(e) => set({ title: e.target.value })} placeholder={t("məs. Salam!")} /><p className="text-xs text-muted-foreground">{t("Başlıq və ya düymə yoxdursa, kart əvəzinə kiçik balon göstərilir.")}</p></div>
-            <div className="flex flex-col gap-1"><Label htmlFor="c-text">{t("Mesaj")}</Label><Textarea id="c-text" required minLength={3} value={r.text} maxLength={300} rows={3} onChange={(e) => set({ text: e.target.value })} placeholder={t("Sualın var? Sənə kömək edə bilərəm.")} /><p className="text-xs text-muted-foreground">{t("Ziyarətçi kartı açanda bu mesaj çatda ilk cavab kimi qalır.")}</p></div>
+            <div className="flex flex-col gap-1"><Label htmlFor="c-text">{t("Mesaj")}</Label><Textarea id="c-text" required minLength={3} aria-invalid={tried && Boolean(errs.text)} value={r.text} maxLength={300} rows={3} onChange={(e) => set({ text: e.target.value })} placeholder={t("Sualın var? Sənə kömək edə bilərəm.")} />{tried && errs.text ? <p role="alert" className="text-xs text-destructive">{errs.text}</p> : <p className="text-xs text-muted-foreground">{t("Ziyarətçi kartı açanda bu mesaj çatda ilk cavab kimi qalır.")}</p>}</div>
             <div className="flex flex-col gap-2">
               <Label>{t("Düymələr (ən çox 3)")}</Label>
               {btns.map((b, i) => (
@@ -136,6 +153,7 @@ function Editor({ init, color, name, liveOn, onCancel, onSave }: { init: Draft; 
                   <Button type="button" variant="ghost" size="sm" onClick={() => set({ buttons: btns.filter((_, j) => j !== i) })} aria-label={t("Sil")}><Trash2 size={14} aria-hidden /></Button>
                 </div>
               ))}
+              {tried && errs.buttons && <p role="alert" className="text-xs text-destructive">{errs.buttons}</p>}
               {btns.length < 3 && <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => set({ buttons: [...btns, { label: "", kind: btns.length ? "close" : "chat" }] })}><Plus size={14} aria-hidden />{t("Düymə əlavə et")}</Button>}
             </div>
           </section>
@@ -148,14 +166,14 @@ function Editor({ init, color, name, liveOn, onCancel, onSave }: { init: Draft; 
               <div className="flex flex-col gap-1"><Label htmlFor="c-freq">{t("Nə qədər tez-tez")}</Label><select id="c-freq" className={sel} value={r.freq ?? "visit"} onChange={(e) => set({ freq: e.target.value as Draft["freq"] })}><option value="visit">{t("Hər ziyarətdə")}</option><option value="once">{t("Ziyarətçiyə bir dəfə")}</option></select></div>
               <div className="flex flex-col gap-1"><Label htmlFor="c-delay">{t("Səhifədə neçə saniyədən sonra")}</Label><Input id="c-delay" type="number" min={0} max={600} value={r.delaySec} onChange={(e) => set({ delaySec: Math.max(0, Math.min(600, Math.round(Number(e.target.value) || 0))) })} /></div>
               <div className="flex flex-col gap-1 sm:col-span-2"><Label htmlFor="c-match">{t("Hansı səhifələrdə")}</Label><Input id="c-match" value={r.match} maxLength={200} onChange={(e) => set({ match: e.target.value })} placeholder="*, /products/*" /><p className="text-xs text-muted-foreground">{t("* bütün sayt, /products/* bu bölmənin hamısı, vergüllə bir neçə yol.")}</p></div>
-              <div className="flex flex-col gap-1"><Label htmlFor="c-start">{t("Başlama (ixtiyari)")}</Label><Input id="c-start" type="datetime-local" value={isoToLocal(r.startAt)} onChange={(e) => set({ startAt: localToIso(e.target.value) })} /></div>
-              <div className="flex flex-col gap-1"><Label htmlFor="c-end">{t("Bitmə (ixtiyari)")}</Label><Input id="c-end" type="datetime-local" value={isoToLocal(r.endAt)} onChange={(e) => set({ endAt: localToIso(e.target.value) })} /></div>
+              <div className="flex flex-col gap-1"><Label htmlFor="c-start">{t("Başlama (ixtiyari)")}</Label><Input ref={startRef} id="c-start" type="datetime-local" aria-invalid={Boolean(errs.start)} value={isoToLocal(r.startAt)} onChange={(e) => { set({ startAt: localToIso(e.target.value) }); checkPartial(); }} onBlur={checkPartial} />{errs.start && <p role="alert" className="text-xs text-destructive">{errs.start}</p>}</div>
+              <div className="flex flex-col gap-1"><Label htmlFor="c-end">{t("Bitmə (ixtiyari)")}</Label><Input ref={endRef} id="c-end" type="datetime-local" aria-invalid={Boolean(errs.end)} min={isoToLocal(r.startAt) || undefined} value={isoToLocal(r.endAt)} onChange={(e) => { set({ endAt: localToIso(e.target.value) }); checkPartial(); }} onBlur={checkPartial} />{errs.end && <p role="alert" className="text-xs text-destructive">{errs.end}</p>}</div>
             </div>
             <SwitchRow checked={Boolean(r.online)} onChange={(v) => set({ online: v })} on={t("Bəli")} off={t("Xeyr")} title={t("Yalnız operator onlayn olanda")}
               description={liveOn ? t("Canlı söhbət bağlı olanda və ya iş saatından kənarda bu kampaniya göstərilmir.") : t("Diqqət: canlı söhbət hazırda söndürülüb, bu şərtlə kampaniya heç göstərilməyəcək.")} />
             <SwitchRow checked={r.active !== false} onChange={(v) => set({ active: v })} on={t("Aktiv")} off={t("Dayandırılıb")} title={t("Kampaniya aktivdir")} />
           </section>
-          <div className="flex gap-2"><Button disabled={busy || r.text.trim().length < 3}>{t("Saxla")}</Button><Button type="button" variant="ghost" onClick={onCancel}>{t("Ləğv et")}</Button></div>
+          <div className="flex flex-wrap items-center justify-end gap-2">{tried && firstErr && <p role="alert" className="mr-auto text-sm text-destructive">{firstErr}</p>}<Button type="button" variant="outline" onClick={onCancel}>{t("Ləğv et")}</Button><Button disabled={busy}>{t("Saxla")}</Button></div>
         </div>
         <aside className="flex flex-col gap-2 lg:sticky lg:top-4 lg:self-start">
           <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"><Eye size={13} aria-hidden />{t("Önizləmə")}</p>

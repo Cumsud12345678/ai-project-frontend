@@ -2,7 +2,7 @@
 // Köməkçi → Profil: ad, dil, ton, cavab uzunluğu, nəticə sayı və öz təlimatın. Sağda canlı önizləmə.
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { saveProfile, type Profile } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { RequireTenant, useSession } from "@/components/session";
@@ -79,10 +79,10 @@ function AssistantProfile() {
           <div className="flex flex-wrap gap-2">
             {tones.map((x) => (
               <button key={x.v} type="button" aria-pressed={d.tone === x.v} onClick={() => set({ tone: x.v })}
-                className={cn("cursor-pointer rounded-full border px-3.5 py-1.5 text-sm", d.tone === x.v ? "border-primary bg-primary/10 font-medium text-primary" : "border-border bg-card hover:border-primary/50")}>{x.l}</button>
+                className={cn("inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors", d.tone === x.v ? "border-foreground bg-foreground font-medium text-background" : "border-border bg-card text-foreground hover:border-foreground/40 hover:bg-muted/50")}>{d.tone === x.v && <Check size={14} strokeWidth={2.5} aria-hidden />}{x.l}</button>
             ))}
             <button type="button" aria-pressed={custom} onClick={() => { if (!custom) set({ tone: "" }); }}
-              className={cn("cursor-pointer rounded-full border px-3.5 py-1.5 text-sm", custom ? "border-primary bg-primary/10 font-medium text-primary" : "border-border bg-card hover:border-primary/50")}>{t("Öz tonun")}</button>
+              className={cn("inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors", custom ? "border-foreground bg-foreground font-medium text-background" : "border-border bg-card text-foreground hover:border-foreground/40 hover:bg-muted/50")}>{custom && <Check size={14} strokeWidth={2.5} aria-hidden />}{t("Öz tonun")}</button>
           </div>
           {custom && <Input value={d.tone} maxLength={60} onChange={(e) => set({ tone: e.target.value })} placeholder={t("məs. zarafatcıl, amma hörmətli")} aria-label={t("Öz tonun")} />}
         </div>

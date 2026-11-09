@@ -307,7 +307,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t("Etiketlər")}</p>
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {(chat.tags ?? []).map((g) => (
-            <Badge key={g} className={cn("gap-1", g.toLowerCase() === "vip" ? "bg-amber/15 text-amber" : "bg-primary/10 text-primary")}>{g}
+            <Badge key={g} className={cn("gap-1", g.toLowerCase() === "vip" ? "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20" : "bg-muted text-foreground")}>{g}
               <button type="button" className="cursor-pointer" aria-label={t("Etiketi sil")} onClick={() => saveTags((chat.tags ?? []).filter((x) => x !== g))}><X size={11} aria-hidden /></button>
             </Badge>
           ))}

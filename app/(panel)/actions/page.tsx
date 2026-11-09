@@ -317,7 +317,7 @@ function ActionsPage() {
               <tbody className="divide-y divide-border">{log.map((e, i) => (
                 <tr key={e.id ?? i} className="align-top">
                   <td className="whitespace-nowrap px-4 py-2">{short(e.at)}</td><td className="px-4 py-2">{e.title}</td><td className="px-4 py-2">{e.subject ?? "-"}</td>
-                  <td className="whitespace-nowrap px-4 py-2"><Badge className={e.status === "done" ? "bg-emerald-500/10 text-emerald-700" : e.status === "test" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive"}>{STATUS[e.status] ?? e.status}{e.httpStatus ? ` (${e.httpStatus})` : ""}</Badge></td>
+                  <td className="whitespace-nowrap px-4 py-2"><Badge className={e.status === "done" ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" : e.status === "test" ? "bg-muted text-muted-foreground" : "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"}>{STATUS[e.status] ?? e.status}{e.httpStatus ? ` (${e.httpStatus})` : ""}</Badge></td>
                   <td className="break-all px-4 py-2 text-muted-foreground">{Object.entries(e.params ?? {}).map(([k, v]) => `${k}=${v}`).join(", ")}</td>
                 </tr>))}</tbody>
             </table></div>

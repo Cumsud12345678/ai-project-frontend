@@ -27,7 +27,7 @@ function LeadCard({ l, team, reload }: { l: LeadRow; team: string[]; reload: () 
   const isMail = l.contact.includes("@");
   const st = statusOf(l), pr = l.priority ?? "normal";
   const stLabel: Record<LeadStatus, string> = { new: t("Yeni"), open: t("İşdədir"), pending: t("Gözləmədə"), solved: t("Həll olunub") };
-  const stColor: Record<LeadStatus, string> = { new: "bg-amber/15 text-amber", open: "bg-primary/10 text-primary", pending: "bg-violet-500/10 text-violet-700", solved: "bg-chart-2/15 text-chart-2" };
+  const stColor: Record<LeadStatus, string> = { new: "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20", open: "bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20", pending: "bg-violet-500/10 text-violet-700", solved: "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" };
   const prLabel = { low: t("Aşağı"), normal: t("Normal"), high: t("Yüksək") };
   async function patch(p: Parameters<typeof updateLead>[1], ok?: string) {
     setBusy(true);
@@ -45,7 +45,7 @@ function LeadCard({ l, team, reload }: { l: LeadRow; team: string[]; reload: () 
           <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
             {l.name || t("Adsız")}
             <Badge className={stColor[st]}>{stLabel[st]}</Badge>
-            {pr === "high" && <Badge className="bg-destructive/10 text-destructive">↑ {prLabel.high}</Badge>}
+            {pr === "high" && <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">↑ {prLabel.high}</Badge>}
             {l.assignee && <span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground"><UserRound size={12} aria-hidden />{l.assignee.name}</span>}
           </p>
           <a href={isMail ? `mailto:${l.contact}` : `tel:${l.contact.replace(/[^\d+]/g, "")}`} className="mt-1 inline-flex items-center gap-1.5 text-sm text-primary underline">

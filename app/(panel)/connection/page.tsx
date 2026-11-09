@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { hasSite } from "@/lib/site";
-import { BookOpen, CircleCheck, ShoppingBag, Upload } from "lucide-react";
+import { BookOpen, CircleCheck, Pencil, ShoppingBag, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { activate, ApiError, testConfig, updateConfig, type ConfigJson, type TestResult } from "@/lib/api";
 import { makeExample, stripJsonComments, isLegacyConfig, normalizeConfig, parseConfigText } from "@/lib/config-file";
@@ -47,6 +47,9 @@ function ListingsSetup() {
   // Əsas yol: forma (vizual qurucu). JSON redaktoru proqramçılar üçün ikinci seçimdir.
   const srcType = (tenant?.config?.source as { type?: string } | undefined)?.type;
   const [way, setWay] = useState<"form" | "api" | "feed">(srcType === "feed" ? "feed" : "form");
+  // Mənbə artıq qoşulubsa yalnız qısa vəziyyət kartı görünür; redaktə "Dəyiş" ilə açılır
+  const connected = Boolean(tenant && srcType);
+  const [editing, setEditing] = useState(!connected);
 
   // Canlı yoxlama: JSON səhvi (sətir/sütun ilə) və ya konfiqurasiya xəbərdarlıqları
   const live = useMemo<{ json?: string; issues: Issue[]; legacy?: boolean } | null>(() => {
@@ -140,9 +143,15 @@ function ListingsSetup() {
             <span className="block font-medium">{srcType === "feed" ? t("Fayl və ya link ilə qoşulub") : t("API ilə qoşulub")}</span>
             <span className="block truncate text-xs text-muted-foreground">{sourceLabel(tenant.config.source, t)}</span>
           </span>
+          {editing
+            ? <Button size="sm" variant="outline" onClick={() => { setEditing(false); setResult(null); setError(null); }}>{t("Bağla")}</Button>
+            : <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil size={14} aria-hidden />{t("Dəyiş")}</Button>}
         </div>
       )}
 
+      {issuedKey && <KeyReveal apiKey={issuedKey} title={t("Aktivləşdi. Bu sənin API açarındır")} onDone={() => setIssuedKey("")} />}
+
+      {editing && <>
       <Segmented value={way} onChange={setWay} label={t("Qoşulma yolu")}
         options={[{ value: "form", label: t("API ilə (forma)") }, { value: "feed", label: t("Fayl və ya link ilə (CSV, JSON, XML)") }, { value: "api", label: t("JSON redaktoru (proqramçı üçün)") }]} />
 
@@ -160,13 +169,11 @@ function ListingsSetup() {
               <div className="flex flex-col gap-1"><Label htmlFor="dm-a">{t("Sayt domeni")}</Label><Input id="dm-a" placeholder="example.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></div>
             </div>
           )}
-          <ApiBuilder businessName={businessName} domain={domain} onIssuedKey={setIssuedKey} onSaved={() => { if (fromSetup) router.push("/setup"); }} />
+          <ApiBuilder businessName={businessName} domain={domain} onIssuedKey={setIssuedKey} onSaved={() => { if (fromSetup) router.push("/setup"); else setEditing(false); }} />
         </section>
       )}
 
       {way === "api" && <><ConfigAssist text={text} onChange={adopt} /><ConfigGuide /><ConfigReference /></>}
-
-      {issuedKey && <KeyReveal apiKey={issuedKey} title={t("Aktivləşdi. Bu sənin API açarındır")} onDone={() => setIssuedKey("")} />}
 
       {way === "feed" && (
         <>
@@ -257,6 +264,7 @@ function ListingsSetup() {
           {result.sampleListings.length > 0 && <ListingTable listings={result.sampleListings} />}
         </div>
       )}
+      </>}
     </div>
   );
 }

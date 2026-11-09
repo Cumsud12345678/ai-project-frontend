@@ -40,7 +40,7 @@ function Channels() {
   ];
   const isOn = (c: Ch) => c.state === "on";
   const shown = list.filter((c) => f === "all" || (f === "on" ? isOn(c) : !isOn(c)));
-  const badge = (s: State) => s === "on" ? <Badge className="bg-foreground text-background">{t("Aktiv")}</Badge>
+  const badge = (s: State) => s === "on" ? <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Aktiv")}</Badge>
     : s === "off" ? <Badge className="bg-muted text-muted-foreground">{t("Söndürülüb")}</Badge>
     : s === "setup" ? <Badge className="bg-muted text-muted-foreground">{t("Qoşulmayıb")}</Badge>
     : <Badge className="border border-dashed border-border bg-transparent text-muted-foreground">{t("Tezliklə")}</Badge>;

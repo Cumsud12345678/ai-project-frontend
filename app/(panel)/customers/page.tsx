@@ -31,7 +31,7 @@ function Detail({ c }: { c: Customer }) {
       <div className="flex items-center gap-3">
         <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 text-base font-semibold text-primary">{initials(c.name)}</span>
         <div className="min-w-0">
-          <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">{c.name || t("Adsız")}{c.blocked && <Badge className="bg-destructive/10 text-destructive"><Ban size={12} aria-hidden />{t("Bloklanıb")}</Badge>}</h2>
+          <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">{c.name || t("Adsız")}{c.blocked && <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"><Ban size={12} aria-hidden />{t("Bloklanıb")}</Badge>}</h2>
           <p className="text-xs text-muted-foreground">{t("İlk əlaqə {a} · son əlaqə {b}", { a: short(c.firstAt), b: short(c.lastAt) })}</p>
         </div>
       </div>
@@ -46,8 +46,8 @@ function Detail({ c }: { c: Customer }) {
           )) : <p className="text-muted-foreground">{t("Əlaqə məlumatı yoxdur.")}</p>}
           <div className="mt-1 flex flex-wrap gap-1.5">
             {c.channels.map((ch) => { const I = CH_ICON[ch]; return <Badge key={ch} className="bg-muted text-foreground"><I size={12} aria-hidden />{chLabel[ch]}</Badge>; })}
-            {c.tags.map((g) => <Badge key={g} className="bg-primary/10 text-primary">#{g}</Badge>)}
-            {c.csat && <Badge className="bg-amber/15 text-amber"><Star size={12} aria-hidden />{c.csat}/5</Badge>}
+            {c.tags.map((g) => <Badge key={g} className="bg-muted text-foreground">#{g}</Badge>)}
+            {c.csat && <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"><Star size={12} aria-hidden />{c.csat}/5</Badge>}
           </div>
         </div>
         {c.visitor && (
@@ -67,7 +67,7 @@ function Detail({ c }: { c: Customer }) {
                 <Link href={`/inbox?chat=${encodeURIComponent(ch.id)}${ch.status === "closed" ? "&closed=1" : ""}`} className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted/60">
                   <I size={15} aria-hidden className="shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1"><span className="block truncate">{ch.first || t("(mesaj yoxdur)")}</span><span className="text-xs text-muted-foreground">{short(ch.createdAt)} · {t("{n} mesaj", { n: ch.count })}{ch.assignee ? ` · ${ch.assignee}` : ""}</span></span>
-                  <Badge className={ch.status === "open" ? "bg-chart-2/15 text-chart-2" : "bg-muted text-muted-foreground"}>{ch.status === "open" ? t("Açıq") : t("Bağlı")}</Badge>
+                  <Badge className={ch.status === "open" ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" : "bg-muted text-muted-foreground"}>{ch.status === "open" ? t("Açıq") : t("Bağlı")}</Badge>
                 </Link>
               </li>
             ); })}

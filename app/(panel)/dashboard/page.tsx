@@ -95,7 +95,7 @@ export default function DashboardPage() {
             {steps.map((st, i) => (
               <li key={st.id}>
                 <Link href={st.href} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50">
-                  <span className={cn("grid size-6 shrink-0 place-items-center rounded-full border text-xs font-medium", st.done ? "border-primary bg-primary text-primary-foreground" : i === nextIdx ? "border-primary text-primary" : "border-border text-muted-foreground")}>
+                  <span className={cn("grid size-6 shrink-0 place-items-center rounded-full border text-xs font-medium", st.done ? "border-transparent bg-emerald-500 text-white" : i === nextIdx ? "border-primary text-primary" : "border-border text-muted-foreground")}>
                     {st.done ? <Check size={14} aria-hidden /> : i + 1}
                   </span>
                   <span className="min-w-0 flex-1">

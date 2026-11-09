@@ -60,7 +60,7 @@ export function Conversations({ days, enabled }: { days: number; enabled: boolea
                 <span className="block truncate text-sm font-medium">{c.first}</span>
                 <span className="text-xs text-muted-foreground">{short(c.startedAt)} · {t("{n} mesaj", { n: c.messages })}</span>
               </span>
-              {c.unanswered > 0 && <Badge className="shrink-0 bg-amber/15 text-amber">{t("{n} cavabsız", { n: c.unanswered })}</Badge>}
+              {c.unanswered > 0 && <Badge className="shrink-0 bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("{n} cavabsız", { n: c.unanswered })}</Badge>}
             </button>
             {open === c.sid && (
               <div className="flex flex-col gap-3 border-t border-border bg-muted/30 px-4 py-3">

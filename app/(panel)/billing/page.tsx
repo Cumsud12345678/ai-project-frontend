@@ -32,9 +32,9 @@ function Body() {
   const approx = (n: number) => Math.max(1, Math.round(n / per / 10) * 10);
   const amt = Number(amount.replace(",", "."));
   const valid = Number.isFinite(amt) && amt >= b.minTopupAzn && amt <= b.maxTopupAzn;
-  const stateBadge = b.state === "empty" ? <Badge className="bg-destructive/15 text-destructive">{t("Balans bitib")}</Badge>
-    : b.state === "low" ? <Badge className="bg-amber/15 text-amber">{t("Balans azalır")}</Badge>
-    : <Badge className="bg-primary/15 text-primary">{t("Aktiv")}</Badge>;
+  const stateBadge = b.state === "empty" ? <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Balans bitib")}</Badge>
+    : b.state === "low" ? <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("Balans azalır")}</Badge>
+    : <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Aktiv")}</Badge>;
   const typeLabel: Record<string, string> = { topup: t("Yükləmə"), adjust: t("Düzəliş"), free: t("Pulsuz balans"), charge: t("Sorğu xərci") };
 
   async function submit() {

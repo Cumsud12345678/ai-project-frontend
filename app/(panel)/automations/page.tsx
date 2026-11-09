@@ -149,12 +149,14 @@ function Editor({ init, view, onCancel, onSave, saving, openConnections }: { ini
               const I = A_ICON[k];
               const cur = a.actions.find((x) => x.type === k);
               const needs = k in connected && !connected[k];
+              // Platformada Telegram bildiriş botu qurulmayıbsa bu addımı qoşmaq mümkün deyil: "qoş" yerinə izah
+              const unavailable = k === "telegram" && !c.telegramAvailable && !c.telegram;
               return (
                 <li key={k} className="flex flex-wrap items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0">
-                  <input type="checkbox" id={`au-a-${k}`} checked={has(k)} onChange={(e) => toggle(k, e.target.checked)} />
+                  <input type="checkbox" id={`au-a-${k}`} checked={has(k)} disabled={unavailable && !has(k)} onChange={(e) => toggle(k, e.target.checked)} />
                   <I size={16} aria-hidden className="shrink-0 text-muted-foreground" />
                   <label htmlFor={`au-a-${k}`} className="min-w-0 flex-1 cursor-pointer text-sm">{act[k].does}</label>
-                  {needs && <button type="button" onClick={openConnections} className="cursor-pointer text-xs font-medium text-amber hover:underline">{t("Qoşulmayıb · qoş")}</button>}
+                  {unavailable ? <span className="text-xs text-muted-foreground">{t("Hazırda əlçatan deyil")}</span> : needs && <button type="button" onClick={openConnections} className="cursor-pointer text-xs font-medium text-amber hover:underline">{t("Qoşulmayıb · qoş")}</button>}
                   {cur?.type === "ticket" && <select aria-label={t("Prioritet")} className="h-8 rounded-md border border-border bg-card px-2 text-xs" value={cur.priority} onChange={(e) => set({ actions: a.actions.map((x) => (x.type === "ticket" ? { type: "ticket", priority: e.target.value as "high" } : x)) })}><option value="normal">{t("Normal prioritet")}</option><option value="high">{t("Yüksək prioritet")}</option></select>}
                   {cur?.type === "tag" && <Input aria-label={t("Teq")} value={cur.tag} maxLength={24} onChange={(e) => set({ actions: a.actions.map((x) => (x.type === "tag" ? { type: "tag", tag: e.target.value } : x)) })} placeholder={t("məs. Şikayət")} className="h-8 w-40 text-xs" />}
                 </li>

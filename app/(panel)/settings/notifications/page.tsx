@@ -87,7 +87,7 @@ function Notifications() {
           <Row title={t("Səs")} note={t("Qısa siqnal; tab arxa planda olsa da çalır.")}><Switch checked={sound} onChange={toggleSound} label={t("Səs")} /></Row>
           <Row title={t("Brauzer bildirişi")} note={t("Tab gizli olanda ekranın küncündə görünür.")}>
             {browser === "unsupported" ? <span className="text-xs text-muted-foreground">{t("Bu brauzer dəstəkləmir")}</span>
-              : browser === "granted" ? <Badge className="bg-muted text-foreground">{t("Açıq")}</Badge>
+              : browser === "granted" ? <Badge tone="success">{t("Açıq")}</Badge>
               : browser === "denied" ? <span className="text-xs text-destructive">{t("Brauzer bildirişi bloklanıb")}</span>
               : <Button size="sm" variant="outline" onClick={enableBrowser}>{t("İcazə ver")}</Button>}
           </Row>
@@ -98,7 +98,7 @@ function Notifications() {
                 : <Button size="sm" variant="outline" onClick={linkTg} disabled={linking}><Send size={14} aria-hidden />{linking ? t("Telegram-da Start bas…") : t("Qoş")}</Button>}
             </Row>
           )}
-          <Row title={t("E-poçt")} note={t("Yeni müraciət və yeni canlı söhbət {email} ünvanına gedir.", { email: me.email })}><Badge className="bg-muted text-foreground">{t("Açıq")}</Badge></Row>
+          <Row title={t("E-poçt")} note={t("Yeni müraciət və yeni canlı söhbət {email} ünvanına gedir.", { email: me.email })}><Badge tone="success">{t("Açıq")}</Badge></Row>
         </CardContent>
       </Card>
 

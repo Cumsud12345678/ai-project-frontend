@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 const SOURCES: ErrorSource[] = ["api", "ai", "mail", "widget", "channel", "client", "job", "process"];
 // Rəng yalnız ciddi mənbələr üçün (server/proses), qalanları neytral
-const tone = (s: ErrorSource) => (s === "api" || s === "process" ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground");
+const tone = (s: ErrorSource) => (s === "api" || s === "process" ? "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20" : "bg-muted text-foreground");
 
 function useLabels() {
   const { t } = useI18n();

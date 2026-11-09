@@ -47,7 +47,7 @@ function PartnerModal({ p, tab, setTab, onClose, onChange }: { p: AdminPartner; 
     setBusy(true);
     try { await fn(); toast.success(ok); await load(); onChange(); return true; } catch (e) { toast.error((e as Error).message); return false; } finally { setBusy(false); }
   };
-  const kind: Record<PartnerEntry["kind"], [string, string]> = { commission: [t("komissiya"), "bg-foreground text-background"], adjust: [t("düzəliş"), "bg-muted text-foreground"], payout: [t("ödənildi"), "border border-border bg-transparent text-muted-foreground"] };
+  const kind: Record<PartnerEntry["kind"], [string, string]> = { commission: [t("komissiya"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"], adjust: [t("düzəliş"), "bg-muted text-foreground"], payout: [t("ödənildi"), "border border-border bg-transparent text-muted-foreground"] };
   const src: Record<PartnerCustomer["source"], string> = { link: t("link"), code: t("kod"), admin: t("admin") };
   const v = num(amount);
   // Ödəniş balansdan çox ola bilməz (partnyor mənfiyə düşməsin)

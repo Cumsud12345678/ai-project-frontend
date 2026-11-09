@@ -4,6 +4,7 @@ import { ListingCards } from "@/components/listing-cards";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, RotateCcw, Sparkles } from "lucide-react";
 import { chat, getListings, getWidget, type ChatMessage, type Listing } from "@/lib/api";
+import { accentStyle } from "@/lib/accent";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/components/session";
 import { cn } from "@/lib/utils";
@@ -77,7 +78,7 @@ export function AssistantPreview({ name, className }: { name: string; className?
     <div className={cn("flex h-full min-h-[32rem] flex-col rounded-[28px] border border-border bg-muted/40 p-3 shadow-sm", className)}>
       <div className="relative flex items-center justify-center py-2">
         <span className="inline-flex items-center gap-2 rounded-full bg-card px-3.5 py-2 text-sm font-semibold shadow-sm ring-1 ring-border/60">
-          <span className="grid size-6 place-items-center rounded-full bg-primary text-primary-foreground"><Sparkles size={13} aria-hidden /></span>{name}
+          <span className="grid size-6 place-items-center rounded-full" style={accentStyle(accent)}><Sparkles size={13} aria-hidden /></span>{name}
         </span>
         <button type="button" onClick={() => { setMessages([]); setError(""); }} aria-label={t("Yeni söhbət")} title={t("Yeni söhbət")}
           className="absolute right-1 grid size-9 cursor-pointer place-items-center rounded-full bg-card shadow-sm ring-1 ring-border/60 hover:bg-muted"><RotateCcw size={15} aria-hidden /></button>
@@ -86,7 +87,7 @@ export function AssistantPreview({ name, className }: { name: string; className?
         {!messages.length && <p className="px-1 text-center text-xs text-muted-foreground">{t("Burada köməkçini ziyarətçi kimi yoxla. Dəyişikliyi saxlayandan sonra növbəti cavab yeni ayarla gəlir. Hər mesaj balansdan çıxılır.")}</p>}
         <ol className="flex flex-col gap-3 text-sm">
           {messages.map((m, i) => m.role === "user"
-            ? <li key={i} className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-primary-foreground">{m.text}</li>
+            ? <li key={i} className="max-w-[85%] self-end rounded-2xl rounded-br-md px-3.5 py-2" style={accentStyle(accent)}>{m.text}</li>
             : (
               <li key={i} className="flex w-full min-w-0 flex-col gap-2">
                 <div className="rounded-2xl rounded-bl-md bg-card px-3.5 py-2.5 ring-1 ring-border/60"><Rich text={m.text} /></div>
@@ -105,7 +106,7 @@ export function AssistantPreview({ name, className }: { name: string; className?
       )}
       <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className="flex items-center gap-2 rounded-full bg-card py-1.5 pl-4 pr-1.5 ring-1 ring-border/60">
         <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder={t("Mesaj yaz…")} aria-label={t("Mesaj")} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
-        <button disabled={busy || !input.trim()} aria-label={t("Göndər")} className="grid size-9 cursor-pointer place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"><ArrowUp size={16} aria-hidden /></button>
+        <button disabled={busy || !input.trim()} aria-label={t("Göndər")} className="grid size-9 cursor-pointer place-items-center rounded-full disabled:opacity-40" style={accentStyle(accent)}><ArrowUp size={16} aria-hidden /></button>
       </form>
     </div>
   );

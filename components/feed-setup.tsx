@@ -161,7 +161,7 @@ export function FeedSetup({ businessName, domain, onIssuedKey }: { businessName:
       {isFeed && status?.feed && (
         <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge className="bg-primary/15 text-primary">{status.feed.format.toUpperCase()}</Badge>
+            <Badge className="bg-muted text-foreground">{status.feed.format.toUpperCase()}</Badge>
             <span><strong>{status.feed.count}</strong> {t("sətir")}</span>
             <span className="text-muted-foreground">· {t("Son yenilənmə")}: {short(status.feed.updatedAt)}</span>
             {status.feed.url && <span className="min-w-0 max-w-full truncate text-muted-foreground">· {status.feed.url}</span>}

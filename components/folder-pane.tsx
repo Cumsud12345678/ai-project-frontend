@@ -73,7 +73,8 @@ export function FolderPane<T extends string>({ title, groups, value, onPick, foo
           ))}
         </div>
         {banner}
-        <div className="flex min-h-0 flex-1">{children}</div>
+        {/* Seçilmiş bölmə bütün eni tutur: əks halda sağda boş zolaq qalırdı */}
+        <div className="flex min-h-0 min-w-0 flex-1 *:min-w-0 *:flex-1">{children}</div>
       </div>
     </div>
   );

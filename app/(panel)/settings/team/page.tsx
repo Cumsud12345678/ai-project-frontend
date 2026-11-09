@@ -59,14 +59,14 @@ function Team() {
             <tr>
               <td className="px-4 py-3 font-medium">{me.email}</td>
               <td className="px-4 py-3">{t("Sahib")}</td>
-              <td className="px-4 py-3"><Badge className="bg-muted text-foreground">{t("Aktiv")}</Badge></td>
+              <td className="px-4 py-3"><Badge tone="success">{t("Aktiv")}</Badge></td>
               <td className="px-4 py-3 text-muted-foreground">—</td><td />
             </tr>
             {members.map((m) => (
               <tr key={m.email}>
                 <td className="px-4 py-3 font-medium">{m.email}</td>
                 <td className="px-4 py-3">{t("Operator")}</td>
-                <td className="px-4 py-3"><Badge className={m.joined ? "bg-muted text-foreground" : "bg-amber/15 text-amber"}>{m.joined ? t("Qoşulub") : t("Dəvət gözləyir")}</Badge></td>
+                <td className="px-4 py-3"><Badge className={m.joined ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" : "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"}>{m.joined ? t("Qoşulub") : t("Dəvət gözləyir")}</Badge></td>
                 <td className="px-4 py-3 text-muted-foreground">{day(m.addedAt)}</td>
                 <td className="px-2 py-2 text-right"><RowMenu items={[{ label: t("Komandadan çıxar"), icon: Trash2, danger: true, run: () => setDel(m) }]} /></td>
               </tr>

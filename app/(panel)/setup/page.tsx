@@ -14,6 +14,7 @@ import {
 import { wooBaseUrl, wooConfig } from "@/lib/presets/woocommerce";
 import { dataDone, readiness, setupSteps, type Goal, type StepId } from "@/lib/setup-steps";
 import { cleanDomain, hasSite, noSiteDomain } from "@/lib/site";
+import { accentStyle } from "@/lib/accent";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { ApiBuilder } from "@/components/api-builder";
@@ -135,7 +136,7 @@ export default function SetupPage() {
               <button key={s.id} type="button" disabled={locked} onClick={() => go(s.id)} aria-current={on ? "step" : undefined}
                 className={cn("flex shrink-0 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 lg:border-transparent",
                   on ? "border-foreground bg-card shadow-sm lg:border-border" : "border-border bg-card/50 hover:bg-card")}>
-                <span className={cn("grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold", s.done ? "bg-foreground text-background" : on ? "border-2 border-foreground" : "border border-border text-muted-foreground")}>
+                <span className={cn("grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold", s.done ? "bg-emerald-500 text-white" : on ? "border-2 border-foreground" : "border border-border text-muted-foreground")}>
                   {s.done ? <Check size={14} strokeWidth={3} aria-hidden /> : i + 1}
                 </span>
                 <span className="min-w-0">
@@ -616,7 +617,7 @@ function StepTest({ goals, dataReady, accent, onTested, onFix, onNext, onBack }:
           )}
           {msgs.map((m, i) => (
             <div key={i} className={cn("flex max-w-full flex-col gap-2", m.role === "user" ? "items-end" : "items-start")}>
-              <div className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm", m.role === "user" ? "rounded-br-md bg-foreground text-background" : "rounded-bl-md border border-border bg-card")}>{m.role === "model" ? <Rich text={m.text} /> : m.text}</div>
+              <div className={cn("max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm", m.role === "user" ? "rounded-br-md" : "rounded-bl-md border border-border bg-card")} style={m.role === "user" ? accentStyle(accent) : undefined}>{m.role === "model" ? <Rich text={m.text} /> : m.text}</div>
               {m.listings && m.listings.length > 0 && <div className="w-full max-w-sm"><ListingCards listings={m.listings} accent={accent} /></div>}
             </div>
           ))}

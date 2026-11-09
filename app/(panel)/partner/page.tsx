@@ -22,7 +22,7 @@ export default function PartnerPage() {
   const money = useMemo(() => new Intl.NumberFormat(locale === "en" ? "en-US" : locale === "ru" ? "ru-RU" : locale === "tr" ? "tr-TR" : "az-Latn-AZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), [locale]);
   const azn = (n: number) => `${money.format(n)} ₼`;
   const copy = async (text: string) => { try { await navigator.clipboard.writeText(text); toast.success(t("Kopyalandı.")); } catch { toast.error(t("Kopyalamaq alınmadı")); } };
-  const kind: Record<PartnerEntry["kind"], [string, string]> = { commission: [t("komissiya"), "bg-foreground text-background"], adjust: [t("düzəliş"), "bg-muted text-foreground"], payout: [t("ödənildi"), "border border-border bg-transparent text-muted-foreground"] };
+  const kind: Record<PartnerEntry["kind"], [string, string]> = { commission: [t("komissiya"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"], adjust: [t("düzəliş"), "bg-muted text-foreground"], payout: [t("ödənildi"), "border border-border bg-transparent text-muted-foreground"] };
 
   if (error) return <p role="alert" className="text-sm text-destructive">{error}</p>;
   if (!d) return <div className="flex flex-col gap-4"><Skeleton className="h-10 w-60" /><Skeleton className="h-32" /><Skeleton className="h-48" /></div>;
@@ -118,7 +118,7 @@ export default function PartnerPage() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{day(c.joinedAt)}</td>
                       <td className="px-4 py-3">
-                        <Badge className={c.active ? "bg-muted text-foreground" : "bg-amber/15 text-amber"}>{c.active ? t("{d} tarixinədək", { d: day(c.until) }) : t("müddət bitib")}</Badge>
+                        <Badge className={c.active ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" : "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"}>{c.active ? t("{d} tarixinədək", { d: day(c.until) }) : t("müddət bitib")}</Badge>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">{azn(c.paidAzn)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right font-medium">{azn(c.earnedAzn)}</td>
