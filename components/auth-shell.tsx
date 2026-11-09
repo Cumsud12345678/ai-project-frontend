@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, BarChart3, BookOpen, MessagesSquare, ShieldCheck, Sparkles } from "lucide-react";
 import { LangSwitch, useT } from "@/lib/i18n";
+import { BRAND_NAME, BrandLogo } from "@/components/brand";
 
 function Brand({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="Car Advisor">
-      <span className={`relative grid size-9 place-items-center rounded-xl ${light ? "bg-white text-black" : "bg-foreground text-background"}`}>
-        <MessagesSquare size={18} aria-hidden />
-        <span className={`absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 bg-[#f97316] ${light ? "border-black" : "border-background"}`} aria-hidden />
-      </span>
-      <span className={`text-[15px] font-semibold tracking-tight ${light ? "text-white" : "text-foreground"}`}>Car Advisor</span>
+    <Link href="/" className="flex items-center" aria-label={BRAND_NAME}>
+      <BrandLogo size={36} inverted={light} />
     </Link>
   );
 }
@@ -78,7 +75,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
           {footer && <div className="border-t border-border pt-5 text-sm text-muted-foreground">{footer}</div>}
         </div>
         <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} Car Advisor</span>
+          <span>© {new Date().getFullYear()} {BRAND_NAME}</span>
           <Link href="/legal/terms" className="hover:text-foreground">{t("İstifadə şərtləri")}</Link>
           <Link href="/legal/privacy" className="hover:text-foreground">{t("Məxfilik siyasəti")}</Link>
         </p>

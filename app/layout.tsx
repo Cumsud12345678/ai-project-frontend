@@ -8,7 +8,7 @@ import { ErrorReporter } from "@/components/error-reporter";
 import { Toaster } from "@/components/ui/sonner";
 import { isLocale } from "@/lib/locale";
 
-export const metadata: Metadata = { title: "Car Advisor", description: "Car Advisor admin panel" };
+export const metadata: Metadata = { title: "Hazırcavab", description: "Hazırcavab: saytın, WhatsApp və Telegram üçün AI köməkçi" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Açılış səhifəsində (/, /en, /ru, /tr) dil ünvandan gəlir (middleware x-locale yazır), qalan yerdə cookie-dən.

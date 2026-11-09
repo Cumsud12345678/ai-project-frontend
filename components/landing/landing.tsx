@@ -11,6 +11,7 @@ import { Reveal } from "@/components/landing/reveal";
 import { LiveDemo } from "@/components/landing/demo";
 import { Everything, Showcase } from "@/components/landing/showcase";
 import { LangDropdown } from "@/components/lang-dropdown";
+import { BRAND_NAME, BrandMark } from "@/components/brand";
 
 const wrap = "mx-auto w-full max-w-6xl px-5 sm:px-6";
 // Düymələr: iki ölçü, hamısı eyni hündürlükdə; en məzmuna görədir, telefonda hero düymələri tam en olur
@@ -32,12 +33,9 @@ const spot = (e: React.MouseEvent<HTMLElement>) => {
 
 function Logo() {
   return (
-    <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap" aria-label="Car Advisor">
-      <span className="relative grid size-9 place-items-center rounded-xl bg-[var(--l-ink)] text-white">
-        <MessagesSquare size={18} aria-hidden />
-        <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-[var(--l-orange)]" aria-hidden />
-      </span>
-      <span className="l-display text-[16px] font-semibold">Car Advisor</span>
+    <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap" aria-label={BRAND_NAME}>
+      <BrandMark size={36} />
+      <span className="l-display text-[17px] tracking-tight"><span className="font-bold">hazır</span><span className="font-medium text-[var(--l-sub)]">cavab</span></span>
     </Link>
   );
 }
@@ -136,7 +134,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           <Reveal as="h1" delay={80} className="l-display mt-6 text-[clamp(2.25rem,5.4vw,3.9rem)] font-semibold leading-[1.02]">
             {cut > 0 ? <>{title.slice(0, cut + 1)} <span className="l-mark">{title.slice(cut + 2)}</span></> : title}
           </Reveal>
-          <Reveal as="p" delay={160} className={`mt-6 max-w-xl ${lead}`}>{t("Car Advisor saytına qoşulan AI köməkçidir. Elan, məhsul və ya xidmətlərini axtarıb ziyarətçiyə uyğununu tapır, şirkət haqqında suallara sənin sənədlərinə və səhifələrinə əsasən cavab verir, cavab tapılmayanda isə operatora yönləndirir.")}</Reveal>
+          <Reveal as="p" delay={160} className={`mt-6 max-w-xl ${lead}`}>{t("Hazırcavab saytına qoşulan AI köməkçidir. Elan, məhsul və ya xidmətlərini axtarıb ziyarətçiyə uyğununu tapır, şirkət haqqında suallara sənin sənədlərinə və səhifələrinə əsasən cavab verir, cavab tapılmayanda isə operatora yönləndirir.")}</Reveal>
           <Reveal delay={240} className="mt-8 grid grid-cols-1 gap-3 min-[420px]:flex min-[420px]:flex-wrap">
             <Link href={signedIn ? "/dashboard" : "/register"} className={`${md} ${primary} min-[420px]:min-w-[11rem]`}>{signedIn ? t("Panelə keç") : t("Pulsuz başla")}<ArrowRight size={16} aria-hidden /></Link>
             <a href="#sinaq" className={`${md} ${secondary} min-[420px]:min-w-[11rem]`}><Sparkles size={16} aria-hidden />{t("Özün sına")}</a>
@@ -199,7 +197,7 @@ function Problem() {
           </div></Reveal>
 
           <Reveal variant="right" delay={150}><div className="h-full rounded-3xl bg-white p-6 text-[var(--l-ink)] sm:p-7">
-            <p className="text-sm font-semibold text-[var(--l-orange-d)]">{t("Car Advisor ilə: bir cümlə")}</p>
+            <p className="text-sm font-semibold text-[var(--l-orange-d)]">{t("Hazırcavab ilə: bir cümlə")}</p>
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-[var(--l-line)] px-4 py-3.5 text-[15px]"><Search size={18} className="shrink-0" aria-hidden />{t("Büdcəm 150 AZN-dir, yaxşı simsiz qulaqlıq axtarıram")}</div>
             <div className="mt-5 flex flex-col gap-2.5 text-sm">
               {[["Sonic X2 Pro", "139"], ["Aero Buds 3", "129"], ["Nova Air", "115"]].map(([n, p]) => (
@@ -485,7 +483,7 @@ function Footer({ signedIn }: { signedIn: boolean }) {
         ))}
       </div>
       <div className={`${wrap} flex flex-wrap items-center justify-between gap-3 border-t border-[var(--l-line)] py-5 text-xs text-[var(--l-sub)]`}>
-        <p>© {new Date().getFullYear()} Car Advisor</p>
+        <p>© {new Date().getFullYear()} {BRAND_NAME}</p>
         <p className="flex items-center gap-1.5"><Globe size={13} aria-hidden />Azərbaycanca · English · Русский · Türkçe</p>
       </div>
     </footer>

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { MessagesSquare } from "lucide-react";
 import { COMPANY } from "@/lib/legal/company";
 import type { LegalDocId, LegalPack } from "@/lib/legal/types";
 import az from "@/lib/legal/az";
@@ -10,6 +9,7 @@ import en from "@/lib/legal/en";
 import ru from "@/lib/legal/ru";
 import tr from "@/lib/legal/tr";
 import { isLocale, type Locale } from "@/lib/locale";
+import { BrandMark } from "@/components/brand";
 
 // Hüquqi sənədlər: /legal/terms, /legal/privacy, /legal/refund. Dil: ?lang=… → "lang" kukisi → az.
 // Mətnlər lib/legal/{az,en,ru,tr}.ts-də, operator məlumatı lib/legal/company.ts-də (.env).
@@ -74,7 +74,7 @@ export default async function LegalPage(props: Props) {
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5" aria-label={COMPANY.brand}>
-            <span className="grid size-8 place-items-center rounded-lg bg-zinc-950 text-white"><MessagesSquare size={16} aria-hidden /></span>
+            <BrandMark size={32} />
             <span className="font-semibold text-zinc-950">{COMPANY.brand}</span>
           </Link>
           <nav aria-label="Language" className="flex items-center gap-1 text-xs">

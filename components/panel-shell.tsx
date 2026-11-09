@@ -15,6 +15,7 @@ import type { Overview } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { TestDock, TestDockTab, useTestDock } from "@/components/test-chat-dock";
 import { LangSwitch, useI18n } from "@/lib/i18n";
+import { BrandMark } from "@/components/brand";
 
 type Mode = "listings" | "support" | "both";
 type Item = { href: string; label: string; icon: LucideIcon; only?: Mode[]; when?: "noTenant" | "partner"; /** menyuda bu bənddən əvvəl alt başlıq */ section?: string };
@@ -378,7 +379,7 @@ export function Frame({ groups, sig, home, cross, menuLinks, bleed, wide, topBar
     <div className="flex h-dvh flex-col bg-shell text-foreground">
       <div className="flex min-w-0 shrink-0 items-center">
         <Link href={home} aria-label={t("Ana səhifə")} className="hidden w-[84px] shrink-0 justify-center md:flex">
-          <span className="grid size-9 place-items-center rounded-xl bg-foreground text-background shadow-sm"><Bot size={19} aria-hidden /></span>
+          <BrandMark size={36} className="shadow-sm" />
         </Link>
         <div className="min-w-0 flex-1">{topBar({ onSearch: () => setPalette(true), onMenu: () => setDrawer(true), menuRef })}</div>
       </div>
@@ -401,7 +402,7 @@ export function Frame({ groups, sig, home, cross, menuLinks, bleed, wide, topBar
         <aside role="dialog" aria-modal="true" aria-label={t("Menyu")} inert={!drawer}
           className={cn("absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-shell shadow-xl transition-transform duration-300 ease-out", drawer ? "translate-x-0" : "-translate-x-full")}>
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-foreground text-background"><Bot size={19} aria-hidden /></span>
+            <BrandMark size={36} />
             <button ref={closeRef} type="button" onClick={() => { setDrawer(false); menuRef.current?.focus(); }} aria-label={t("Menyunu bağla")} className="grid size-9 cursor-pointer place-items-center rounded-lg hover:bg-card"><X size={20} aria-hidden /></button>
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-3">

@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import type { Locale } from "@/lib/locale";
 
 const META: Record<Locale, { title: string; description: string }> = {
-  az: { title: "Car Advisor: saytın üçün AI köməkçi", description: "Ziyarətçi sual yazır, AI köməkçi saytındakı elan, məhsul və xidmətləri tapır, sənədlərinə əsasən cavab verir və lazım olanda operatora yönləndirir." },
-  en: { title: "Car Advisor: an AI assistant for your website", description: "Visitors type a question and the AI assistant finds your listings, products or services, answers from your documents and hands off to an operator when needed." },
-  tr: { title: "Car Advisor: web siteniz için yapay zeka asistanı", description: "Ziyaretçi bir soru yazar; yapay zeka asistanı sitenizdeki ilan, ürün veya hizmetleri bulur, belgelerinize dayanarak yanıt verir ve gerektiğinde bir operatöre yönlendirir." },
-  ru: { title: "Car Advisor: ИИ-помощник для вашего сайта", description: "Посетитель пишет вопрос, а ИИ-помощник находит объявления, товары или услуги, отвечает по вашим документам и при необходимости передаёт оператору." },
+  az: { title: "Hazırcavab: saytın üçün AI köməkçi", description: "Ziyarətçi sual yazır, AI köməkçi saytındakı elan, məhsul və xidmətləri tapır, sənədlərinə əsasən cavab verir və lazım olanda operatora yönləndirir." },
+  en: { title: "Hazırcavab: an AI assistant for your website", description: "Visitors type a question and the AI assistant finds your listings, products or services, answers from your documents and hands off to an operator when needed." },
+  tr: { title: "Hazırcavab: web siteniz için yapay zeka asistanı", description: "Ziyaretçi bir soru yazar; yapay zeka asistanı sitenizdeki ilan, ürün veya hizmetleri bulur, belgelerinize dayanarak yanıt verir ve gerektiğinde bir operatöre yönlendirir." },
+  ru: { title: "Hazırcavab: ИИ-помощник для вашего сайта", description: "Посетитель пишет вопрос, а ИИ-помощник находит объявления, товары или услуги, отвечает по вашим документам и при необходимости передаёт оператору." },
 };
 const PATH: Record<Locale, string> = { az: "/", en: "/en", ru: "/ru", tr: "/tr" };
 
