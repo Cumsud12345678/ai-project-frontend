@@ -89,7 +89,7 @@ function Telegram() {
           <p className="mb-2 text-sm font-medium">{t("Bilməli olduqların")}</p>
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-muted-foreground">
             <li>{t("Bot yalnız şəxsi yazışmada cavab verir, qruplarda yox.")}</li>
-            <li>{t("Hələlik yalnız yazılı mesajlara cavab verir: səs və şəkil dəstəklənmir.")}</li>
+            <li>{t("Yazılı və səsli mesajlara, həmçinin şəkillərə cavab verir (səs mətnə çevrilir, şəkli köməkçi özü anlayır).")}</li>
             <li>{t("Cavab tapılmayanda bot telefon və ya e-poçt istəyir, müraciət “Müraciətlər” bölməsinə düşür və sənə e-poçt gəlir.")}</li>
             <li>{t("Sifariş və ödəniş kimi müştəri məlumatı Telegram-da işləmir (orada müştərini təsdiqləmək mümkün deyil).")}</li>
             <li>{t("Hər cavab saytdakı çat kimi balansdan çıxılır. Günlük limit “Saytına qoş” səhifəsindəki ziyarətçi limitidir.")}</li>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { connectWhatsApp, disconnectWhatsApp, getWhatsApp, patchWhatsApp, type WhatsAppStatus } from "@/lib/api";
 import { FormSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
+import { Label, Textarea } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SwitchRow } from "@/components/ui/switch";
 import { useI18n } from "@/lib/i18n";
@@ -37,8 +38,20 @@ export function WhatsApp() {
     try { setSt(await connectWhatsApp()); }
     catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   }
-  async function patch(p: { enabled?: boolean; pauseOnOwnReply?: boolean }) {
-    try { setSt(await patchWhatsApp(p)); } catch (err) { toast.error((err as Error).message); }
+  async function patch(p: { enabled?: boolean; pauseOnOwnReply?: boolean; ignore?: string[] }) {
+    try { setSt(await patchWhatsApp(p)); return true; } catch (err) { toast.error((err as Error).message); return false; }
+  }
+  // Cavab yazılmayan nömrələr/adlar: hər sətirdə bir
+  const [ignore, setIgnore] = useState<string | null>(null);
+  const ignoreText = ignore ?? (st?.ignore ?? []).join("\n");
+  const ignoreRows = ignoreText.split("\n").map((x) => x.trim()).filter(Boolean);
+  const ignoreDirty = ignore !== null && ignoreRows.join("\n") !== (st?.ignore ?? []).join("\n");
+  const ignoreBad = ignoreRows.length > 300 || ignoreRows.some((x) => x.length > 60);
+  async function saveIgnore() {
+    if (ignoreBad) return;
+    setBusy(true);
+    if (await patch({ ignore: ignoreRows })) { setIgnore(null); toast.success(t("Siyahı saxlandı.")); }
+    setBusy(false);
   }
   async function disconnect() {
     setBusy(true);
@@ -111,13 +124,23 @@ export function WhatsApp() {
           </div>
         )}
         {st?.connected && error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          {st && <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-4">
+            <Label htmlFor="wa-ignore">{t("Bu nömrələrə köməkçi cavab yazmasın")}</Label>
+            <p id="wa-ignore-d" className="text-sm text-muted-foreground">{!st.connected && <>{t("Nömrəni qoşmazdan əvvəl də yaza bilərsən: qoşulan kimi tətbiq olunur.")} </>}{t("Hər sətirdə bir nömrə və ya ad yaz. Nömrəni istənilən formada yazmaq olar (050 123 45 67 və ya +994501234567). Ad yazsan, adamın WhatsApp-da özünə qoyduğu adla müqayisə olunur, sənin telefonda yadda saxladığın adla yox. Bu adamlar yazanda köməkçi susur, cavabı sən özün verirsən.")}</p>
+            <Textarea id="wa-ignore" aria-describedby="wa-ignore-d" rows={5} value={ignoreText} onChange={(e) => setIgnore(e.target.value)} placeholder={"050 123 45 67\n+994551234567\nAnam"} aria-invalid={ignoreBad} className="font-mono text-sm" />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className={ignoreBad ? "mr-auto text-xs text-destructive" : "mr-auto text-xs text-muted-foreground"}>{ignoreBad ? t("Ən çox 300 sətir, hər sətir ən çox 60 simvol.") : t("{n} sətir", { n: ignoreRows.length })}</span>
+              {ignoreDirty && <Button size="sm" variant="outline" disabled={busy} onClick={() => setIgnore(null)}>{t("Ləğv et")}</Button>}
+              <Button size="sm" disabled={busy || !ignoreDirty || ignoreBad} onClick={saveIgnore}>{t("Saxla")}</Button>
+            </div>
+          </div>}
 
         <div className="border-t border-border pt-4">
           <p className="mb-2 text-sm font-medium">{t("Bilməli olduqların")}</p>
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-muted-foreground">
             <li>{t("Köməkçi yalnız şəxsi yazışmalarda cavab verir: qrup, status və kanallara yox.")}</li>
-            <li>{t("Qoşulan nömrəyə yazan hər kəsə cavab veriləcək. Ona görə ayrıca iş nömrəsi məsləhətdir.")}</li>
-            <li>{t("Hələlik yalnız yazılı mesajlara cavab verir: səs və şəkil dəstəklənmir.")}</li>
+            <li>{t("Qoşulan nömrəyə yazan hər kəsə cavab veriləcək (yuxarıdakı siyahıdakılardan başqa). Ona görə ayrıca iş nömrəsi məsləhətdir.")}</li>
+            <li>{t("Yazılı və səsli mesajlara, həmçinin şəkillərə cavab verir (səs mətnə çevrilir, şəkli köməkçi özü anlayır).")}</li>
             <li>{t("Cavablar bloklanma riskini azaltmaq üçün bir az gecikmə ilə, saatda ən çox 150 cavab həddi ilə göndərilir.")}</li>
             <li>{t("Cavab tapılmayanda köməkçi telefon və ya e-poçt istəyir, müraciət “Müraciətlər” bölməsinə düşür və sənə e-poçt gəlir.")}</li>
             <li>{t("Telefon hər gün internetdə olmalı deyil, amma 14 gündən çox oflayn qalsa və ya nömrəni “Əlaqəli cihazlar”dan çıxarsan, bağlantı kəsilir.")}</li>

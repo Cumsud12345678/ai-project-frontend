@@ -113,10 +113,10 @@ export const disconnectTelegram = () => pinged(call<{ ok: true }>("/tenant/chann
 
 // Kanallar (WhatsApp, QR ilə)
 export type WhatsAppState = "off" | "connecting" | "qr" | "open" | "error" | "replaced";
-export type WhatsAppStatus = { connected: boolean; enabled: boolean; phone: string | null; connectedAt: string | null; state: WhatsAppState; qr: string | null; error: string | null; pauseOnOwnReply: boolean; keyReady: boolean };
+export type WhatsAppStatus = { connected: boolean; enabled: boolean; phone: string | null; connectedAt: string | null; state: WhatsAppState; qr: string | null; error: string | null; pauseOnOwnReply: boolean; /** köməkçinin cavab yazmadığı nömrələr/adlar */ ignore?: string[]; keyReady: boolean };
 export const getWhatsApp = () => call<WhatsAppStatus>("/tenant/channels/whatsapp");
 export const connectWhatsApp = () => call<WhatsAppStatus>("/tenant/channels/whatsapp/connect", { method: "POST", body: { ack: true } });
-export const patchWhatsApp = (patch: { enabled?: boolean; pauseOnOwnReply?: boolean }) => pinged(call<WhatsAppStatus>("/tenant/channels/whatsapp", { method: "PATCH", body: patch }));
+export const patchWhatsApp = (patch: { enabled?: boolean; pauseOnOwnReply?: boolean; ignore?: string[] }) => pinged(call<WhatsAppStatus>("/tenant/channels/whatsapp", { method: "PATCH", body: patch }));
 export const disconnectWhatsApp = () => pinged(call<{ ok: true }>("/tenant/channels/whatsapp", { method: "DELETE" }));
 
 // Hesab
