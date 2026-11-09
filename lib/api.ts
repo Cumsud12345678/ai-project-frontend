@@ -333,7 +333,7 @@ export const getQueryStats = (days: number) => call<QueryStats>(`/tenant/queries
 // Söhbət tarixçəsi, konversiya, ixrac, aylıq hesabat
 export type ConversationRow = { sid: string; startedAt: string; lastAt: string; messages: number; first: string; unanswered: number; costAzn: number };
 export type ConversationList = { enabled: boolean; hasMore: boolean; nextCursor: string | null; conversations: ConversationRow[] };
-export type ConvListing = { id?: string; title: string; price?: number; currency?: string; url?: string; image?: string };
+export type ConvListing = { id?: string; title: string; price?: number; currency?: string; url?: string; image?: string; year?: number; mileage?: number };
 export type ConversationMsg = { id: string; at: string; message: string; answer: string | null; results: number; error: boolean; costAzn: number | null; listings?: ConvListing[]; confirm?: { title: string; summary: string }; clicks?: { id: string; title: string; at: string }[] };
 export const getConversations = (q: { days?: number; limit?: number; before?: string | null }) => {
   const p = new URLSearchParams();
@@ -508,6 +508,13 @@ export const getVisitors = () => call<{ enabled: boolean; items: SiteVisitor[] }
 export const inviteVisitor = (pid: string, text: string) => post<{ id: string }>(`/tenant/visitors/${pid}/invite`, { text });
 /** Canlı söhbətdə ziyarətçinin göndərdiyi şəkil (panel proksisi ilə, sessiya cookie-si gedir) */
 export const liveFileUrl = (chatId: string, fileId: string) => `/api/portal/tenant/live/${encodeURIComponent(chatId)}/files/${encodeURIComponent(fileId)}`;
+/** Telegram/WhatsApp-da AI ilə gedən söhbətlər (son 14 gün; operatora ötürülübsə liveId) */
+export type ChannelChat = {
+  channel: "telegram" | "whatsapp"; chatId: string; sid: string; name: string; ref: string; last: string; lastAnswer: string;
+  messages: number; updatedAt: string; liveId: string | null; history: { role: "user" | "model"; text: string }[];
+};
+export const getChannelChats = (channel?: "telegram" | "whatsapp") =>
+  call<{ items: ChannelChat[]; counts: { telegram: number; whatsapp: number }; enabled: { telegram: boolean; whatsapp: boolean } }>(`/tenant/channel-chats${channel ? `?channel=${channel}` : ""}`);
 export const startLiveChat = (b: { channel: "telegram" | "whatsapp"; chatId: string; text: string }) => post<{ id: string; existing?: boolean }>("/tenant/live/start", b);
 // Operator komandası (yalnız sahib)
 export type TeamMember = { email: string; joined: boolean; addedAt: string };

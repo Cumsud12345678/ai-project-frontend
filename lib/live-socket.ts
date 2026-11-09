@@ -8,7 +8,9 @@ import { getLiveTicket } from "@/lib/api";
  * Bütün səhifələr tək bir bağlantıdan istifadə edir (menyudakı sayğac, gələnlər qutusu).
  */
 /** by: "visitor" yalnız ziyarətçidən gələn hadisələrdə olur (operatorun öz mesajında yox): səs və bildiriş yalnız bunlarda. draft: ziyarətçinin göndərilməmiş mətni. */
-export type LiveEvent = { t: "live"; id: string; kind: "start" | "message" | "close" | "assign" | "note" | "tags" | "csat"; by?: "visitor" } | { t: "typing"; id: string; draft?: string } | { t: "visitors"; /** yeni ziyarət başladı */ fresh?: boolean; returning?: boolean };
+export type LiveEvent = { t: "live"; id: string; kind: "start" | "message" | "close" | "assign" | "note" | "tags" | "csat"; by?: "visitor" } | { t: "typing"; id: string; draft?: string } | { t: "visitors"; /** yeni ziyarət başladı */ fresh?: boolean; returning?: boolean }
+  /** Telegram/WhatsApp-da bot cavab verdi: Müraciətlər → Kanallar yenilənir */
+  | { t: "channels"; channel: "telegram" | "whatsapp" };
 type Listener = (e: LiveEvent) => void;
 
 const listeners = new Set<Listener>();

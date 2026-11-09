@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Ban, Bot, Check, CheckCheck, Hourglass, CircleHelp, Clock, Inbox as InboxIcon, Mail, MessageCircle, MessagesSquare, Phone, Send, Star, Trash2, Undo2, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
-import { deleteLead, getBlocks, getLeads, getLiveCount, getLiveList, getTeam, getVisitors, getUnanswered, unblock, updateLead, type BlockItem, type LeadRow, type LeadStatus, type LiveItem, type UnansweredRow } from "@/lib/api";
+import { deleteLead, getBlocks, getChannelChats, getLeads, getLiveCount, getLiveList, getTeam, getVisitors, getUnanswered, unblock, updateLead, type BlockItem, type LeadRow, type LeadStatus, type LiveItem, type UnansweredRow } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useLiveEvents } from "@/lib/live-socket";
 import { RequireTenant, useSession } from "@/components/session";
@@ -13,6 +13,7 @@ import { LiveInbox, type LiveFolder } from "@/components/live-inbox";
 import { NotifyBar } from "@/components/notify-bar";
 import { KnowledgeGaps } from "@/components/knowledge-gaps";
 import { FolderPane, Pane, type FolderItem } from "@/components/folder-pane";
+import { ChannelChats } from "@/components/channel-chats";
 import { AiWatch } from "@/components/ai-watch";
 
 const STATUS_ORDER: LeadStatus[] = ["new", "open", "pending", "solved"];
@@ -160,6 +161,8 @@ function Inbox() {
   const [live, setLive] = useState<Awaited<ReturnType<typeof getLiveCount>> | null>(null);
   const [items, setItems] = useState<LiveItem[]>([]);
   const [aiCount, setAiCount] = useState<number | undefined>();
+  // Telegram/WhatsApp-da son 24 saatda botla yazışanlar (operatora ötürülməmişlər də)
+  const [chCount, setChCount] = useState<{ telegram: number; whatsapp: number } | null>(null);
   const [leads, setLeads] = useState<Awaited<ReturnType<typeof getLeads>> | null>(null);
   const [un, setUn] = useState<Awaited<ReturnType<typeof getUnanswered>> | null>(null);
   const [error, setError] = useState("");
@@ -177,6 +180,7 @@ function Inbox() {
   const pick = (f: FolderId) => { setFolder(f); setOpenId(undefined); try { localStorage.setItem(STORE, f); } catch { /* yaddaş bağlıdır */ } };
 
   const loadLive = useCallback(() => {
+    getChannelChats().then((r) => setChCount(r.counts)).catch(() => {});
     getLiveCount().then((c) => {
       setLive(c);
       if (c.enabled) {
@@ -190,13 +194,12 @@ function Inbox() {
     Promise.all([getLeads(), getUnanswered()]).then(([l, u]) => { setLeads(l); setUn(u); setError(""); }).catch((e: Error) => setError(e.message));
   }, [isOperator]);
   useEffect(() => { loadLive(); loadForms(); const i = setInterval(loadLive, 15000); return () => clearInterval(i); }, [loadLive, loadForms]);
-  useLiveEvents((e) => { if (e.t === "live" || e.t === "visitors") loadLive(); }, Boolean(live?.enabled));
+  useLiveEvents((e) => { if (e.t === "live" || e.t === "visitors" || e.t === "channels") loadLive(); }, true);
   useEffect(() => { if (live && !live.enabled && !isOperator && ["ai", "open", "mine", "free", "waiting"].includes(folder)) pick("leads"); }, [live?.enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isVip = (c: LiveItem) => !!c.tags?.some((g) => g.toLowerCase() === "vip");
   const n = (f: (c: LiveItem) => boolean) => items.filter(f).length;
   const lv = (who: LiveFolder["who"], ch: LiveFolder["ch"] = "all", status: LiveFolder["status"] = "open"): LiveFolder => ({ status, who, ch });
-  const chEmpty = (name: string) => t("{ch}-da müştəri /operator yazanda söhbət burada görünür. Bot qoşulmayıbsa, Kanallar bölməsindən qoş.", { ch: name });
   const groups: { id: string; label: string; items: Folder[] }[] = [
     { id: "live", label: t("Canlı söhbət"), items: [
       { id: "ai", label: t("AI söhbətləri"), icon: Bot, color: "text-violet-600", count: aiCount },
@@ -209,8 +212,9 @@ function Inbox() {
     ] },
     { id: "channels", label: t("Kanallar"), items: [
       { id: "site", label: t("Sayt"), icon: MessageCircle, count: n((c) => !c.channel), live: lv("all", "site"), empty: t("Saytdan açıq söhbət yoxdur.") },
-      { id: "telegram", label: "Telegram", icon: Send, color: "text-[#229ED9]", count: n((c) => c.channel === "telegram"), live: lv("all", "telegram"), empty: chEmpty("Telegram") },
-      { id: "whatsapp", label: "WhatsApp", icon: Phone, color: "text-[#25D366]", count: n((c) => c.channel === "whatsapp"), live: lv("all", "whatsapp"), empty: chEmpty("WhatsApp") },
+      // Kanal qovluqları botun bütün yazışmalarını göstərir (əvvəl yalnız operatora ötürülənlər görünürdü)
+      { id: "telegram", label: "Telegram", icon: Send, color: "text-[#229ED9]", count: chCount?.telegram },
+      { id: "whatsapp", label: "WhatsApp", icon: Phone, color: "text-[#25D366]", count: chCount?.whatsapp },
       { id: "vip", label: "VIP", icon: Star, color: "text-amber", count: n(isVip), live: lv("all", "vip"), empty: t("VIP etiketli açıq söhbət yoxdur.") },
     ] },
     ...(isOperator ? [] : [{ id: "forms", label: t("Formalar və AI"), items: [
@@ -228,6 +232,7 @@ function Inbox() {
 
   let content: React.ReactNode;
   if (cur.live) content = live ? <LiveInbox key={cur.id} enabled={live.enabled} folder={cur.live} title={cur.label} empty={cur.empty ?? ""} open={openId} onChange={loadLive} /> : null;
+  else if (cur.id === "telegram" || cur.id === "whatsapp") content = <ChannelChats key={cur.id} channel={cur.id} title={cur.label} liveEnabled={Boolean(live?.enabled)} onLive={(id) => { pick("open"); setOpenId(id); loadLive(); }} />;
   else if (cur.id === "ai") content = <AiWatch title={cur.label} initial={watchPid} onTaken={(id) => { pick("open"); setOpenId(id); loadLive(); }} />;
   else if (cur.id === "unanswered") content = pane(cur.label, un ? <Unanswered rows={un.items} reload={loadForms} /> : null);
   else if (cur.id === "blocked") content = pane(cur.label, <Blocked />);
