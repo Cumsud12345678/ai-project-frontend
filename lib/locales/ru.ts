@@ -1515,7 +1515,6 @@ export const ru: Record<string, string> = {
   "Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa və ya Telegram/WhatsApp-da /operator yazsa burada görünəcək.": "Открытых чатов нет. Они появятся здесь, когда посетитель нажмёт «Написать оператору» или напишет /operator в Telegram/WhatsApp.",
   "Bağlanmış söhbət yoxdur.": "Нет закрытых чатов.",
   "Sən": "Вы",
-  "Hələ mesaj yoxdur": "Сообщений пока нет",
   "Burax": "Отпустить",
   "Götür": "Взять",
   "Söhbəti bitir": "Завершить чат",
@@ -3201,4 +3200,9 @@ export const ru: Record<string, string> = {
   "{ch} istifadəçisi": "Пользователь {ch}",
   "{ch} qoşulmayıb": "{ch} не подключён",
   "{ch}-da botla yazışan müştərilər (son 14 gün). Yazışmaya bax, lazım olsa söhbəti ələ al.": "Клиенты, переписывающиеся с ботом в {ch} (последние 14 дней). Смотрите переписку и при необходимости перехватите чат.",
+  "Həmişəlik silinsin?": "Удалить навсегда?",
+  "Operator istəyir, hələ yazmayıb": "Хочет оператора, ещё не написал",
+  "Söhbət silindi.": "Чат удалён.",
+  "Söhbəti sil": "Удалить чат",
+  "Ziyarətçi söhbətdən çıxdı.": "Посетитель покинул чат.",
 };

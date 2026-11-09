@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ban, BookPlus, Clock, FileText, Paperclip, Globe, Hand, Inbox, Mail, MessageSquarePlus, MessagesSquare, PanelRight, Phone, Search, Send, Sparkles, Star, StickyNote, Undo2, UserRound, X, XCircle } from "lucide-react";
+import { ArrowLeft, Ban, BookPlus, Clock, FileText, Paperclip, Globe, Hand, Inbox, Mail, MessageSquarePlus, MessagesSquare, PanelRight, Phone, Search, Send, Sparkles, Star, StickyNote, Trash2, Undo2, UserRound, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { blockLive, liveFileUrl, sendLiveFile, addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
+import { blockLive, deleteLive, liveFileUrl, sendLiveFile, addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { useI18n } from "@/lib/i18n";
 import { sendTyping, useLiveEvents } from "@/lib/live-socket";
@@ -167,6 +167,14 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
     } catch (err) { toast.error((err as Error).message); }
     finally { setBusy(false); }
   }
+  // Bağlanmış söhbəti silmək (yalnız hesab sahibi): iki addımlı təsdiq
+  const [askDel, setAskDel] = useState(false);
+  useEffect(() => { setAskDel(false); }, [sel]);
+  async function remove() {
+    if (!chat) return;
+    try { await deleteLive(chat.id); toast.success(t("Söhbət silindi.")); setSel(""); loadList(); onChange?.(); }
+    catch (err) { toast.error((err as Error).message); }
+  }
   async function close() {
     if (!chat) return;
     try { await closeLive(chat.id); toast.success(t("Söhbət bağlandı.")); setSel(""); loadList(); onChange?.(); }
@@ -251,7 +259,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
                         <span className={cn("min-w-0 flex-1 truncate text-sm", c.waiting ? "font-semibold" : "font-medium")}>{c.name || t("Adsız ziyarətçi")}</span>
                         <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">{ago(c.updatedAt)}</span>
                       </span>
-                      <span className={cn("truncate text-[13px]", c.waiting ? "text-foreground" : "text-muted-foreground")}>{c.last ? (c.last.from === "operator" ? `${t("Sən")}: ` : "") + (c.last.from === "system" ? "—" : c.last.text) : t("Hələ mesaj yoxdur")}</span>
+                      <span className={cn("truncate text-[13px]", c.waiting ? "text-foreground" : "text-muted-foreground")}>{c.last ? (c.last.from === "operator" ? `${t("Sən")}: ` : "") + (c.last.from === "system" ? (c.last.text === "visitor_left" ? t("Ziyarətçi söhbətdən çıxdı.") : t("Söhbət bitdi.")) : c.last.text) : t("Operator istəyir, hələ yazmayıb")}</span>
                       <span className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                         <span className="inline-flex items-center gap-1"><UserRound size={11} aria-hidden />{c.assignee ? (c.assignee.name === myName ? t("Sən") : c.assignee.name) : t("Təyin olunmayıb")}</span>
                         {c.waiting && <span className="rounded-full bg-amber/15 px-1.5 font-medium text-amber">{t("Cavab gözləyir")}</span>}
@@ -361,6 +369,13 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
             </div>
             {chat.status === "open" && !chat.assignee && <Button size="sm" variant="outline" className="hidden sm:inline-flex" onClick={() => claim(false)}><Hand size={14} aria-hidden />{t("Götür")}</Button>}
             {chat.status === "open" && <Button size="sm" variant="outline" onClick={close}><XCircle size={14} aria-hidden /><span className="hidden sm:inline">{t("Söhbəti bitir")}</span></Button>}
+            {chat.status === "closed" && !isOperator && (askDel
+              ? <span className="flex items-center gap-1.5">
+                  <span className="hidden text-xs text-muted-foreground sm:inline">{t("Həmişəlik silinsin?")}</span>
+                  <Button size="sm" variant="outline" onClick={() => setAskDel(false)}>{t("Ləğv et")}</Button>
+                  <Button size="sm" variant="destructive" onClick={() => void remove()}>{t("Sil")}</Button>
+                </span>
+              : <Button size="sm" variant="outline" className="text-destructive" onClick={() => setAskDel(true)} aria-label={t("Söhbəti sil")}><Trash2 size={14} aria-hidden /><span className="hidden sm:inline">{t("Sil")}</span></Button>)}
             <Button size="sm" variant="ghost" className="xl:hidden" onClick={() => setInfoOpen((v) => !v)} aria-label={t("Müştəri məlumatı")} aria-pressed={infoOpen}><PanelRight size={16} aria-hidden /></Button>
           </div>
           <div ref={logRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40; }}
@@ -374,7 +389,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
               </details>
             )}
             {chat.messages.map((m, i) => m.from === "system"
-              ? <p key={i} className="self-center rounded-full bg-card px-3 py-1 text-xs text-muted-foreground ring-1 ring-border">{t("Söhbət bitdi.")}</p>
+              ? <p key={i} className="self-center rounded-full bg-card px-3 py-1 text-xs text-muted-foreground ring-1 ring-border">{m.text === "visitor_left" ? t("Ziyarətçi söhbətdən çıxdı.") : t("Söhbət bitdi.")}</p>
               : (
                 <div key={i} className={cn("flex max-w-[80%] flex-col gap-1", m.from === "operator" ? "self-end items-end" : "self-start")}>
                   <span className="px-1 text-[11px] text-muted-foreground">{m.from === "operator" ? (m.by || t("Sən")) : (chat.name || t("Ziyarətçi"))} · {time(m.at)}</span>

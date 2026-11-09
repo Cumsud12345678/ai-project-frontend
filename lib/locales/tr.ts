@@ -1515,7 +1515,6 @@ export const tr: Record<string, string> = {
   "Açıq söhbət yoxdur. Ziyarətçi “Operatorla canlı yaz” bassa və ya Telegram/WhatsApp-da /operator yazsa burada görünəcək.": "Açık sohbet yok. Ziyaretçi “Operatörle canlı yaz”a basarsa veya Telegram/WhatsApp'ta /operator yazarsa burada görünecek.",
   "Bağlanmış söhbət yoxdur.": "Kapatılmış sohbet yok.",
   "Sən": "Sen",
-  "Hələ mesaj yoxdur": "Henüz mesaj yok",
   "Burax": "Bırak",
   "Götür": "Üstlen",
   "Söhbəti bitir": "Sohbeti bitir",
@@ -3201,4 +3200,9 @@ export const tr: Record<string, string> = {
   "{ch} istifadəçisi": "{ch} kullanıcısı",
   "{ch} qoşulmayıb": "{ch} bağlı değil",
   "{ch}-da botla yazışan müştərilər (son 14 gün). Yazışmaya bax, lazım olsa söhbəti ələ al.": "{ch} üzerinden botla yazışan müşteriler (son 14 gün). Yazışmaya bak, gerekirse sohbeti devral.",
+  "Həmişəlik silinsin?": "Kalıcı olarak silinsin mi?",
+  "Operator istəyir, hələ yazmayıb": "Operatör istiyor, henüz yazmadı",
+  "Söhbət silindi.": "Sohbet silindi.",
+  "Söhbəti sil": "Sohbeti sil",
+  "Ziyarətçi söhbətdən çıxdı.": "Ziyaretçi sohbetten ayrıldı.",
 };

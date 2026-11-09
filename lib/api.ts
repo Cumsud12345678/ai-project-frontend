@@ -510,7 +510,9 @@ export const inviteVisitor = (pid: string, text: string) => post<{ id: string }>
 export const liveFileUrl = (chatId: string, fileId: string) => `/api/portal/tenant/live/${encodeURIComponent(chatId)}/files/${encodeURIComponent(fileId)}`;
 /** Telegram/WhatsApp-da AI ilə gedən söhbətlər (son 14 gün; operatora ötürülübsə liveId) */
 export type ChannelChat = {
-  channel: "telegram" | "whatsapp"; chatId: string; sid: string; name: string; ref: string; last: string; lastAnswer: string;
+  channel: "telegram" | "whatsapp"; chatId: string; sid: string; name: string; ref: string;
+  /** WhatsApp nömrəsi (LID-li söhbətlərdə məlum olmaya bilər) */ phone?: string;
+  /** köhnədən yeniyə bütün söhbət ID-ləri (fasilədən sonra yeni sid açılır) */ sids?: string[]; last: string; lastAnswer: string;
   messages: number; updatedAt: string; liveId: string | null; history: { role: "user" | "model"; text: string }[];
 };
 export const getChannelChats = (channel?: "telegram" | "whatsapp") =>
@@ -534,6 +536,7 @@ export const sendLive = (id: string, text: string) => post<{ total: number }>(`/
 /** Operatorun faylı: şəkil (2 MB) və ya PDF (4 MB), base64; text istəyə bağlı izahdır */
 export const sendLiveFile = (id: string, f: { data: string; name: string; text?: string }) => post<{ total: number }>(`/tenant/live/${id}/files`, f);
 export const closeLive = (id: string) => post<{ ok: true }>(`/tenant/live/${id}/close`);
+export const deleteLive = (id: string) => call<{ ok: true }>(`/tenant/live/${id}`, { method: "DELETE" });
 export type FeedbackSummary = { days: number; up: number; down: number; bad: { at: string; question: string; answer: string }[] };
 export const getFeedback = (days = 30) => call<FeedbackSummary>(`/tenant/feedback?days=${days}`);
 

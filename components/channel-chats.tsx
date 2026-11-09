@@ -42,10 +42,12 @@ export function ChannelChats({ channel, title, liveEnabled, onLive }: { channel:
     if (!cur) return;
     let on = true;
     const fallback = (): Msg[] => cur.history.map((m, i) => ({ key: `h${i}`, role: m.role, text: m.text }));
-    const f = () => getConversation(cur.sid)
-      .then((r) => {
+    const sids = cur.sids?.length ? cur.sids : [cur.sid];
+    // Uzun fasilədən sonra kanal yeni söhbət ID-si açır: hamısını köhnədən yeniyə birləşdiririk
+    const f = () => Promise.all(sids.map((s) => getConversation(s).then((r) => r.messages).catch(() => [] as ConversationMsg[])))
+      .then((parts) => {
         if (!on) return;
-        const full = r.messages.flatMap((m: ConversationMsg): Msg[] => [
+        const full = parts.flat().flatMap((m: ConversationMsg): Msg[] => [
           { key: `${m.id}q`, role: "user", text: m.message, at: m.at },
           ...(m.answer !== null ? [{ key: `${m.id}a`, role: "model" as const, text: m.answer, at: m.at, warn: m.error || m.results === 0, listings: (m.listings ?? []).slice(0, CARD_LIMIT).map(toListing) }] : []),
         ]);
@@ -55,7 +57,7 @@ export function ChannelChats({ channel, title, liveEnabled, onLive }: { channel:
     f();
     const i = setInterval(f, 6000);
     return () => { on = false; clearInterval(i); };
-  }, [cur?.sid, cur?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cur?.sid, cur?.sids?.length, cur?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const el = logRef.current; if (el) el.scrollTop = el.scrollHeight; }, [msgs?.length]);
 
   const time = (iso: string) => {
@@ -63,7 +65,7 @@ export function ChannelChats({ channel, title, liveEnabled, onLive }: { channel:
     const same = d.toDateString() === new Date().toDateString();
     return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : locale, same ? { hour: "2-digit", minute: "2-digit" } : { day: "numeric", month: "short" }).format(d);
   };
-  const who = (c: ChannelChat) => c.name || (channel === "whatsapp" && c.ref ? `+${c.ref.replace(/\D/g, "")}` : t("{ch} istifadəçisi", { ch: name }));
+  const who = (c: ChannelChat) => c.name || (channel === "whatsapp" && c.phone ? `+${c.phone}` : t("{ch} istifadəçisi", { ch: name }));
   // WhatsApp-da operator yalnız nömrəsi məlum olan müştəriyə yaza bilir
   const canTake = Boolean(cur && liveEnabled && (channel === "telegram" || cur.ref));
 
@@ -132,7 +134,7 @@ export function ChannelChats({ channel, title, liveEnabled, onLive }: { channel:
               <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted"><UserRound size={15} aria-hidden /></span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[15px] font-semibold">{who(cur)}</p>
-                <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground"><Icon size={11} aria-hidden />{name}{channel === "whatsapp" && cur.ref ? ` · +${cur.ref.replace(/\D/g, "")}` : ""}</p>
+                <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground"><Icon size={11} aria-hidden />{name}{channel === "whatsapp" && cur.phone ? ` · +${cur.phone}` : ""}</p>
               </div>
               {cur.liveId
                 ? <Button size="sm" onClick={() => onLive(cur.liveId!)}><Headset size={14} aria-hidden />{t("Canlı söhbətə keç")}</Button>
