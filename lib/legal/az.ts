@@ -30,7 +30,7 @@ const az: LegalPack = {
           "Xidmət əvvəlcədən ödənilmiş balans (AZN) əsasında işləyir. Hər cavab üçün faktiki xərc balansdan çıxılır, cari balans və xərc tarixçəsi paneldə görünür.",
           "Balans bitəndə köməkçi ziyarətçilərə cavab vermir, əvəzinə əlaqə forması göstərilir. Balans artırılan kimi xidmət avtomatik davam edir.",
           "Qiymətlər dəyişərsə, ən azı 14 gün əvvəl e-poçt və ya panel vasitəsilə xəbərdarlıq edirik. Artıq yüklənmiş balans dəyişiklikdən sonra yeni qiymətlərlə istifadə olunur.",
-          "Geri qaytarma qaydaları ayrıca “Ödəniş və geri qaytarma” sənədindədir.",
+          "Hər yükləmənin istifadə müddəti yükləmə tarixindən 12 aydır; bu müddətdə istifadə olunmayan hissə yanır. Yüklənmiş balans geri qaytarılmır və nağdlaşdırılmır (səhv tutulma və bizim tərəfimizdən xidmətin dayandırılması istisna). Ətraflı: “Ödəniş və geri qaytarma” sənədi.",
         ] },
         { id: "mezmun", h: "5. Sənin məzmunun və öhdəliklərin", body: [
           "- Yüklədiyin və ya qoşduğun məlumat (elanlar, sənədlər, API cavabları, şirkət məlumatı) sənə məxsusdur. Bu məlumatı istifadə etməyə hüququn olduğunu təsdiq edirsən.",
@@ -55,7 +55,7 @@ const az: LegalPack = {
           "Planlı texniki işlər barədə imkan daxilində əvvəlcədən xəbər veririk.",
         ] },
         { id: "dayandirma", h: "9. Dayandırma və hesabın silinməsi", body: [
-          "Hesabını istənilən vaxt paneldən (Ayarlar → Hesab → Hesabı sil) silə bilərsən. Silinmə ilə məlumatların Məxfilik siyasətində göstərilən qaydada silinir.",
+          "Hesabını istənilən vaxt paneldən (Ayarlar → Hesab → Hesabı sil) silə bilərsən. Silinmə ilə məlumatların Məxfilik siyasətində göstərilən qaydada silinir. Hesab silinəndə istifadə olunmamış balans geri qaytarılmır.",
           "Şərtlər pozulduqda, ödəniş fırıldaqçılığı və ya qanun tələbi olduqda hesabı dayandıra bilərik. Dayandırılmış hesabda məlumat və balans dərhal silinmir, səbəb e-poçtla bildirilir.",
         ] },
         { id: "mesuliyyet", h: "10. Məsuliyyətin məhdudlaşdırılması", body: [
@@ -144,35 +144,40 @@ const az: LegalPack = {
     },
     refund: {
       title: "Ödəniş və geri qaytarma",
-      summary: "Balansın necə işlədiyi, hansı hallarda və necə geri qaytarıldığı.",
+      summary: "Balansın necə işlədiyi, istifadə müddəti və geri qaytarma qaydaları.",
       sections: [
         { id: "model", h: "1. Balans necə işləyir", body: [
           "{brand} əvvəlcədən ödənilən balansla işləyir. Balansı artırırsan, hər cavab üçün faktiki xərc balansdan çıxılır. Avtomatik yenilənən abunə və gizli ödəniş yoxdur.",
           "Xərc tarixçəsi, cari balans və yükləmələr paneldəki “Balans” bölməsində görünür. Gündəlik xərc limiti gözlənilməz artımdan (məsələn, bot hücumundan) qoruyur.",
+          "Hər yükləmənin istifadə müddəti **yükləmə tarixindən 12 aydır**. Bu müddət ərzində istifadə olunmayan hissə yanır və bərpa olunmur. Xərc əvvəlcə müddəti ən tez bitən yükləmədən çıxılır. Hər yükləmənin qalığı və bitmə tarixi paneldə görünür; müddəti bitməyə az qalanda paneldə xəbərdarlıq göstərilir.",
         ] },
         { id: "odenis", h: "2. Ödəniş", body: [
           "Ödənişlər Azərbaycan manatı (AZN) ilə, lisenziyalı ödəniş provayderi vasitəsilə bank kartı ilə qəbul olunur. Kart məlumatlarını biz görmürük və saxlamırıq.",
           "Uğurlu ödənişdən sonra balans avtomatik artır və təsdiq məktubu göndərilir.",
         ] },
-        { id: "qaytarma", h: "3. Geri qaytarılan hallar", body: [
-          "- **14 gün ərzində:** yükləmədən sonra 14 gün ərzində həmin yükləmənin istifadə olunmamış hissəsi tam geri qaytarılır.",
-          "- **Hesab bağlananda:** 14 gündən sonra da hesabını bağlayırsansa, istifadə olunmamış balans sorğu əsasında qaytarılır.",
+        { id: "qaytarma", h: "3. Geri qaytarma", body: [
+          "Yüklənmiş balans **geri qaytarılmır və nağdlaşdırılmır**: nə yükləmədən sonra, nə də hesab bağlananda. Ona görə məbləği ehtiyacına görə seç; kiçik məbləğlə başlayıb lazım olduqca artırmaq olar.",
+          "Yalnız bu hallarda pul geri qaytarılır:",
           "- **Səhv tutulma:** texniki xəta ilə artıq məbləğ çıxılıbsa və ya ödəniş iki dəfə keçibsə, artıq hissə tam qaytarılır.",
+          "- **Xidməti biz dayandırsaq:** platforma fəaliyyətini dayandırarsa, istifadə olunmamış yüklənmiş balans qaytarılır.",
+          "- qanunla tələb olunan digər hallar.",
         ] },
         { id: "qaytarilmir", h: "4. Geri qaytarılmayan hallar", body: [
           "- artıq istifadə olunmuş xərc (köməkçinin verdiyi cavablar);",
-          "- hər ay verilən pulsuz balans, bonus, promo və ya partnyor proqramı ilə verilən balans (bunlar nağdlaşdırılmır);",
-          "- şərtlərin pozulmasına görə dayandırılmış hesab (qanunla tələb olunan hallar istisna).",
+          "- müddəti (12 ay) bitmiş balans;",
+          "- hesab bağlanarkən və ya silinərkən qalan balans;",
+          "- pulsuz balans, bonus, promo və ya partnyor proqramı ilə verilən balans (bunlar nağdlaşdırılmır);",
+          "- şərtlərin pozulmasına görə dayandırılmış hesab.",
         ] },
-        { id: "nece", h: "5. Necə müraciət etmək olar", body: [
+        { id: "nece", h: "5. Səhv tutulma barədə necə müraciət etmək olar", body: [
           "{email} ünvanına hesabının e-poçtu, ödənişin tarixi və məbləği ilə yaz. Müraciətə 10 iş günü ərzində baxırıq.",
-          "Təsdiq olunan məbləğ ödənişin edildiyi karta qaytarılır. Pulun karta düşməsi bankdan asılı olaraq 5–15 iş günü çəkə bilər. Ödəniş provayderinin tutduğu komissiya qaytarılmaya bilər.",
+          "Təsdiq olunan məbləğ ödənişin edildiyi karta qaytarılır. Pulun karta düşməsi bankdan asılı olaraq 5–15 iş günü çəkə bilər.",
         ] },
         { id: "mubahise", h: "6. Ödəniş mübahisələri", body: [
           "Ödənişlə bağlı problem olduqda bankda mübahisə (chargeback) açmazdan əvvəl bizə yaz: əksər halları bir neçə gün ərzində həll edirik. Mübahisə açıq olduğu müddətdə hesab müvəqqəti məhdudlaşdırıla bilər.",
         ] },
         { id: "qiymet", h: "7. Qiymət dəyişiklikləri", body: [
-          "Qiymətlər dəyişərsə, ən azı 14 gün əvvəl xəbər veririk. Razı deyilsənsə, istifadə olunmamış balansı bu qaydaya uyğun geri ala bilərsən.",
+          "Qiymətlər dəyişərsə, ən azı 14 gün əvvəl e-poçt və ya panel vasitəsilə xəbər veririk. Bu müddətdə yeni yükləmə etməyə bilərsən; artıq yüklənmiş balans dəyişiklikdən sonra yeni qiymətlərlə istifadə olunur.",
         ] },
       ],
     },

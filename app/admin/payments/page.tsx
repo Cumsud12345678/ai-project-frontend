@@ -147,7 +147,7 @@ export default function AdminPaymentsPage() {
   }
 
   const total = ledger?.reduce((s, x) => s + x.amountAzn, 0) ?? 0;
-  const kindBadge: Record<LedgerRow["kind"], [string, string]> = { payment: [t("ödəniş"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"], manual: [t("əl ilə"), "bg-muted text-foreground"], adjust: [t("düzəliş"), "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"] };
+  const kindBadge: Record<LedgerRow["kind"], [string, string]> = { payment: [t("ödəniş"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"], manual: [t("əl ilə"), "bg-muted text-foreground"], adjust: [t("düzəliş"), "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"], expire: [t("müddəti bitdi"), "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"] };
   const statusBadge: Record<string, [string, string]> = { pending: [t("gözləyir"), "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"], approved: [t("təsdiqləndi"), "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"], rejected: [t("rədd edildi"), "border border-border bg-transparent text-muted-foreground"] };
   const name = (s: string) => (s === "(silinib)" ? t("(silinib)") : s);
   const th = "px-4 py-3 font-medium";
@@ -201,7 +201,7 @@ export default function AdminPaymentsPage() {
             {tab === "ledger" ? (
               <div className="flex flex-col gap-1"><Label htmlFor="pay-kind">{t("Növ")}</Label>
                 <select id="pay-kind" value={kind} onChange={(e) => setKind(e.target.value)} className={sel}>
-                  <option value="">{t("Hamısı")}</option><option value="payment">{t("Ödəniş")}</option><option value="manual">{t("Əl ilə əlavə")}</option><option value="adjust">{t("Düzəliş (mənfi)")}</option>
+                  <option value="">{t("Hamısı")}</option><option value="payment">{t("Ödəniş")}</option><option value="manual">{t("Əl ilə əlavə")}</option><option value="adjust">{t("Düzəliş (mənfi)")}</option><option value="expire">{t("Müddəti bitən balans")}</option>
                 </select></div>
             ) : (
               <div className="flex flex-col gap-1"><Label htmlFor="pay-status">{t("Status")}</Label>

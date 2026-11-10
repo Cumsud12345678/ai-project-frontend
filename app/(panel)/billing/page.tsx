@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Wallet } from "lucide-react";
+import { Clock, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { getBilling, requestTopup, type Billing } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -20,6 +20,8 @@ function Body() {
   const [error, setError] = useState("");
   const [amount, setAmount] = useState("10");
   const [busy, setBusy] = useState(false);
+  // Ödənişdən əvvəl şərtlərin qəbulu: balans geri qaytarılmır və müddəti var
+  const [agree, setAgree] = useState(false);
   const [info, setInfo] = useState<{ instructions?: string; checkoutUrl?: string; amount: number } | null>(null);
 
   const load = useCallback(() => { getBilling().then(setB).catch((e: Error) => setError(e.message)); }, []);
@@ -38,10 +40,15 @@ function Body() {
   const stateBadge = b.state === "empty" ? <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Balans bitib")}</Badge>
     : b.state === "low" ? <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("Balans azalır")}</Badge>
     : <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Aktiv")}</Badge>;
-  const typeLabel: Record<string, string> = { topup: t("Yükləmə"), adjust: t("Düzəliş"), free: t("Pulsuz balans"), charge: t("Sorğu xərci") };
+  const typeLabel: Record<string, string> = { topup: t("Yükləmə"), adjust: t("Düzəliş"), free: t("Pulsuz balans"), charge: t("Sorğu xərci"), expire: t("Müddəti bitdi"), bonus: t("Bonus") };
+  const months = Math.round((b.expiryDays ?? 365) / 30.4);
+  const lots = b.lots ?? [];
+  // 30 gün ərzində bitəcək qalıq: xəbərdarlıq
+  const soon = lots.filter((l) => l.expiresAt && Date.parse(l.expiresAt) - Date.now() < 30 * 86_400_000);
+  const soonAzn = soon.reduce((s, l) => s + l.leftAzn, 0);
 
   async function submit() {
-    if (!valid) return;
+    if (!valid || !agree) return;
     setBusy(true);
     try {
       const r = await requestTopup(amt);
@@ -71,6 +78,25 @@ function Body() {
             <div><dt className="text-muted-foreground">{t("Yüklənmiş hissə")}</dt><dd className="tabular-nums">{azn(b.balance.paidAzn)}</dd></div>
             <div><dt className="text-muted-foreground">{t("Bu ay xərc")}</dt><dd className="tabular-nums">{azn(b.spend.monthAzn)} · {num(b.spend.monthRequests)} {t("sorğu")}</dd></div>
           </dl>
+          {soonAzn > 0 && (
+            <p role="status" className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-inset ring-amber-600/20">
+              <Clock size={16} aria-hidden className="mt-0.5 shrink-0" />
+              <span>{t("{a} AZN yüklənmiş balansın müddəti {d} tarixində bitir. O vaxta qədər istifadə olunmasa, yanacaq.", { a: soonAzn.toFixed(2), d: short(soon[0]!.expiresAt!) })}</span>
+            </p>
+          )}
+          {lots.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">{t("Yüklənmiş balans və bitmə tarixləri")}</p>
+              <ul className="divide-y divide-border rounded-md border border-border text-sm">
+                {lots.map((l, i) => (
+                  <li key={i} className="flex flex-wrap justify-between gap-2 px-3 py-2 tabular-nums">
+                    <span>{azn(l.leftAzn)} <span className="text-muted-foreground">/ {azn(l.amountAzn)} · {t("yüklənib {d}", { d: short(l.at) })}</span></span>
+                    <span className="text-muted-foreground">{l.expiresAt ? t("{d} tarixinədək", { d: short(l.expiresAt) }) : t("müddətsiz")}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             {b.allowance.period === "monthly"
               ? t("Hər ay {n} AZN pulsuz balans verilir; əvvəlcə o xərclənir.", { n: b.allowance.freeAzn })
@@ -97,7 +123,7 @@ function Body() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>{t("Balansı yüklə")}</CardTitle><CardDescription>{t("Minimum {min} AZN. Yüklənən məbləğ ödənişdən sonra balansa əlavə olunur.", { min: b.minTopupAzn })}</CardDescription></CardHeader>
+        <CardHeader><CardTitle>{t("Balansı yüklə")}</CardTitle><CardDescription>{t("Minimum {min} AZN. Yüklənən məbləğ ödənişdən sonra balansa əlavə olunur. Ehtiyacın qədər yüklə: balans geri qaytarılmır.", { min: b.minTopupAzn })}</CardDescription></CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             {[10, 20, 50].filter((n) => n >= b.minTopupAzn).map((n) => (
@@ -110,7 +136,16 @@ function Body() {
             {valid && <p className="text-sm" aria-live="polite">{t("≈ {n} mesaj", { n: num(approx(amt)) })} <span className="text-muted-foreground">· {t("köməkçinin bir cavabı = 1 mesaj, real orta qiymətlə hesablanıb")}</span></p>}
             {!valid && <p className="text-xs text-destructive">{t("Məbləğ {min} ilə {max} AZN arasında olmalıdır.", { min: b.minTopupAzn, max: b.maxTopupAzn })}</p>}
           </div>
-          <div><Button onClick={submit} disabled={!valid || busy}>{t("Yükləmə sorğusu göndər")}</Button></div>
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-foreground" />
+            <span>
+              {(b.expiryDays ?? 365) > 0
+                ? t("Başa düşürəm: yüklənən məbləğ {m} ay ərzində istifadə olunmalıdır, istifadə olunmayan hissə yanır və balans geri qaytarılmır.", { m: months })
+                : t("Başa düşürəm: yüklənən balans geri qaytarılmır.")}{" "}
+              <Link href="/legal/refund" target="_blank" className="font-medium underline underline-offset-2">{t("Qaydalar")}</Link>
+            </span>
+          </label>
+          <div><Button onClick={submit} disabled={!valid || !agree || busy}>{t("Yükləmə sorğusu göndər")}</Button></div>
           {info && (
             <div role="status" className="rounded-md border border-border bg-muted/40 p-3 text-sm">
               <p className="font-medium">{t("{a} AZN üçün sorğu qəbul olundu.", { a: info.amount })}</p>

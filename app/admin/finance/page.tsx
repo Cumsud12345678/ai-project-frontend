@@ -117,7 +117,7 @@ export default function AdminFinancePage() {
                       </td>
                       <td className="px-3 py-2.5 text-right">{azn(m.billedAzn)}</td>
                       <td className="px-3 py-2.5 text-right text-muted-foreground">{azn(m.freeAzn)}</td>
-                      <td className="px-3 py-2.5 text-right">{azn(m.revenueAzn)}</td>
+                      <td className="px-3 py-2.5 text-right">{azn(m.revenueAzn)}{!!m.expiredAzn && <span className="block text-xs text-muted-foreground">{t("yanan balans")} {azn(m.expiredAzn)}</span>}</td>
                       <td className="px-3 py-2.5 text-right">{azn(m.costAzn)}</td>
                       <td className={cn("px-3 py-2.5 text-right font-medium", m.profitAzn < 0 ? "text-destructive" : "text-foreground")}>{azn(m.profitAzn)}</td>
                       <td className="px-5 py-2.5 text-right text-muted-foreground">{m.marginPct == null ? "–" : `${m.marginPct}%`}</td>

@@ -30,7 +30,7 @@ const en: LegalPack = {
           "The service runs on a prepaid balance (AZN). The actual cost of each answer is deducted from the balance; the current balance and spending history are shown in the panel.",
           "When the balance runs out, the assistant stops answering visitors and shows a contact form instead. The service resumes automatically after a top-up.",
           "We announce price changes at least 14 days in advance by email or in the panel. Balance already topped up is used at the new prices after the change.",
-          "Refund rules are set out in the separate “Payments & Refunds” document.",
+          "Each top-up can be used for 12 months from the top-up date; any part not used in that time expires. Topped-up balance is non-refundable and cannot be cashed out (except for incorrect charges and if we discontinue the service). Details: the “Payments & Refunds” document.",
         ] },
         { id: "mezmun", h: "5. Your content and obligations", body: [
           "- Data you upload or connect (listings, documents, API responses, company details) belongs to you. You confirm you have the right to use it.",
@@ -55,7 +55,7 @@ const en: LegalPack = {
           "Where possible we announce planned maintenance in advance.",
         ] },
         { id: "dayandirma", h: "9. Suspension and account deletion", body: [
-          "You can delete your account at any time in the panel (Settings → Account → Delete account). Your data is then deleted as described in the Privacy Policy.",
+          "You can delete your account at any time in the panel (Settings → Account → Delete account). Your data is then deleted as described in the Privacy Policy. Unused balance is not refunded when an account is deleted.",
           "We may suspend an account for breach of these terms, payment fraud or legal requirements. Data and balance of a suspended account are not deleted immediately, and the reason is sent by email.",
         ] },
         { id: "mesuliyyet", h: "10. Limitation of liability", body: [
@@ -144,35 +144,40 @@ const en: LegalPack = {
     },
     refund: {
       title: "Payments & Refunds",
-      summary: "How the balance works and when and how refunds are made.",
+      summary: "How the balance works, how long it can be used and the refund rules.",
       sections: [
         { id: "model", h: "1. How the balance works", body: [
           "{brand} runs on a prepaid balance. You top up, and the actual cost of each answer is deducted. There are no auto-renewing subscriptions or hidden charges.",
           "Spending history, current balance and top-ups are shown in the “Balance” section of the panel. A daily spending limit protects against unexpected spikes (e.g. bot attacks).",
+          "Each top-up can be used for **12 months from the top-up date**. Any part not used within that period expires and cannot be restored. Usage is deducted from the top-up that expires soonest. The remaining amount and expiry date of each top-up are shown in the panel, with a notice when one is about to expire.",
         ] },
         { id: "odenis", h: "2. Payment", body: [
           "Payments are accepted in Azerbaijani manat (AZN) by bank card through a licensed payment provider. We never see or store card details.",
           "After a successful payment the balance increases automatically and a confirmation email is sent.",
         ] },
-        { id: "qaytarma", h: "3. When we refund", body: [
-          "- **Within 14 days:** the unused part of a top-up is refunded in full within 14 days of the top-up.",
-          "- **On account closure:** after 14 days, if you close your account, the unused balance is refunded on request.",
+        { id: "qaytarma", h: "3. Refunds", body: [
+          "Topped-up balance is **non-refundable and cannot be cashed out**, neither after the top-up nor when you close your account. Choose the amount you need; you can start small and top up as you go.",
+          "We refund money only in these cases:",
           "- **Incorrect charges:** if a technical error deducted too much or a payment went through twice, the excess is refunded in full.",
+          "- **If we discontinue the service:** if the platform stops operating, the unused topped-up balance is refunded.",
+          "- other cases required by law.",
         ] },
         { id: "qaytarilmir", h: "4. When we don't refund", body: [
           "- costs already used (answers given by the assistant);",
-          "- the free monthly balance and any balance granted as a bonus, promotion or through the partner programme (these cannot be cashed out);",
-          "- accounts suspended for breach of the terms (except where required by law).",
+          "- balance that has expired (after 12 months);",
+          "- balance remaining when an account is closed or deleted;",
+          "- free balance and any balance granted as a bonus, promotion or through the partner programme (these cannot be cashed out);",
+          "- accounts suspended for breach of the terms.",
         ] },
-        { id: "nece", h: "5. How to request a refund", body: [
+        { id: "nece", h: "5. How to report an incorrect charge", body: [
           "Write to {email} with your account email, payment date and amount. We review requests within 10 business days.",
-          "Approved amounts are returned to the card used for payment. Depending on the bank this can take 5–15 business days. The payment provider's fee may be non-refundable.",
+          "Approved amounts are returned to the card used for payment. Depending on the bank this can take 5–15 business days.",
         ] },
         { id: "mubahise", h: "6. Payment disputes", body: [
           "If there is a problem with a payment, please contact us before opening a chargeback with your bank — we resolve most cases within a few days. The account may be temporarily restricted while a dispute is open.",
         ] },
         { id: "qiymet", h: "7. Price changes", body: [
-          "We announce price changes at least 14 days in advance. If you disagree, you can get your unused balance back under this policy.",
+          "We announce price changes at least 14 days in advance by email or in the panel. You can choose not to top up during that time; balance already topped up is used at the new prices after the change.",
         ] },
       ],
     },

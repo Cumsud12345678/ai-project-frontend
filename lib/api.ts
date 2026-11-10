@@ -215,7 +215,7 @@ export const adminUnsuspend = (tenantId: string) => post<{ ok: true }>(`/admin/t
 
 export type FinanceMonth = {
   month: string; cashIn: { paidAzn: number; manualAzn: number; adjustAzn: number; totalAzn: number };
-  billedAzn: number; freeAzn: number; revenueAzn: number; costAzn: number; profitAzn: number; marginPct: number | null; requests: number;
+  billedAzn: number; freeAzn: number; /** müddəti bitib yanan yüklənmiş balans (gəlirə daxildir) */ expiredAzn?: number; revenueAzn: number; costAzn: number; profitAzn: number; marginPct: number | null; requests: number;
 };
 export type FinanceModel = { model: string; provider: "anthropic" | "google" | "other"; costAzn: number; calls: number; tokens: number; months: Record<string, number> };
 export type FinanceTenant = { tenantId: string; businessName: string; domain: string; email: string; suspended: boolean; requests: number; billedAzn: number; freeAzn: number; revenueAzn: number; costAzn: number; profitAzn: number; markup: number; customMarkup: boolean; balanceAzn: number };
@@ -262,7 +262,7 @@ export const adminAudit = (q: { action?: string; actor?: string; q?: string; bef
 export type PaymentFilters = { status?: string; kind?: string; tenant?: string; from?: string; to?: string; before?: string };
 type TenantMatch = { tenantId: string; businessName: string; domain: string };
 export type PaymentRequestRow = TopupRequest & { businessName: string; domain: string; email: string; resolvedAt?: string; resolvedBy?: string };
-export type LedgerRow = { id: string; tenantId: string; at: string; kind: "payment" | "manual" | "adjust"; type: string; amountAzn: number; note: string; by: string; businessName: string; domain: string; email: string };
+export type LedgerRow = { id: string; tenantId: string; at: string; kind: "payment" | "manual" | "adjust" | "expire"; type: string; amountAzn: number; note: string; by: string; businessName: string; domain: string; email: string };
 const pq = (f: PaymentFilters) => new URLSearchParams(Object.entries(f).filter(([, v]) => v) as [string, string][]);
 export const adminPaymentRequests = (f: PaymentFilters) => call<{ requests: PaymentRequestRow[]; nextBefore: string | null; tenant: TenantMatch | null; matches: TenantMatch[] }>(`/admin/payments/requests?${pq(f)}`);
 export const adminLedger = (f: PaymentFilters) => call<{ entries: LedgerRow[]; nextBefore: string | null; tenant: TenantMatch | null; matches: TenantMatch[] }>(`/admin/payments/ledger?${pq(f)}`);
@@ -277,7 +277,7 @@ export type ChannelRow = {
 export const adminChannels = () => call<{ rows: ChannelRow[]; summary: { telegram: number; whatsapp: number; waOpen: number; problems: number; waCapacity: { used: number; max: number } } }>("/admin/channels");
 
 // Xəbərdarlıqlar və AI açarı
-export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit" | "domain";
+export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit" | "domain" | "provider";
 export type AlertSettings = { email: boolean; telegram: boolean; kinds: Record<AlertKind, boolean>; errorThreshold: number };
 export type AlertsView = {
   settings: AlertSettings; kinds: AlertKind[];
@@ -547,6 +547,10 @@ export type BillingState = "ok" | "low" | "empty";
 export type TopupRequest = { id: string; tenantId: string; amountAzn: number; status: "pending" | "approved" | "rejected"; provider: string; at: string };
 export type Billing = {
   balance: { freeAzn: number; paidAzn: number; totalAzn: number };
+  /** Yüklənmiş balansın partiyaları: hər yükləmənin qalığı və bitmə tarixi (bitməyə ən yaxın birinci). expiresAt null = müddətsiz */
+  lots?: { amountAzn: number; leftAzn: number; at: string; expiresAt: string | null }[];
+  /** Yükləmənin istifadə müddəti (gün), 0 = müddətsiz */
+  expiryDays?: number;
   state: BillingState;
   allowance: { freeAzn: number; period: "monthly" | "once" };
   minTopupAzn: number; maxTopupAzn: number; lowAzn: number; enforced: boolean;

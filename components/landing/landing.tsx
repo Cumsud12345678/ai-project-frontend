@@ -117,7 +117,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
   const title = t("Ziyarətçin sual yazsın, saytın özü cavab versin.");
   // Başlığın ikinci hissəsi (vergüldən sonra) vurğulanır; vergül yoxdursa bütöv qalır
   const cut = title.indexOf(", ");
-  const stats: [string, string][] = [["1", t("sətir kod")], ["4", t("dildə panel")], ["2 ₼", t("hər ay pulsuz")]];
+  const stats: [string, string][] = [["1", t("sətir kod")], ["4", t("dildə panel")], ["2 ₼", t("pulsuz sınaq balansı")]];
   return (
     <section className="relative -mt-[4.25rem] overflow-hidden pt-[4.25rem]">
       <div className="l-grid pointer-events-none absolute inset-0" aria-hidden />
@@ -350,12 +350,13 @@ function Pricing({ signedIn }: { signedIn: boolean }) {
   // Server və brauzer eyni mətni versin deyə (hydration) Intl əvəzinə sadə format: 10 000
   const num = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   const q = STEPS_Q[i]!;
-  const cost = Math.max(0, q * PER_Q - FREE);
+  // Pulsuz sınaq balansı bir dəfə verilir: aylıq xərcdən çıxılmır, ayrıca göstərilir
+  const cost = q * PER_Q;
   const fmt = useMemo(() => (n: number) => (n < 10 ? n.toFixed(2) : String(Math.round(n))).replace(".", ","), []);
   const pts = [
     t("Aylıq abunə yoxdur. Yalnız çatın real istifadəsi üçün ödəyirsən."),
-    t("Hər ay 2 AZN pulsuz balans verilir. Kiçik saytlar üçün çox vaxt bəs edir."),
-    t("Pulsuz hissə bitəndə istədiyin qədər (məs. 10 AZN) yükləyirsən. Hər sorğunun qiyməti paneldə AZN ilə görünür."),
+    t("Qeydiyyatda 2 AZN pulsuz sınaq balansı verilir: köməkçini real ziyarətçilərlə yoxlamağa bəs edir."),
+    t("Sonra istədiyin qədər (məs. 10 AZN) yükləyirsən, yüklənən balans 12 ay qüvvədədir. Hər sorğunun qiyməti paneldə AZN ilə görünür."),
     t("Balans bitəndə çat dayanır, ziyarətçiyə əlaqə forması çıxır. Sonradan gələn fatura və ya gözlənilməz borc yoxdur."),
   ];
   return (
@@ -382,8 +383,8 @@ function Pricing({ signedIn }: { signedIn: boolean }) {
                 <p className="l-display mt-1 text-2xl font-semibold tabular-nums">{cost === 0 ? t("Pulsuz") : `≈ ${fmt(cost)} ₼`}</p>
               </div>
               <div className="rounded-2xl bg-[var(--l-mist)] p-4">
-                <p className="text-xs text-[var(--l-sub)]">{t("Pulsuz hissə")}</p>
-                <p className="l-display mt-1 text-2xl font-semibold tabular-nums">≈ {num(Math.round(FREE / PER_Q))}</p>
+                <p className="text-xs text-[var(--l-sub)]">{t("Sınaq balansı (bir dəfə)")}</p>
+                <p className="l-display mt-1 text-2xl font-semibold tabular-nums">≈ {num(Math.round(FREE / PER_Q))} {t("sual")}</p>
               </div>
             </div>
             <p className="mt-4 text-xs leading-relaxed text-[var(--l-sub)]">{t("Təxmini hesabdır: real qiymət sualın uzunluğuna görə dəyişir və paneldə hər gün dəqiq göstərilir.")}</p>
@@ -449,7 +450,7 @@ function Cta({ signedIn }: { signedIn: boolean }) {
             <Link href={signedIn ? "/dashboard" : "/register"} className={`${md} l-btn-arrow bg-white text-[var(--l-ink)] hover:bg-[var(--l-mist)] sm:min-w-[11rem]`}>{signedIn ? t("Panelə keç") : t("Pulsuz başla")}<ArrowRight size={16} aria-hidden /></Link>
             {!signedIn && <Link href="/login" className={`${md} border border-white/25 text-white hover:bg-white/10 sm:min-w-[11rem]`}>{t("Hesabım var, daxil ol")}</Link>}
           </div>
-          <p className="mt-6 text-xs text-white/50">{t("Kart tələb olunmur · hər ay 2 AZN pulsuz")}</p>
+          <p className="mt-6 text-xs text-white/50">{t("Kart tələb olunmur · 2 AZN pulsuz sınaq balansı")}</p>
         </div>
       </Reveal>
     </section>

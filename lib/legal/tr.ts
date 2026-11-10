@@ -30,7 +30,7 @@ const tr: LegalPack = {
           "Hizmet ön ödemeli bakiye (AZN) ile çalışır. Her cevabın gerçek maliyeti bakiyeden düşülür; güncel bakiye ve harcama geçmişi panelde görünür.",
           "Bakiye bitince asistan ziyaretçilere cevap vermez, yerine iletişim formu gösterilir. Bakiye yüklenince hizmet otomatik olarak devam eder.",
           "Fiyat değişikliklerini en az 14 gün önceden e-posta veya panel üzerinden duyururuz. Yüklenmiş bakiye değişiklikten sonra yeni fiyatlarla kullanılır.",
-          "İade kuralları ayrı “Ödeme ve iade” belgesindedir.",
+          "Her yüklemenin kullanım süresi yükleme tarihinden itibaren 12 aydır; bu sürede kullanılmayan kısım yanar. Yüklenen bakiye iade edilmez ve nakde çevrilmez (hatalı tahsilat ve hizmetin bizim tarafımızdan durdurulması hariç). Ayrıntılar: “Ödeme ve iade” belgesi.",
         ] },
         { id: "mezmun", h: "5. İçeriğin ve yükümlülüklerin", body: [
           "- Yüklediğin veya bağladığın veriler (ilanlar, belgeler, API yanıtları, şirket bilgileri) sana aittir. Bunları kullanma hakkın olduğunu onaylarsın.",
@@ -55,7 +55,7 @@ const tr: LegalPack = {
           "Planlı bakımları mümkün olduğunca önceden duyururuz.",
         ] },
         { id: "dayandirma", h: "9. Askıya alma ve hesabın silinmesi", body: [
-          "Hesabını istediğin zaman panelden (Ayarlar → Hesap → Hesabı sil) silebilirsin. Verilerin Gizlilik politikasında belirtilen şekilde silinir.",
+          "Hesabını istediğin zaman panelden (Ayarlar → Hesap → Hesabı sil) silebilirsin. Verilerin Gizlilik politikasında belirtilen şekilde silinir. Hesap silindiğinde kullanılmayan bakiye iade edilmez.",
           "Şartların ihlali, ödeme dolandırıcılığı veya yasal zorunluluk hâlinde hesabı askıya alabiliriz. Askıya alınan hesabın verileri ve bakiyesi hemen silinmez, sebep e-postayla bildirilir.",
         ] },
         { id: "mesuliyyet", h: "10. Sorumluluğun sınırlandırılması", body: [
@@ -144,35 +144,40 @@ const tr: LegalPack = {
     },
     refund: {
       title: "Ödeme ve iade",
-      summary: "Bakiyenin nasıl çalıştığı, hangi durumlarda ve nasıl iade yapıldığı.",
+      summary: "Bakiyenin nasıl çalıştığı, kullanım süresi ve iade kuralları.",
       sections: [
         { id: "model", h: "1. Bakiye nasıl çalışır", body: [
           "{brand} ön ödemeli bakiyeyle çalışır. Bakiyeni yüklersin, her cevabın gerçek maliyeti düşülür. Otomatik yenilenen abonelik veya gizli ücret yoktur.",
           "Harcama geçmişi, güncel bakiye ve yüklemeler paneldeki “Bakiye” bölümünde görünür. Günlük harcama limiti beklenmedik artışlara (ör. bot saldırılarına) karşı korur.",
+          "Her yüklemenin kullanım süresi **yükleme tarihinden itibaren 12 aydır**. Bu sürede kullanılmayan kısım yanar ve geri getirilmez. Harcama önce süresi en erken dolacak yüklemeden düşülür. Her yüklemenin kalanı ve bitiş tarihi panelde görünür; süresi dolmak üzereyken panelde uyarı gösterilir.",
         ] },
         { id: "odenis", h: "2. Ödeme", body: [
           "Ödemeler Azerbaycan manatı (AZN) ile, lisanslı bir ödeme sağlayıcısı üzerinden banka kartıyla alınır. Kart bilgilerini görmeyiz ve saklamayız.",
           "Başarılı ödemeden sonra bakiye otomatik artar ve onay e-postası gönderilir.",
         ] },
-        { id: "qaytarma", h: "3. İade yapılan durumlar", body: [
-          "- **14 gün içinde:** yüklemeden sonraki 14 gün içinde o yüklemenin kullanılmamış kısmı tamamen iade edilir.",
-          "- **Hesap kapatıldığında:** 14 günden sonra da hesabını kapatırsan kullanılmamış bakiye talep üzerine iade edilir.",
-          "- **Hatalı tahsilat:** teknik bir hata nedeniyle fazla tutar düşüldüyse veya ödeme iki kez geçtiyse fazlası tamamen iade edilir.",
+        { id: "qaytarma", h: "3. İade", body: [
+          "Yüklenen bakiye **iade edilmez ve nakde çevrilmez**: ne yüklemeden sonra ne de hesap kapatılırken. Bu yüzden tutarı ihtiyacına göre seç; küçük bir tutarla başlayıp gerektikçe yükleyebilirsin.",
+          "Para yalnızca şu durumlarda iade edilir:",
+          "- **Hatalı tahsilat:** teknik bir hata nedeniyle fazla tutar düşüldüyse veya ödeme iki kez geçtiyse, fazlası tamamen iade edilir.",
+          "- **Hizmeti biz durdurursak:** platform faaliyetini durdurursa, kullanılmayan yüklenmiş bakiye iade edilir.",
+          "- yasanın gerektirdiği diğer durumlar.",
         ] },
-        { id: "qaytarilmir", h: "4. İade yapılmayan durumlar", body: [
-          "- kullanılmış maliyet (asistanın verdiği cevaplar);",
-          "- her ay verilen ücretsiz bakiye ile bonus, promosyon veya ortaklık programıyla verilen bakiye (nakde çevrilmez);",
-          "- şartların ihlali nedeniyle askıya alınan hesaplar (yasanın gerektirdiği durumlar hariç).",
+        { id: "qaytarilmir", h: "4. İade edilmeyen durumlar", body: [
+          "- zaten kullanılmış harcama (asistanın verdiği cevaplar);",
+          "- süresi (12 ay) dolmuş bakiye;",
+          "- hesap kapatılırken veya silinirken kalan bakiye;",
+          "- ücretsiz, bonus, promosyon veya ortaklık programıyla verilen bakiye (nakde çevrilmez);",
+          "- şartların ihlali nedeniyle askıya alınan hesaplar.",
         ] },
-        { id: "nece", h: "5. Nasıl başvurulur", body: [
-          "{email} adresine hesap e-postan, ödeme tarihi ve tutarıyla yaz. Başvuruları 10 iş günü içinde inceleriz.",
-          "Onaylanan tutar ödemenin yapıldığı karta iade edilir. Bankaya bağlı olarak 5–15 iş günü sürebilir. Ödeme sağlayıcısının komisyonu iade edilmeyebilir.",
+        { id: "nece", h: "5. Hatalı tahsilatı nasıl bildirirsin", body: [
+          "{email} adresine hesap e-postan, ödeme tarihi ve tutarıyla yaz. Talepleri 10 iş günü içinde inceleriz.",
+          "Onaylanan tutar ödemenin yapıldığı karta iade edilir. Bankaya bağlı olarak 5–15 iş günü sürebilir.",
         ] },
         { id: "mubahise", h: "6. Ödeme itirazları", body: [
           "Ödemeyle ilgili bir sorun olursa bankada itiraz (chargeback) açmadan önce bize yaz — çoğu durumu birkaç gün içinde çözeriz. İtiraz açıkken hesap geçici olarak kısıtlanabilir.",
         ] },
         { id: "qiymet", h: "7. Fiyat değişiklikleri", body: [
-          "Fiyat değişikliklerini en az 14 gün önceden duyururuz. Kabul etmiyorsan kullanılmamış bakiyeni bu kurallara göre geri alabilirsin.",
+          "Fiyat değişikliklerini en az 14 gün önceden e-posta veya panel üzerinden duyururuz. Bu sürede yükleme yapmayabilirsin; yüklenmiş bakiye değişiklikten sonra yeni fiyatlarla kullanılır.",
         ] },
       ],
     },
