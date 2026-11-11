@@ -501,7 +501,12 @@ export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; a
 export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
 export type LiveNote = { text: string; by: string; at: string };
 export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; tags?: string[]; csat?: number | null; notes?: number; last: LiveMsg | null };
-export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[]; visitor?: VisitorInfo | null; blocked?: boolean };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[]; visitor?: VisitorInfo | null; blocked?: boolean; summary?: SavedSummary & { stale?: boolean } };
+/** Söhbətin AI xülasəsi: niyyət, əhval, etirazlar, növbəti addım, almağa yaxınlıq */
+export type ChatSummary = { summary: string; intent: string; mood: "positive" | "neutral" | "negative"; objections: string[]; nextStep: string; temperature: "hot" | "warm" | "cold" };
+export type SavedSummary = ChatSummary & { at: string; count: number };
+export const liveSummary = (id: string, force = false) => post<{ summary: SavedSummary; cached: boolean }>(`/tenant/live/${id}/summary`, { force });
+export const conversationSummary = (sid: string, force = false) => post<{ summary: SavedSummary; cached: boolean }>(`/tenant/conversations/${encodeURIComponent(sid)}/summary`, { force });
 /** Brauzerin bildirdiyi ziyarətçi məlumatı */
 export type VisitorInfo = { tz?: string; lang?: string; mobile?: boolean; first?: number; visits?: number; ref?: string };
 export type LivePrevious = { id: string; createdAt: string; status: "open" | "closed"; count: number; tags: string[]; csat: number | null; first: string };

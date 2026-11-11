@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getConversation, getConversations, type ConversationMsg, type ConversationRow } from "@/lib/api";
+import { conversationSummary, getConversation, getConversations, type ConversationMsg, type ConversationRow } from "@/lib/api";
+import { ChatSummaryCard } from "@/components/chat-summary";
 import { useI18n } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ export function Conversations({ days, enabled }: { days: number; enabled: boolea
             </button>
             {open === c.sid && (
               <div className="flex flex-col gap-3 border-t border-border bg-muted/30 px-4 py-3">
+                {msgs && msgs.length > 0 && <ChatSummaryCard key={c.sid} load={(force) => conversationSummary(c.sid, force)} compact />}
                 {!msgs ? <p className="text-sm text-muted-foreground">{t("Yüklənir…")}</p> : msgs.map((m) => (
                   <div key={m.id} className="flex flex-col gap-1.5 text-sm">
                     <p className="self-end max-w-[85%] whitespace-pre-wrap break-words rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">{m.message}</p>

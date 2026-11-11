@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Ban, BookPlus, Clock, FileText, Paperclip, Globe, Hand, Inbox, Mail, MessageSquarePlus, MessagesSquare, PanelRight, Phone, Search, Send, Sparkles, Star, StickyNote, Trash2, Undo2, UserRound, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { blockLive, deleteLive, liveFileUrl, sendLiveFile, addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
+import { blockLive, deleteLive, liveFileUrl, sendLiveFile, addLiveNote, claimLive, draftLive, getCanned, kbAddQa, setLiveTags, type CannedReply, closeLive, getLiveChat, getLiveContacts, getLiveList, liveSummary, releaseLive, sendLive, startLiveChat, type LiveChat, type LiveContact, type LiveItem } from "@/lib/api";
 import { useSession } from "@/components/session";
 import { useResizable } from "@/components/resizable";
 import { useI18n } from "@/lib/i18n";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { ConfirmButton, VisitorFacts } from "@/components/visitor-facts";
+import { ChatSummaryCard } from "@/components/chat-summary";
 
 export type LiveFolder = { status: "open" | "closed"; who: "all" | "mine" | "free" | "waiting"; ch: "all" | "site" | "telegram" | "whatsapp" | "vip" };
 
@@ -296,6 +297,10 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
         <div className="flex items-center gap-2.5"><Clock size={15} aria-hidden className="text-muted-foreground" />{short(chat.createdAt)}</div>
         {chat.csat && <div className="flex items-start gap-2.5"><Star size={15} aria-hidden className="mt-0.5 text-amber" />{t("Müştəri qiyməti: {n}/5", { n: chat.csat.rating })}{chat.csat.comment ? ` · ${chat.csat.comment}` : ""}</div>}
       </dl>
+      {chat.messages.some((m) => m.from === "visitor") || chat.context.some((m) => m.role === "user") ? (
+        // AI xülasəsi: operator uzun söhbəti oxumadan vəziyyəti görür (yeni mesaj yoxdursa saxlanmış nəticə, pulsuz)
+        <div className="flex flex-col gap-2 border-b border-border p-4"><ChatSummaryCard key={chat.id} initial={chat.summary ?? null} stale={chat.summary?.stale} load={(force) => liveSummary(chat.id, force)} /></div>
+      ) : null}
       {chat.visitor && <div className="border-b border-border p-4"><VisitorFacts v={chat.visitor} /></div>}
       <div className="flex flex-col gap-2 border-b border-border p-4 text-sm">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t("Operator")}</p>
