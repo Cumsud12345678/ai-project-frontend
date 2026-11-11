@@ -460,6 +460,11 @@ export type FollowupSettings = { enabled: boolean; delayMin: number; text?: stri
 export const getFollowup = () => call<{ followup: FollowupSettings; delays: number[] }>("/tenant/followup");
 export const saveFollowup = (f: FollowupSettings) => call<{ followup: FollowupSettings; delays: number[] }>("/tenant/followup", { method: "PUT", body: f });
 
+/** Ağıllı operator çağırışı: AI hansı hallarda söhbəti operatora ötürür */
+export type HandoffSettings = { cantHelp: boolean; upset: boolean; ready: boolean; misses: boolean };
+export const getHandoff = () => call<{ handoff: HandoffSettings }>("/tenant/handoff");
+export const saveHandoff = (h: HandoffSettings) => call<{ handoff: HandoffSettings }>("/tenant/handoff", { method: "PUT", body: h });
+
 /** API-siz sifariş forması: AI söhbətdə bu sahələri soruşur, təsdiqdən sonra sifariş müraciətlər qutusuna düşür */
 export type OrderFieldType = "text" | "phone" | "email" | "number" | "select" | "address";
 export type OrderField = { key: string; label: string; type: OrderFieldType; required: boolean; description?: string; options?: string[] };
