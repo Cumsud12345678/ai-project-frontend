@@ -33,6 +33,11 @@ function Health({ h, busy }: { h: AdminHealth | null; busy: boolean }) {
             <Row label={t("AI servisi")} ok={h.ai.ok} detail={h.ai.ok ? `${h.ai.ms} ms` : h.ai.error ?? t("Xəta")} />
             <Row label={t("E-poçt (Resend)")} ok={h.mail.configured || !h.server.production} detail={h.mail.configured ? t("qoşulub") : t("açar yoxdur, konsola yazılır")} />
             <Row label={t("Server")} ok detail={`${t("işləyir")}: ${up(h.server.uptimeSec)} · ${num(h.server.memoryMb)} MB · ${h.server.node}`} />
+            {h.network && (
+              // Backend səni hansı IP ilə görür: daxili IP-dirsə TRUST_PROXY səhvdir və IP limitləri bütün istifadəçilər üçün birdən dolur
+              <Row label={t("İstifadəçi IP-si (TRUST_PROXY)")} ok={!h.network.privateIp}
+                detail={h.network.privateIp ? t("Daxili IP görünür ({ip}): TRUST_PROXY-ni artır (indi {n})", { ip: h.network.ip, n: h.network.trustProxy }) : t("Düzgün: {ip}", { ip: h.network.ip })} />
+            )}
           </ul>
         )}
       </CardContent>

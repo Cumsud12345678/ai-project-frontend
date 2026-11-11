@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Activity, BarChart3, Bell, Bot, Building2, Globe, Hash, LayoutGrid, BookOpen, Code, Gauge, HandCoins, Inbox, LayoutDashboard, List, LogOut, Menu, MessageSquare, MessagesSquare, Plug, Radio, Rocket,
-  Search, Send, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
+  Search, Send, Settings, ShoppingBag, Shield, ShieldCheck, Sparkles, UserRound, Users, Wallet, Wand2, Workflow, X, Zap, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { readiness } from "@/lib/setup-steps";
@@ -47,6 +47,7 @@ const GROUPS: Group[] = [
     { href: "/connection", label: "Elan mənbəyi", icon: Plug, only: ["listings", "both"] },
     { href: "/customer-data", label: "Müştəri məlumatı", icon: ShieldCheck, section: "Saytınla əlaqə" },
     { href: "/actions", label: "Əməliyyatlar", icon: Zap },
+    { href: "/orders", label: "Sifariş qəbulu", icon: ShoppingBag },
   ] },
   // Kanallar əvvəl Ayarların içində idi: müştərinin harada yazdığı əsas işdir, ayrıca bölmədə daha tez tapılır (ünvanlar dəyişmədi)
   { id: "channels", label: "Kanallar", icon: Radio, items: [

@@ -97,6 +97,7 @@ export default function AdminSettingsPage() {
     channel: [t("Kanal qırıldı"), t("Müştərinin WhatsApp bağlantısı düşəndə (müştəri üzrə 6 saatda bir).")],
     limit: [t("Gündəlik limit"), t("Müştəri gündəlik xərc limitinə çatanda: qəfil artım ola bilər.")],
     domain: [t("Eyni domen yeni hesabda"), t("Artıq başqa e-poçtla işlənmiş sayt yeni hesabla qoşulanda: pulsuz balans sui-istifadəsi ola bilər.")],
+    setup: [t("Yeni qurulum sorğusu"), t("Müştəri “Qurulumu bizə həvalə et” formasını göndərəndə.")],
     provider: [t("Claude / Gemini hesabı"), t("Claude və ya Gemini hesabında balans və ya limit bitəndə, API açarı qəbul olunmayanda; düzələndə də xəbər gəlir.")],
   };
   const th = Number(threshold);

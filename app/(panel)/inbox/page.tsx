@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Ban, Bot, Check, CheckCheck, Hourglass, CircleHelp, Clock, Inbox as InboxIcon, Mail, MessageCircle, MessagesSquare, Phone, Send, Star, Trash2, Undo2, UserRound, UserRoundX } from "lucide-react";
+import { Ban, Bot, Check, CheckCheck, Hourglass, CircleHelp, Clock, Inbox as InboxIcon, Mail, MessageCircle, MessagesSquare, Phone, Send, ShoppingBag, Star, Trash2, Undo2, UserRound, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 import { deleteLead, getBlocks, getChannelChats, getLeads, getLiveCount, getLiveList, getTeam, getVisitors, getUnanswered, unblock, updateLead, type BlockItem, type LeadRow, type LeadStatus, type LiveItem, type UnansweredRow } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -51,7 +51,15 @@ function LeadCard({ l, team, reload }: { l: LeadRow; team: string[]; reload: () 
           <a href={isMail ? `mailto:${l.contact}` : `tel:${l.contact.replace(/[^\d+]/g, "")}`} className="mt-1 inline-flex items-center gap-1.5 text-sm text-primary underline">
             {isMail ? <Mail size={14} aria-hidden /> : <Phone size={14} aria-hidden />}{l.contact}
           </a>
-          {l.question && <p className="mt-2 break-words text-sm text-muted-foreground">“{l.question}”</p>}
+          {l.order ? (
+            // AI-ın topladığı sifariş: sahələr cədvəl kimi (operator zəng edəndə hər şey gözünün önündədir)
+            <div className="mt-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+              <p className="mb-1.5 flex items-center gap-1.5 font-medium"><ShoppingBag size={14} aria-hidden />{l.order.title}</p>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                {l.order.fields.map((f) => <div key={f.label} className="contents"><dt className="text-muted-foreground">{f.label}</dt><dd className="break-words">{f.value}</dd></div>)}
+              </dl>
+            </div>
+          ) : l.question && <p className="mt-2 break-words text-sm text-muted-foreground">“{l.question}”</p>}
           <p className="mt-1 text-xs text-muted-foreground">{short(l.at)}</p>
         </div>
         <Button size="sm" variant="ghost" aria-label={t("Sil")} onClick={async () => { try { await deleteLead(l.id); toast.success(t("Silindi.")); reload(); } catch (e) { toast.error((e as Error).message); } }}><Trash2 size={14} aria-hidden /></Button>

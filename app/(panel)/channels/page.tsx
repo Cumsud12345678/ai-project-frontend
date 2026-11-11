@@ -14,6 +14,7 @@ import { Input, Label } from "@/components/ui/input";
 import { SwitchRow } from "@/components/ui/switch";
 import { useI18n } from "@/lib/i18n";
 import { WhatsApp } from "./whatsapp";
+import { FollowupCard } from "@/components/followup-card";
 
 function Telegram() {
   const { t, date } = useI18n();
@@ -131,6 +132,7 @@ function ChannelTabs() {
       <FilterPills value={c} onChange={pick} label={t("Kanallar")} items={[{ value: "whatsapp", label: "WhatsApp" }, { value: "telegram", label: "Telegram" }]} />
       <OperatorNote />
       {c === "whatsapp" ? <WhatsApp /> : <Telegram />}
+      <FollowupCard />
     </div>
   );
 }

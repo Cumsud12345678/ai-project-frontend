@@ -22,7 +22,6 @@ export type WidgetSettings = {
   title: string;
   greeting: string;
   color: string;
-  bg?: string; // əlavə edildi
   theme?: "light" | "dark" | "auto";
   /** Çat düyməsinin effektləri: rəngli dalğa (pulse) və yüngül atılma (bounce) */
   effects?: { pulse: boolean; bounce: boolean };
@@ -232,6 +231,8 @@ export type AdminOverview = {
   domains?: { suspicious: number; blocked: number };
   usage: { today: UsagePoint & { date: string }; thisMonth: UsagePoint & { month: string }; lastMonth: UsagePoint & { month: string } } | null;
   pendingTopups: number;
+  /** Yeni (baxılmamış) qurulum sorğuları */
+  setupNew?: number;
   /** Balansa daxil olan real pul (cəmi). AI servisi cavab verməyəndə null. */
   revenueAzn: number | null; revenueMonthAzn?: number | null; outstandingPaidAzn?: number | null; monthProfitAzn?: number | null;
   aiControl?: { paused: boolean; reason?: string; by?: string; at?: string } | null;
@@ -243,6 +244,8 @@ export const adminOverview = () => call<AdminOverview>("/admin/overview");
 export type AdminHealth = {
   database: { ok: boolean; ms: number; error?: string }; ai: { ok: boolean; ms: number; error?: string };
   mail: { configured: boolean; from: string }; server: { uptimeSec: number; node: string; memoryMb: number; production: boolean };
+  /** Backend admini hansı IP ilə görür (TRUST_PROXY yoxlaması). Köhnə backend-də yoxdur. */
+  network?: { ip: string; privateIp: boolean; trustProxy: number; hops: number };
 };
 export const adminHealth = () => call<AdminHealth>("/admin/health");
 export type ErrorSource = "api" | "ai" | "mail" | "widget" | "process" | "client" | "job" | "channel";
@@ -278,7 +281,7 @@ export type ChannelRow = {
 export const adminChannels = () => call<{ rows: ChannelRow[]; summary: { telegram: number; whatsapp: number; waOpen: number; problems: number; waCapacity: { used: number; max: number } } }>("/admin/channels");
 
 // Xəbərdarlıqlar və AI açarı
-export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit" | "domain" | "provider";
+export type AlertKind = "errors" | "health" | "topup" | "channel" | "limit" | "domain" | "provider" | "setup";
 export type AlertSettings = { email: boolean; telegram: boolean; kinds: Record<AlertKind, boolean>; errorThreshold: number };
 export type AlertsView = {
   settings: AlertSettings; kinds: AlertKind[];
@@ -430,7 +433,35 @@ export const kbDelete = (id: string) => call<{ ok: true }>(`/tenant/kb/sources/$
 export type UnansweredRow = { id: string; at: string; message: string; reason?: string };
 export type LeadStatus = "new" | "open" | "pending" | "solved";
 export type LeadRow = { id: string; at: string; name: string; contact: string; question: string; conversation?: { role: "user" | "model"; text: string }[]; handled: boolean;
-  status?: LeadStatus; priority?: "low" | "normal" | "high"; assignee?: { id?: string; name: string } | null; notes?: { by: string; at: string; text: string }[]; history?: { by: string; at: string; e: string }[]; updatedAt?: string };
+  status?: LeadStatus; priority?: "low" | "normal" | "high"; assignee?: { id?: string; name: string } | null; notes?: { by: string; at: string; text: string }[]; history?: { by: string; at: string; e: string }[]; updatedAt?: string;
+  /** AI-ın söhbətdə topladığı sifariş (API-siz sifariş forması) */
+  order?: { title: string; fields: { label: string; value: string }[]; channel?: string; sid?: string } };
+
+/** "Qurulumu bizə həvalə et": komanda botu müştərinin məlumatı ilə qurur */
+export type SetupChannel = "site" | "telegram" | "whatsapp";
+export type SetupRequestStatus = "new" | "in_progress" | "done";
+export type SetupForm = { businessName: string; website: string; phone: string; description: string; salesScript: string; faq: string; channels: SetupChannel[] };
+export type SetupRequest = SetupForm & { status: SetupRequestStatus; createdAt: string; updatedAt: string; doneAt?: string; adminNote?: string };
+export type AdminSetupRequest = SetupRequest & { userId: string; email: string; tenantId?: string; doneBy?: string };
+export const getSetupRequest = () => call<{ request: SetupRequest | null }>("/setup-request");
+export const sendSetupRequest = (f: SetupForm) => call<{ request: SetupRequest }>("/setup-request", { method: "POST", body: f });
+export const cancelSetupRequest = () => call<{ ok: true }>("/setup-request", { method: "DELETE" });
+export const adminSetupRequests = (status?: SetupRequestStatus) => call<{ items: AdminSetupRequest[]; counts: Record<SetupRequestStatus, number> }>(`/admin/setup-requests${status ? `?status=${status}` : ""}`);
+export const adminUpdateSetupRequest = (userId: string, p: { status?: SetupRequestStatus; adminNote?: string }) => call<{ request: AdminSetupRequest }>(`/admin/setup-requests/${encodeURIComponent(userId)}`, { method: "PATCH", body: p });
+export const adminBuildSetupRequest = (userId: string) => call<{ request: AdminSetupRequest; created: boolean; kb: number; warnings: string[] }>(`/admin/setup-requests/${encodeURIComponent(userId)}/build`, { method: "POST" });
+
+/** Telegram/WhatsApp-da susan müştəriyə bir dəfə xatırlatma */
+export type FollowupSettings = { enabled: boolean; delayMin: number; text?: string };
+export const getFollowup = () => call<{ followup: FollowupSettings; delays: number[] }>("/tenant/followup");
+export const saveFollowup = (f: FollowupSettings) => call<{ followup: FollowupSettings; delays: number[] }>("/tenant/followup", { method: "PUT", body: f });
+
+/** API-siz sifariş forması: AI söhbətdə bu sahələri soruşur, təsdiqdən sonra sifariş müraciətlər qutusuna düşür */
+export type OrderFieldType = "text" | "phone" | "email" | "number" | "select" | "address";
+export type OrderField = { key: string; label: string; type: OrderFieldType; required: boolean; description?: string; options?: string[] };
+export type OrderForm = { enabled: boolean; title?: string; instructions?: string; successMessage?: string; fields: OrderField[]; updatedAt?: string };
+export const getOrderForm = () => call<{ form: OrderForm | null }>("/tenant/order-form");
+export const saveOrderForm = (form: OrderForm) => call<{ form: OrderForm }>("/tenant/order-form", { method: "PUT", body: form });
+export const deleteOrderForm = () => call<{ ok: true }>("/tenant/order-form", { method: "DELETE" });
 export const getUnanswered = () => call<{ total: number; items: UnansweredRow[] }>("/tenant/kb/unanswered");
 export const deleteUnanswered = (id: string) => call<{ ok: true }>(`/tenant/kb/unanswered/${id}`, { method: "DELETE" });
 export const getLeads = () => call<{ total: number; open: number; items: LeadRow[] }>("/tenant/kb/leads");

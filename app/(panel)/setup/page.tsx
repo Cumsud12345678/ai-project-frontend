@@ -27,6 +27,7 @@ import { useSession } from "@/components/session";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { SetupRequestCard } from "@/components/setup-request-card";
 
 // ---------------------------------------------------------------- vəziyyət
 // Addımlar, adları və "hazırdır" şərtləri lib/setup-steps.ts-dədir: yuxarı zolaq, Ümumi baxış və Köməkçi səhifəsi eyni mənbədən oxuyur.
@@ -126,6 +127,8 @@ export default function SetupPage() {
           <span className="text-sm font-medium tabular-nums">{doneCount}/{steps.length}</span>
         </div>
       </header>
+
+      <SetupRequestCard businessName={tenant?.businessName} />
 
       <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <nav aria-label={t("Addımlar")} className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
