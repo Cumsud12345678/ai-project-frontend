@@ -2,8 +2,8 @@
 import { PlanLockNotice } from "@/components/plan-ui";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Database, FlaskConical, Pencil, Plug, Plus, ShieldCheck, Trash2 } from "lucide-react";
-import { deletePrivateData, getPrivateData, savePrivateData, testPrivateData, type FieldSpec, type PrivateData, type PrivateSource } from "@/lib/api";
+import { Database, FlaskConical, PackageSearch, Pencil, Plug, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { deletePrivateData, getPrivateData, savePrivateData, testOrderLookup, testPrivateData, type FieldSpec, type PrivateData, type PrivateLookup, type PrivateSource } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { DangerAction } from "@/components/danger-action";
 import { IdentitySetup } from "@/components/identity-setup";
@@ -11,6 +11,7 @@ import { RequireTenant } from "@/components/session";
 import { FormSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { SwitchRow } from "@/components/ui/switch";
 import { Modal } from "@/components/ui/modal";
 import { RowMenu } from "@/components/ui/row-menu";
 import { ConnectionModal, SetupSteps, connInput, type ConnValue } from "@/components/api-connection";
@@ -54,13 +55,29 @@ function toSource(f: SrcForm): PrivateSource {
 
 const sel = "h-10 rounded-md border border-border bg-card px-2 text-sm";
 
+// ---- girişsiz sifariş statusu (nömrə + telefon) ----
+type LookupForm = { enabled: boolean; title: string; path: string; orderParam: string; itemsPath: string; phoneField: string; idField: string; fields: FieldRow[]; linesPath: string; linesTitle: string; linesQty: string };
+const blankLookup = (): LookupForm => ({ enabled: true, title: "Sifariş", path: "/orders/{orderId}", orderParam: "", itemsPath: "data", phoneField: "phone", idField: "", fields: [row("Status", "status"), row("Çatdırılma tarixi", "deliveryDate", "date"), row("Məbləğ", "total", "number"), row("İzləmə linki", "tracking", "url")], linesPath: "items", linesTitle: "name", linesQty: "qty" });
+const toLookupForm = (l: PrivateLookup): LookupForm => ({
+  enabled: l.enabled, title: l.title ?? "", path: l.path, orderParam: l.orderParam ?? "", itemsPath: l.itemsPath, phoneField: l.phoneField, idField: l.idField ?? "",
+  fields: Object.entries(l.fields).map(([label, f]) => ({ label, ...specOf(f) })), linesPath: l.lines?.path ?? "", linesTitle: l.lines?.title ?? "", linesQty: l.lines?.qty ?? "",
+});
+function toLookup(f: LookupForm): PrivateLookup {
+  const { fields, lines } = toSource({ ...blank(), fields: f.fields, linesPath: f.linesPath, linesTitle: f.linesTitle, linesQty: f.linesQty });
+  return {
+    enabled: f.enabled, path: f.path.trim(), itemsPath: f.itemsPath.trim(), phoneField: f.phoneField.trim(), fields,
+    ...(f.title.trim() && { title: f.title.trim() }), ...(f.orderParam.trim() && { orderParam: f.orderParam.trim() }), ...(f.idField.trim() && { idField: f.idField.trim() }), ...(lines && { lines }),
+  };
+}
+
 /** Bir məlumat növünün forması (modalın içində) */
-function SourceFields({ f, set }: { f: SrcForm; set: (s: SrcForm) => void }) {
+function SourceFields({ f, set, fieldsOnly }: { f: SrcForm; set: (s: SrcForm) => void; fieldsOnly?: boolean }) {
   const { t } = useI18n();
   const up = (p: Partial<SrcForm>) => set({ ...f, ...p });
   const setRow = (i: number, p: Partial<FieldRow>) => up({ fields: f.fields.map((r, j) => (j === i ? { ...r, ...p } : r)) });
   return (
     <div className="flex flex-col gap-5">
+      {!fieldsOnly && <>
       <section className="flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1"><Label htmlFor="sf-title">{t("Ad (istifadəçiyə görünür)")}</Label><Input id="sf-title" value={f.title} onChange={(e) => up({ title: e.target.value })} required /></div>
@@ -83,6 +100,7 @@ function SourceFields({ f, set }: { f: SrcForm; set: (s: SrcForm) => void }) {
           </div>
         </details>
       </section>
+      </>}
       <section className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold">{t("Göstəriləcək sahələr")}</h3>
         <div className="overflow-hidden rounded-xl border border-border">
@@ -112,7 +130,7 @@ function SourceFields({ f, set }: { f: SrcForm; set: (s: SrcForm) => void }) {
   );
 }
 
-type Tab = "sources" | "security";
+type Tab = "sources" | "lookup" | "security";
 
 function CustomerData() {
   const { t } = useI18n();
@@ -121,7 +139,9 @@ function CustomerData() {
   const [tab, setTab] = useState<Tab>("sources");
   const [picker, setPicker] = useState(false);
   const [edit, setEdit] = useState<{ f: SrcForm; index: number | null } | null>(null);
-  const [conn, setConn] = useState<{ pending: PrivateSource[] | null } | null>(null);
+  const [conn, setConn] = useState<{ pending: PrivateSource[] | null; lookup?: PrivateLookup } | null>(null);
+  const [lk, setLk] = useState<LookupForm | null>(null);
+  const [lkTest, setLkTest] = useState({ orderId: "", phone: "", out: "" });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [del, setDel] = useState<number | null>(null);
@@ -129,14 +149,15 @@ function CustomerData() {
   const [testUser, setTestUser] = useState("");
   const [testOut, setTestOut] = useState("");
 
-  const load = useCallback(() => getPrivateData().then(setData).catch((e: Error) => setLoadError(e.message)), []);
+  const load = useCallback(() => getPrivateData().then((d) => { setData(d); setLk(d.lookup ? toLookupForm(d.lookup) : null); }).catch((e: Error) => setLoadError(e.message)), []);
   useEffect(() => { void load(); }, [load]);
 
   const connOf = (d: PrivateData): ConnValue => ({ baseUrl: d.baseUrl ?? "", authType: d.auth?.type ?? "header", authName: d.auth?.name ?? "X-Api-Key", secret: "" });
-  async function persist(sources: PrivateSource[], c?: ConnValue): Promise<boolean> {
+  // Sifariş axtarışı da eyni sənəddə saxlanır: hər yazışda ötürülür, əks halda məlumat növü saxlananda silinərdi
+  async function persist(sources: PrivateSource[], c?: ConnValue, lookup: PrivateLookup | undefined = data?.lookup): Promise<boolean> {
     if (!data) return false;
     setSaving(true); setErr("");
-    try { setData(await savePrivateData({ ...connInput(c ?? connOf(data), ["header", "query"]), sources })); toast.success(t("Yadda saxlanıldı.")); return true; }
+    try { const d = await savePrivateData({ ...connInput(c ?? connOf(data), ["header", "query"]), sources, ...(lookup && { lookup }) }); setData(d); setLk(d.lookup ? toLookupForm(d.lookup) : null); toast.success(t("Yadda saxlanıldı.")); return true; }
     catch (e) { setErr((e as Error).message); return false; }
     finally { setSaving(false); }
   }
@@ -149,9 +170,29 @@ function CustomerData() {
   }
   async function remove(i: number) {
     if (!data) return;
-    if (data.sources.length === 1) { await deletePrivateData(); await load(); toast.success(t("Söndürüldü.")); }
+    if (data.sources.length === 1 && !data.lookup) { await deletePrivateData(); await load(); toast.success(t("Söndürüldü.")); }
     else await persist(data.sources.filter((_, j) => j !== i));
     setDel(null);
+  }
+  async function saveLookup() {
+    if (!lk) return;
+    const l = toLookup(lk);
+    if (!data?.configured) { setErr(""); setConn({ pending: data?.sources ?? [], lookup: l }); return; }
+    await persist(data.sources, undefined, l);
+  }
+  async function removeLookup() {
+    if (!data) return;
+    if (!data.sources.length) { await deletePrivateData(); await load(); toast.success(t("Söndürüldü.")); return; }
+    setSaving(true);
+    try { const d = await savePrivateData({ ...connInput(connOf(data), ["header", "query"]), sources: data.sources }); setData(d); setLk(null); toast.success(t("Silindi.")); }
+    catch (e) { toast.error((e as Error).message); } finally { setSaving(false); }
+  }
+  async function runLookupTest() {
+    setLkTest((x) => ({ ...x, out: "…" }));
+    try {
+      const r = await testOrderLookup(lkTest.orderId.trim(), lkTest.phone.trim());
+      setLkTest((x) => ({ ...x, out: r.error ? r.error : r.found ? JSON.stringify(r.record, null, 2) : t("Bu nömrə və telefonla sifariş tapılmadı (müştəri də eyni cavabı görəcək).") }));
+    } catch (e) { setLkTest((x) => ({ ...x, out: (e as Error).message })); }
   }
   async function runTest() {
     if (!test) return;
@@ -178,6 +219,7 @@ function CustomerData() {
 
       <FilterPills value={tab} onChange={setTab} label={t("Bölmələr")} items={[
         { value: "sources", label: t("Məlumat növləri"), count: data.sources.length, icon: <Database size={14} aria-hidden /> },
+        { value: "lookup", label: t("Sifariş statusu (girişsiz)"), icon: <PackageSearch size={14} aria-hidden /> },
         { value: "security", label: t("Gizli açar və token"), icon: <ShieldCheck size={14} aria-hidden /> },
       ]} />
 
@@ -211,6 +253,61 @@ function CustomerData() {
           </table>
         </div>
       ))}
+
+      {tab === "lookup" && (
+        <div className="flex flex-col gap-4">
+          <section className="rounded-2xl bg-muted/50 p-5">
+            <h2 className="mb-2 font-semibold">{t("“Sifarişim haradadır?” — sayta daxil olmadan")}</h2>
+            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-muted-foreground">
+              <li>{t("WhatsApp, Telegram və ya hesabsız alış edən müştəri sifariş nömrəsini və sifarişdə yazdığı telefonu deyir.")}</li>
+              <li>{t("Bot sifarişi sənin API-ndən gətirir və telefonun son 9 rəqəmi uyğun gələrsə statusu göstərir. Uyğun gəlməsə “tapılmadı” deyilir: sifarişin olub-olmadığı bildirilmir.")}</li>
+              <li>{t("Təxminə qarşı: eyni sifarişə saatda 5 uğursuz cəhd, bir söhbətdə 10 dəqiqədə 5 axtarış. Telefon və e-poçt cavabda maskalanır.")}</li>
+            </ul>
+          </section>
+          {!lk ? (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-6 py-10 text-center">
+              <span className="grid size-12 place-items-center rounded-full bg-muted"><PackageSearch size={22} aria-hidden /></span>
+              <p className="max-w-md text-sm text-muted-foreground">{t("API-n sifarişi nömrəyə görə qaytarırsa (məs. GET /orders/10452), bunu qoşa bilərsən.")}</p>
+              <Button onClick={() => { const b = blankLookup(); setLk({ ...b, title: t(b.title), fields: b.fields.map((r) => ({ ...r, label: t(r.label) })) }); }}><Plus size={16} aria-hidden />{t("Sifariş axtarışını qoş")}</Button>
+            </div>
+          ) : (
+            <form className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5" onSubmit={(e) => { e.preventDefault(); void saveLookup(); }}>
+              <SwitchRow checked={lk.enabled} onChange={(v) => setLk({ ...lk, enabled: v })} title={t("Çatda sifariş statusunu yoxla")} description={t("Söndürülsə də ayarlar və sınaq qalır.")} on={t("Aktiv")} off={t("Söndürülüb")} />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1"><Label htmlFor="lk-path">{t("Sorğu ünvanı")}</Label><Input id="lk-path" value={lk.path} onChange={(e) => setLk({ ...lk, path: e.target.value })} placeholder="/orders/{orderId}" required /></div>
+                <div className="flex flex-col gap-1"><Label htmlFor="lk-items">{t("Sifarişin yolu cavabda (kökdədirsə boş)")}</Label><Input id="lk-items" value={lk.itemsPath} onChange={(e) => setLk({ ...lk, itemsPath: e.target.value })} placeholder="data" /></div>
+                <div className="flex flex-col gap-1"><Label htmlFor="lk-phone">{t("Sifarişdəki telefonun yolu (yoxlama üçün)")}</Label><Input id="lk-phone" value={lk.phoneField} onChange={(e) => setLk({ ...lk, phoneField: e.target.value })} placeholder="billing.phone" required /></div>
+                <div className="flex flex-col gap-1"><Label htmlFor="lk-title">{t("Ad (botun dilində)")}</Label><Input id="lk-title" value={lk.title} maxLength={60} onChange={(e) => setLk({ ...lk, title: e.target.value })} placeholder={t("Sifariş")} /></div>
+              </div>
+              <details className="rounded-xl bg-muted/50 px-3 py-2 text-sm">
+                <summary className="cursor-pointer text-muted-foreground">{t("Əlavə ayarlar (ixtiyari)")}</summary>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1"><Label htmlFor="lk-op">{t("Sifariş nömrəsi sorğu parametri (ünvanda {orderId} yoxdursa)")}</Label><Input id="lk-op" value={lk.orderParam} onChange={(e) => setLk({ ...lk, orderParam: e.target.value })} placeholder="number" /></div>
+                  <div className="flex flex-col gap-1"><Label htmlFor="lk-idf">{t("Siyahı qayıdırsa: nömrə sahəsi")}</Label><Input id="lk-idf" value={lk.idField} onChange={(e) => setLk({ ...lk, idField: e.target.value })} placeholder="number" /></div>
+                </div>
+              </details>
+              <SourceFields f={{ ...blank(), key: "lookup", title: "x", description: "x", fields: lk.fields, linesPath: lk.linesPath, linesTitle: lk.linesTitle, linesQty: lk.linesQty }}
+                set={(f) => setLk({ ...lk, fields: f.fields, linesPath: f.linesPath, linesTitle: f.linesTitle, linesQty: f.linesQty })} fieldsOnly />
+              {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button type="submit" disabled={saving}>{saving ? t("Yoxlanılır…") : data.configured ? t("Saxla") : t("Davam et")}</Button>
+                {data.lookup && <Button type="button" variant="ghost" className="ml-auto text-destructive" disabled={saving} onClick={() => void removeLookup()}><Trash2 size={14} aria-hidden />{t("Sifariş axtarışını sil")}</Button>}
+              </div>
+            </form>
+          )}
+          {data.lookup && (
+            <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
+              <h3 className="font-semibold">{t("Yoxla")}</h3>
+              <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); void runLookupTest(); }}>
+                <div className="flex flex-col gap-1"><Label htmlFor="lk-t-id">{t("Sifariş nömrəsi")}</Label><Input id="lk-t-id" value={lkTest.orderId} onChange={(e) => setLkTest({ ...lkTest, orderId: e.target.value })} className="w-40" /></div>
+                <div className="flex flex-col gap-1"><Label htmlFor="lk-t-ph">{t("Telefon")}</Label><Input id="lk-t-ph" value={lkTest.phone} onChange={(e) => setLkTest({ ...lkTest, phone: e.target.value })} className="w-48" /></div>
+                <Button type="submit" variant="outline" disabled={!lkTest.orderId.trim() || !lkTest.phone.trim()}><FlaskConical size={14} aria-hidden />{t("Yoxla")}</Button>
+              </form>
+              {lkTest.out && <pre className="max-h-72 overflow-auto rounded-xl bg-muted p-3 text-xs">{lkTest.out}</pre>}
+            </section>
+          )}
+        </div>
+      )}
 
       {tab === "security" && (
         <div className="flex flex-col gap-4">
@@ -254,10 +351,10 @@ function CustomerData() {
         types={[{ value: "header", label: "Header" }, { value: "bearer", label: "Bearer" }, { value: "query", label: "Query" }, { value: "none", label: t("Yoxdur") }]} named={["header", "query"]}
         description={t("İstifadəçinin məlumatını (sifariş, ödəniş, şikayət və s.) ID-si ilə qaytaran daxili API. Yalnız oxuma (GET) sorğuları göndərilir.")}
         saveLabel={conn?.pending ? t("Qoş və saxla") : undefined}
-        onSave={async (c) => { if (await persist(conn?.pending ?? data.sources, c)) setConn(null); }} />
+        onSave={async (c) => { if (await persist(conn?.pending ?? data.sources, c, conn?.lookup ?? data.lookup)) setConn(null); }} />
 
       <Modal open={del !== null} onClose={() => setDel(null)} size="sm" title={t("Məlumat növü silinsin?")}
-        description={data.sources.length === 1 ? t("Bu sonuncu növdür: silinsə API bağlantısı da silinəcək.") : t("Çat artıq bu məlumatı göstərməyəcək.")}
+        description={data.sources.length === 1 && !data.lookup ? t("Bu sonuncu növdür: silinsə API bağlantısı da silinəcək.") : t("Çat artıq bu məlumatı göstərməyəcək.")}
         footer={<><Button type="button" variant="outline" onClick={() => setDel(null)}>{t("Ləğv et")}</Button><Button type="button" variant="destructive" disabled={saving} onClick={() => del !== null && void remove(del)}>{t("Sil")}</Button></>}>
         <p className="text-sm font-medium">{del !== null ? data.sources[del]?.title : ""}</p>
       </Modal>

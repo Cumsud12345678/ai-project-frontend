@@ -394,8 +394,13 @@ export type PrivateData = {
   auth?: { type: "header" | "bearer" | "query"; name?: string; hasSecret: boolean };
   sources: PrivateSource[];
   identity: { configured: boolean; createdAt?: string | null };
+  /** Girişsiz sifariş statusu: sifariş nömrəsi + telefon (eyni API bağlantısı) */
+  lookup?: PrivateLookup;
 };
-export type PrivateInput = { baseUrl: string; apiSecret?: string; auth?: { type: string; name?: string }; sources: PrivateSource[] };
+export type PrivateLookup = { enabled: boolean; title?: string; path: string; orderParam?: string; itemsPath: string; phoneField: string; idField?: string; fields: Record<string, FieldSpec>; lines?: { path: string; title: string; qty?: string } };
+export type PrivateInput = { baseUrl: string; apiSecret?: string; auth?: { type: string; name?: string }; sources: PrivateSource[]; lookup?: PrivateLookup };
+export type LookupResult = { found?: boolean; title?: string; orderId?: string; record?: Record<string, unknown>; note?: string; error?: string };
+export const testOrderLookup = (orderId: string, phone: string) => post<LookupResult>("/tenant/private-data/lookup-test", { orderId, phone });
 export const getPrivateData = () => call<PrivateData>("/tenant/private-data");
 export const savePrivateData = (b: PrivateInput) => call<PrivateData>("/tenant/private-data", { method: "PUT", body: b });
 export const deletePrivateData = () => call<{ ok: true }>("/tenant/private-data", { method: "DELETE" });
