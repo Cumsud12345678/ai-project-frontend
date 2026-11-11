@@ -179,7 +179,7 @@ export default function AdminPartnersPage() {
 
   const load = useCallback(() => adminPartners().then((r) => {
     setData(r); setError("");
-    setS({ defaultRate: String(r.settings.defaultRate), bonusPct: String(r.settings.bonusPct), bonusCapAzn: String(r.settings.bonusCapAzn), months: String(r.settings.months) });
+    setS({ defaultRate: String(r.settings.defaultRate), bonusReplies: String(r.settings.bonusReplies), months: String(r.settings.months) });
   }).catch((e: Error) => setError(e.message)), []);
   useEffect(() => { void load(); }, [load]);
   const run = async (fn: () => Promise<unknown>, ok: string) => {
@@ -193,11 +193,11 @@ export default function AdminPartnersPage() {
   const shown = partners.filter(test[filter]).filter((p) => !needle || p.code.toLowerCase().includes(needle) || p.email.toLowerCase().includes(needle));
   const cur = open ? partners.find((p) => p.id === open.id) ?? null : null;
   const sNums = s ? Object.values(s).map(num) : [];
-  const sOk = !!s && sNums.every((n) => Number.isFinite(n) && n >= 0) && num(s.defaultRate) <= 100 && num(s.bonusPct) <= 100 && num(s.months) >= 1;
+  const sOk = !!s && sNums.every((n) => Number.isFinite(n) && n >= 0) && num(s.defaultRate) <= 100 && num(s.bonusReplies) <= 5000 && num(s.months) >= 1;
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("Partnyorlar")} description={t("Partnyorun kodu ilə gələn saytların real ödənişlərindən komissiya yazılır. Ödənişi özün edib balansdan çıxırsan.")}
+      <PageHeader title={t("Partnyorlar")} description={t("Partnyorun kodu ilə gələn saytların plan ödənişlərindən komissiya yazılır. Ödənişi özün edib balansdan çıxırsan.")}
         actions={<>
           <Button variant="outline" onClick={() => setModal("rules")}><Settings2 size={16} aria-hidden />{t("Proqram qaydaları")}</Button>
           <Button variant="outline" onClick={() => setModal("link")}><Link2 size={16} aria-hidden />{t("Müştərini bağla")}</Button>
@@ -295,18 +295,17 @@ export default function AdminPartnersPage() {
         </form>
       </Modal>
 
-      <Modal open={modal === "rules"} onClose={() => setModal(null)} busy={busy} title={t("Proqram qaydaları")} description={t("Komissiya yalnız real ödənişlərdən (təsdiqlənmiş yükləmə və ödəniş şlüzü) hesablanır. Bonus, hədiyyə və pulsuz balans sayılmır.")}
+      <Modal open={modal === "rules"} onClose={() => setModal(null)} busy={busy} title={t("Proqram qaydaları")} description={t("Komissiya müştərinin hər plan və paket ödənişindən faizlə hesablanır. Bonus, hədiyyə və pulsuz sınaq sayılmır.")}
         footer={<><Button variant="outline" onClick={() => setModal(null)} disabled={busy}>{t("Ləğv et")}</Button><Button type="submit" form="ps-form" disabled={busy || !sOk}>{t("Saxla")}</Button></>}>
         {s && (
-          <form id="ps-form" className="flex flex-col gap-3" onSubmit={async (e) => { e.preventDefault(); if (sOk && await run(() => adminPartnerSettings({ defaultRate: num(s.defaultRate), bonusPct: num(s.bonusPct), bonusCapAzn: num(s.bonusCapAzn), months: Math.round(num(s.months)) }), t("Ayarlar yadda saxlandı."))) setModal(null); }}>
+          <form id="ps-form" className="flex flex-col gap-3" onSubmit={async (e) => { e.preventDefault(); if (sOk && await run(() => adminPartnerSettings({ defaultRate: num(s.defaultRate), bonusReplies: Math.round(num(s.bonusReplies)), months: Math.round(num(s.months)) }), t("Ayarlar yadda saxlandı."))) setModal(null); }}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1"><Label htmlFor="ps-rate">{t("Yeni partnyor üçün faiz")}</Label><Input id="ps-rate" value={s.defaultRate} onChange={(e) => setS({ ...s, defaultRate: e.target.value })} inputMode="decimal" /></div>
               <div className="flex flex-col gap-1"><Label htmlFor="ps-months">{t("Müddət (ay)")}</Label><Input id="ps-months" value={s.months} onChange={(e) => setS({ ...s, months: e.target.value })} inputMode="numeric" /></div>
-              <div className="flex flex-col gap-1"><Label htmlFor="ps-bonus">{t("Yeni müştəri bonusu (%)")}</Label><Input id="ps-bonus" value={s.bonusPct} onChange={(e) => setS({ ...s, bonusPct: e.target.value })} inputMode="decimal" /></div>
-              <div className="flex flex-col gap-1"><Label htmlFor="ps-cap">{t("Bonus tavanı (AZN)")}</Label><Input id="ps-cap" value={s.bonusCapAzn} onChange={(e) => setS({ ...s, bonusCapAzn: e.target.value })} inputMode="decimal" /></div>
+              <div className="flex flex-col gap-1 sm:col-span-2"><Label htmlFor="ps-bonus">{t("Yeni müştəri bonusu (cavab)")}</Label><Input id="ps-bonus" value={s.bonusReplies} onChange={(e) => setS({ ...s, bonusReplies: e.target.value })} inputMode="numeric" /></div>
             </div>
             {!sOk && <p className="text-xs text-destructive">{t("Rəqəmlər düzgün deyil.")}</p>}
-            <p className="text-xs text-muted-foreground">{t("Bonus 0 olsa yeni müştəriyə heç nə verilmir. Müddət dəyişəndə artıq bağlı müştərilərə də tətbiq olunur.")}</p>
+            <p className="text-xs text-muted-foreground">{t("Kodla gələn müştəri ilk planını alanda bir dəfə bu qədər əlavə cavab alır (0 = bonus yoxdur). Müddət dəyişəndə artıq bağlı müştərilərə də tətbiq olunur.")}</p>
           </form>
         )}
       </Modal>

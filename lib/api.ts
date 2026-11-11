@@ -123,7 +123,7 @@ export const disconnectWhatsApp = () => pinged(call<{ ok: true }>("/tenant/chann
 /** ref: partnyor kodu; refSource=link: linkdən gəlib (səhv kod xəta vermir), code: istifadəçi özü yazıb */
 export const register = (email: string, password: string, ref?: { code: string; source: "link" | "code" }) =>
   post<{ ok: true }>("/auth/register", { email, password, ...(ref?.code && { ref: ref.code, refSource: ref.source }) });
-export const checkRefCode = (code: string) => call<{ valid: boolean; code: string; bonusPct: number; bonusCapAzn: number }>(`/auth/ref/${encodeURIComponent(code)}`);
+export const checkRefCode = (code: string) => call<{ valid: boolean; code: string; bonusReplies: number }>(`/auth/ref/${encodeURIComponent(code)}`);
 
 // Partnyor proqramı
 export type PartnerTotals = { earned: number; adjust: number; paidOut: number; balance: number };
@@ -131,10 +131,11 @@ export type PartnerCustomer = { id: string; email: string; joinedAt: string; sou
 export type PartnerEntry = { id: string; kind: "commission" | "adjust" | "payout"; amountAzn: number; at: string; baseAzn?: number | null; rate?: number | null; note?: string; by?: string };
 export type MyPartner = {
   partner: { code: string; rate: number; active: boolean; since: string }; link: string;
-  settings: { months: number; bonusPct: number; bonusCapAzn: number }; totals: PartnerTotals; customers: PartnerCustomer[]; entries: PartnerEntry[];
+  settings: { months: number; bonusReplies: number }; totals: PartnerTotals; customers: PartnerCustomer[]; entries: PartnerEntry[];
 };
 export const getMyPartner = () => call<MyPartner>("/partner");
-export type PartnerSettings = { defaultRate: number; bonusPct: number; bonusCapAzn: number; months: number };
+/** bonusReplies: kodla gələn müştəriyə ilk plan ödənişindən sonra bir dəfə verilən əlavə cavab sayı */
+export type PartnerSettings = { defaultRate: number; bonusReplies: number; months: number };
 export type AdminPartner = { id: string; email: string; code: string; rate: number; active: boolean; since: string; note: string; customers: number; totals: PartnerTotals };
 export const adminPartners = () => call<{ settings: PartnerSettings; partners: AdminPartner[] }>("/admin/partners");
 export const adminPartner = (id: string) => call<{ partner: AdminPartner; customers: PartnerCustomer[]; entries: PartnerEntry[] }>(`/admin/partners/${id}`);

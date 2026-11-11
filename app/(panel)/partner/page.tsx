@@ -61,7 +61,7 @@ export default function PartnerPage() {
             <button type="button" onClick={() => copy(d.partner.code)} title={t("Kopyala")} className="cursor-pointer rounded-lg border border-dashed border-foreground/40 px-3 py-1 font-mono text-base font-semibold tracking-wider hover:bg-muted">{d.partner.code}</button>
           </div>
           <p className="text-xs text-muted-foreground">
-            {d.settings.bonusPct > 0 ? `${t("Gələn sayt ilk yükləməsində +{p}% bonus balans alır (ən çox {cap} AZN).", { p: d.settings.bonusPct, cap: d.settings.bonusCapAzn })} ` : ""}
+            {d.settings.bonusReplies > 0 ? `${t("Gələn sayt ilk planını alanda +{n} bonus cavab alır.", { n: d.settings.bonusReplies })} ` : ""}
             {t("Video, story və ya söhbətdə link itə bilər: kodu da de. Qeydiyyat zamanı “Promo kodun var?” bölməsinə yazılır.")}
           </p>
         </div>
@@ -103,7 +103,7 @@ export default function PartnerPage() {
 
       {tab === "sites" ? (
         d.customers.length === 0 ? (
-          <Empty icon={UserPlus} title={t("Hələ heç kim sənin linkinlə qeydiyyatdan keçməyib.")} note={t("Komissiya yalnız real ödənişlərdən hesablanır: bonus və pulsuz balans sayılmır.")} />
+          <Empty icon={UserPlus} title={t("Hələ heç kim sənin linkinlə qeydiyyatdan keçməyib.")} note={t("Komissiya müştərinin hər plan və paket ödənişindən hesablanır: bonus və pulsuz sınaq sayılmır.")} />
         ) : (
           <div className="flex flex-col gap-2">
             <div className="overflow-x-auto rounded-2xl border border-border bg-card">
@@ -128,7 +128,7 @@ export default function PartnerPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted-foreground">{t("Komissiya yalnız real ödənişlərdən hesablanır: bonus və pulsuz balans sayılmır.")}</p>
+            <p className="text-xs text-muted-foreground">{t("Komissiya müştərinin hər plan və paket ödənişindən hesablanır: bonus və pulsuz sınaq sayılmır.")}</p>
           </div>
         )
       ) : d.entries.length === 0 ? (

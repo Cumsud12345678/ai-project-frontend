@@ -44,7 +44,7 @@ export default function RegisterPage() {
   const [fromLink, setFromLink] = useState("");
   const [code, setCode] = useState("");
   const [showCode, setShowCode] = useState(false);
-  const [check, setCheck] = useState<{ code: string; valid: boolean; bonusPct: number; bonusCapAzn: number } | null>(null);
+  const [check, setCheck] = useState<{ code: string; valid: boolean; bonusReplies: number } | null>(null);
 
   useEffect(() => { const c = linkCode(); if (c) { setFromLink(c); setCode(c); setShowCode(true); } }, []);
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function RegisterPage() {
               onChange={(e) => setCode(e.target.value.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20))} aria-invalid={codeBad || undefined} aria-describedby="ref-hint" />
             <p id="ref-hint" className="min-h-5 text-xs" aria-live="polite">
               {check?.code === typed && check.valid
-                ? <span className="flex items-center gap-1.5 text-emerald-700"><Gift size={13} aria-hidden />{check.bonusPct > 0 ? t("Kod qəbul olundu: ilk yükləmədə +{p}% bonus balans (ən çox {cap} AZN).", { p: check.bonusPct, cap: check.bonusCapAzn }) : t("Kod qəbul olundu.")}</span>
+                ? <span className="flex items-center gap-1.5 text-emerald-700"><Gift size={13} aria-hidden />{check.bonusReplies > 0 ? t("Kod qəbul olundu: ilk planını alanda +{n} bonus cavab.", { n: check.bonusReplies }) : t("Kod qəbul olundu.")}</span>
                 : codeBad && source === "code" ? <span className="text-destructive">{t("Promo kod tapılmadı")}</span> : null}
             </p>
           </div>
