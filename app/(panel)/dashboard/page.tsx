@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function DashboardPage() {
   const router = useRouter();
   const { tenant } = useSession();
-  const { t, num } = useI18n();
+  const { t, num, day } = useI18n();
   const [usage, setUsage] = useState<Usage | null>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [fb, setFb] = useState<FeedbackSummary | null>(null);
@@ -37,10 +37,19 @@ export default function DashboardPage() {
   const limit = usage?.limits?.monthlyRequests ?? 0;
   const left = limit ? Math.max(0, limit - used) : null;
   const pct = limit ? (used / limit) * 100 : 0;
-  // Əsas məhdudiyyət balansdır (AZN, hər sorğunun real xərcinə görə). Sorğu sayı yalnız məlumat üçündür.
+  // Əsas məhdudiyyət planın cavab limitidir (plan yoxdursa pulsuz sınaq cavabları)
   const bill = overview?.billing ?? null;
-  const avgCost = bill && used >= 20 && bill.monthAzn > 0 ? bill.monthAzn / used : 0;
-  const approxLeft = bill && avgCost > 0 ? Math.floor(bill.balanceAzn / avgCost) : null;
+  // Abunə: plan, limit faizi və xəbərdarlıq (plan yoxdursa sınaq balansı göstərilir)
+  const plan = bill?.plan ?? null;
+  const planPct = plan && plan.included > 0 ? Math.min(100, Math.round((plan.used / plan.included) * 100)) : 0;
+  // Pulsuz sınaq (plan yoxdur): qalan cavab sayı
+  const trial = !plan ? bill?.trial ?? null : null;
+  const trialOver = Boolean(trial) && trial!.left <= 0;
+  const planAlert = !plan ? (trialOver ? { bad: true, text: t("Pulsuz sınaq bitib: köməkçinin işləməsi üçün plan seç.") } : trial && trial.left <= 20 ? { bad: false, text: t("Pulsuz sınaqda {n} cavab qalıb.", { n: trial.left }) } : null)
+    : plan.status === "expired" ? { bad: true, text: t("Planın müddəti bitib: köməkçi ziyarətçilərə cavab vermir.") }
+    : plan.used >= plan.included && plan.packLeft <= 0 ? { bad: true, text: t("Cavab limiti doldu: köməkçi ziyarətçilərə cavab vermir.") }
+    : plan.status === "grace" ? { bad: false, text: t("Planın müddəti bitib, güzəşt müddətindəsən. Köməkçi dayanmamış yenilə.") }
+    : planPct >= 80 && plan.packLeft <= 0 ? { bad: false, text: t("Cavab limitinin {p}%-i işlənib.", { p: planPct }) } : null;
   const data = (usage?.daily ?? []).map((d) => ({ label: `${d.date.slice(8, 10)}.${d.date.slice(5, 7)}`, title: d.date, value: d.requests }));
 
   const supportMode = overview ? overview.mode !== "listings" : false;
@@ -68,12 +77,22 @@ export default function DashboardPage() {
       </header>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
-      {overview?.billing && overview.billing.enforced && overview.billing.state !== "ok" && (
+      {planAlert && (
+        <div role="alert" className={cn("flex items-start gap-3 rounded-lg border p-4 text-sm", planAlert.bad ? "border-destructive/50 bg-destructive/10" : "border-amber/50 bg-amber/10")}>
+          <AlertTriangle size={18} className={cn("mt-0.5 shrink-0", planAlert.bad ? "text-destructive" : "text-amber")} aria-hidden />
+          <div>
+            <p className="font-medium">{planAlert.text}</p>
+            <Link href="/billing" className="text-primary underline">{t("Planı idarə et")}</Link>
+          </div>
+        </div>
+      )}
+
+      {!plan && !trial && overview?.billing && overview.billing.enforced && overview.billing.state !== "ok" && (
         <div role="alert" className={cn("flex items-start gap-3 rounded-lg border p-4 text-sm", overview.billing.state === "empty" ? "border-destructive/50 bg-destructive/10" : "border-amber/50 bg-amber/10")}>
           <AlertTriangle size={18} className={cn("mt-0.5 shrink-0", overview.billing.state === "empty" ? "text-destructive" : "text-amber")} aria-hidden />
           <div>
-            <p className="font-medium">{overview.billing.state === "empty" ? t("Balans bitib: çat ziyarətçilərə cavab vermir.") : t("Balans azalır: {a} AZN qalıb.", { a: overview.billing.balanceAzn.toFixed(2) })}</p>
-            <Link href="/billing" className="text-primary underline">{t("Balansı yüklə")}</Link>
+            <p className="font-medium">{overview.billing.state === "empty" ? t("Köməkçi dayanıb: davam etmək üçün plan seç.") : t("Balansda {a} AZN qalıb.", { a: overview.billing.balanceAzn.toFixed(2) })}</p>
+            <Link href="/billing" className="text-primary underline">{t("Plan seç")}</Link>
           </div>
         </div>
       )}
@@ -158,20 +177,34 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile icon={Wallet} tone={3} label={t("Balans")} value={bill ? `${bill.balanceAzn.toFixed(2)} AZN` : "–"} hint={bill ? `${t("Pulsuz hissə")}: ${bill.freeAzn.toFixed(2)} · ${t("Yüklənmiş hissə")}: ${bill.paidAzn.toFixed(2)}` : undefined} />
-        <StatTile icon={Coins} tone={2} label={t("Bu ay xərc")} value={bill ? `${bill.monthAzn.toFixed(2)} AZN` : "–"} hint={t("Ətraflı: Balans bölməsi")} />
+        {plan ? (<>
+          <StatTile icon={Wallet} tone={3} label={t("Plan")} value={plan.name} hint={plan.status === "expired" ? t("müddəti bitib") : t("{d} tarixinədək", { d: day(plan.end) })} />
+          <StatTile icon={Coins} tone={2} label={t("Cavab limiti")} value={`${num(plan.used)} / ${num(plan.included)}`} hint={plan.packLeft > 0 ? t("+{n} paketdə", { n: num(plan.packLeft) }) : t("{p}% işlənib", { p: planPct })} />
+        </>) : (<>
+          <StatTile icon={Wallet} tone={3} label={t("Pulsuz sınaq")} value={trial ? `${num(trial.left)} / ${num(trial.total)}` : "–"} hint={trial?.until ? t("{d} tarixinədək", { d: day(trial.until) }) : t("Plan seçilməyib")} />
+          <StatTile icon={Coins} tone={2} label={t("Bu ay xərc")} value={bill ? `${bill.monthAzn.toFixed(2)} AZN` : "–"} hint={t("Ətraflı: Plan və ödəniş")} />
+        </>)}
         <StatTile icon={Zap} tone={1} label={t("Sorğu")} value={usage ? num(used) : "–"} hint={limit ? t("Admin limiti: {n}", { n: num(limit) }) : undefined} />
         <StatTile icon={Gauge} tone={4} label={t("Ziyarətçi limiti")} value={overview?.limits ? (overview.limits.perVisitorDay > 0 ? num(overview.limits.perVisitorDay) : t("limitsiz")) : "–"} hint={overview?.limits && overview.limits.perVisitorDay > 0 ? t("mesaj / gün") : undefined} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {bill && (
+        {bill && plan && (
           <Card>
-            <CardHeader><CardTitle>{t("Balans")}</CardTitle><CardDescription>{t("Hər sorğunun real xərcinə görə çıxılır")}</CardDescription></CardHeader>
+            <CardHeader><CardTitle>{plan.name}</CardTitle><CardDescription>{t("Bu dövrün cavab limiti")}</CardDescription></CardHeader>
             <CardContent className="flex flex-col gap-3 py-6">
-              <p className="text-3xl font-semibold tabular-nums">{bill.balanceAzn.toFixed(2)} <span className="text-base font-normal text-muted-foreground">AZN</span></p>
-              {approxLeft !== null && <p className="text-sm text-muted-foreground">{t("Bu ayın orta xərcinə görə təxminən {n} sorğuya çatır.", { n: num(approxLeft) })}</p>}
-              {bill.enforced && <Link href="/billing" className="text-sm text-primary underline">{t("Balansı yüklə")}</Link>}
+              <p className="text-3xl font-semibold tabular-nums">{num(plan.used)} <span className="text-base font-normal text-muted-foreground">/ {num(plan.included)}</span></p>
+              <div className="h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden><div className={cn("h-full rounded-full", planPct >= 100 ? "bg-destructive" : planPct >= 80 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${planPct}%` }} /></div>
+              <Link href="/billing" className="text-sm text-primary underline">{t("Planı idarə et")}</Link>
+            </CardContent>
+          </Card>
+        )}
+        {bill && !plan && (
+          <Card>
+            <CardHeader><CardTitle>{t("Pulsuz sınaq")}</CardTitle><CardDescription>{t("Bütün imkanlar açıqdır")}</CardDescription></CardHeader>
+            <CardContent className="flex flex-col gap-3 py-6">
+              <p className="text-3xl font-semibold tabular-nums">{num(trial?.left ?? 0)} <span className="text-base font-normal text-muted-foreground">{t("cavab qalıb")}</span></p>
+              <Link href="/billing" className="text-sm text-primary underline">{t("Plan seç")}</Link>
             </CardContent>
           </Card>
         )}

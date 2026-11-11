@@ -1,6 +1,7 @@
 "use client";
 // Kampaniyalar: ziyarətçi yazmamış çat düyməsinin yanında göstərilən kart (başlıq, mətn, düymələr) və şərtləri.
 // Saxlanma vidjet ayarlarının "proactive" hissəsinə gedir; statistika ayrıca sayılır (göstərilib / klik / söhbət).
+import { PlanLockNotice } from "@/components/plan-ui";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -215,6 +216,7 @@ export function Campaigns({ widget, stats, filter, onChange, reloadStats }: {
 
   return (
     <div className="flex flex-col gap-4">
+      <PlanLockNotice feature="campaigns" />
       <SwitchRow checked={enabled} onChange={(v) => void persist(rules, v, v ? t("Kampaniyalar aktivləşdi.") : t("Bütün kampaniyalar dayandırıldı."))} on={t("Aktiv")} off={t("Söndürülüb")}
         title={t("Kampaniyalar saytda göstərilir")} description={t("Ziyarətçi yazmamış, şərtə uyğun gələndə çat düyməsinin yanında kart çıxır. Mətn sənindir, AI xərci yoxdur. Söndürsən, heç bir kampaniya göstərilmir.")} />
 

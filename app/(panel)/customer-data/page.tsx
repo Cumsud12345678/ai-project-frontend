@@ -1,4 +1,5 @@
 "use client";
+import { PlanLockNotice } from "@/components/plan-ui";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Database, FlaskConical, Pencil, Plug, Plus, ShieldCheck, Trash2 } from "lucide-react";
@@ -167,6 +168,7 @@ function CustomerData() {
       <PageHeader title={t("Müştəri məlumatı")}
         description={t("Saytında hesabına daxil olmuş istifadəçi çatdan öz məlumatını (sifarişləri, ödənişləri, şikayətləri, sorğuları və s.) soruşa bilsin. Məlumat sorğu anında sənin API-ndən alınır və bizdə saxlanmır.")}
         actions={<>{data.configured && <Button variant="outline" onClick={() => { setErr(""); setConn({ pending: null }); }}><Plug size={16} aria-hidden />{t("API bağlantısı")}</Button>}{newBtn}</>} />
+      <PlanLockNotice feature="customerData" />
 
       <SetupSteps steps={[
         { title: t("API qoşulub"), done: data.configured, action: { label: t("Əlavə et"), run: () => setPicker(true) } },

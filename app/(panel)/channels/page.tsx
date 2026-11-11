@@ -1,4 +1,5 @@
 "use client";
+import { PlanLockNotice } from "@/components/plan-ui";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FilterPills, PageHeader } from "@/components/page-header";
@@ -126,6 +127,7 @@ function ChannelTabs() {
     <div className="flex flex-col gap-6">
       <PageHeader title={t("Telegram və WhatsApp")} description={t("Köməkçini saytdan başqa harada işlətmək istədiyini seç.")}
         actions={<Link href="/settings/channels" className={buttonVariants({ variant: "outline" })}>{t("Bütün kanallar")}</Link>} />
+      <PlanLockNotice feature="channels" />
       <FilterPills value={c} onChange={pick} label={t("Kanallar")} items={[{ value: "whatsapp", label: "WhatsApp" }, { value: "telegram", label: "Telegram" }]} />
       <OperatorNote />
       {c === "whatsapp" ? <WhatsApp /> : <Telegram />}

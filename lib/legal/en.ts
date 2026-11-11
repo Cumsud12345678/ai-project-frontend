@@ -10,7 +10,7 @@ const en: LegalPack = {
   docs: {
     terms: {
       title: "Terms of Service",
-      summary: "Rules for using {brand}: account, balance, content, liability and disputes.",
+      summary: "Rules for using {brand}: account, subscription plan, content, liability and disputes.",
       sections: [
         { id: "umumi", h: "1. General", body: [
           "These terms govern the use of the {brand} platform (web panel, chat widget, Telegram and WhatsApp integrations, API) provided by {operator} (“we”).",
@@ -26,11 +26,11 @@ const en: LegalPack = {
           "- You are responsible for keeping your password and API key confidential. We recommend enabling two-step login.",
           "- You are responsible for all activity in your account, including your team members. Tell us immediately if you suspect unauthorised access.",
         ] },
-        { id: "balans", h: "4. Balance and payment", body: [
-          "The service runs on a prepaid balance (AZN). The actual cost of each answer is deducted from the balance; the current balance and spending history are shown in the panel.",
-          "When the balance runs out, the assistant stops answering visitors and shows a contact form instead. The service resumes automatically after a top-up.",
-          "We announce price changes at least 14 days in advance by email or in the panel. Balance already topped up is used at the new prices after the change.",
-          "Each top-up can be used for 12 months from the top-up date; any part not used in that time expires. Topped-up balance is non-refundable and cannot be cashed out (except for incorrect charges and if we discontinue the service). Details: the “Payments & Refunds” document.",
+        { id: "balans", h: "4. Subscription plan and payment", body: [
+          "The service is provided on a monthly subscription plan (each period is 30 days). Each plan's monthly reply limit, number of users and features are shown in the panel and on the pricing section of the website. New accounts get a one-time free trial: 100 replies within 14 days (whichever ends first).",
+          "We email you when 80% and 100% of the limit is used. When the limit is reached, the assistant stops answering visitors and shows a contact form instead. Upgrading the plan or buying an extra reply pack resumes the service immediately.",
+          "Plans do not renew automatically: we remind you 3 days before the period ends. After the period ends there is a short grace period (3 days), then the assistant stops; your data is kept and the service resumes as soon as the plan is renewed.",
+          "Paid periods and extra packs are non-refundable and cannot be cashed out (except for erroneous charges and discontinuation of the service by us). We give at least 14 days' notice of price changes; a paid period finishes at the old price. Details: the “Payments & Refunds” document.",
         ] },
         { id: "mezmun", h: "5. Your content and obligations", body: [
           "- Data you upload or connect (listings, documents, API responses, company details) belongs to you. You confirm you have the right to use it.",
@@ -55,7 +55,7 @@ const en: LegalPack = {
           "Where possible we announce planned maintenance in advance.",
         ] },
         { id: "dayandirma", h: "9. Suspension and account deletion", body: [
-          "You can delete your account at any time in the panel (Settings → Account → Delete account). Your data is then deleted as described in the Privacy Policy. Unused balance is not refunded when an account is deleted.",
+          "You can delete your account at any time in the panel (Settings → Account → Delete account). Your data is then deleted as described in the Privacy Policy. The remainder of a paid period and unused packs are not refunded when an account is deleted.",
           "We may suspend an account for breach of these terms, payment fraud or legal requirements. Data and balance of a suspended account are not deleted immediately, and the reason is sent by email.",
         ] },
         { id: "mesuliyyet", h: "10. Limitation of liability", body: [
@@ -87,7 +87,7 @@ const en: LegalPack = {
         { id: "melumat", h: "2. Data we collect", body: [
           "- **Account:** email, password hash (the password itself is not stored), two-step login settings, language.",
           "- **Business:** business name, website domain, company contact details (phone, address, opening hours), assistant settings.",
-          "- **Payments:** top-up amount, date and status. Card details are processed by the payment provider and are not stored by us.",
+          "- **Payments:** amount, date and status of plan or pack orders. Card details are processed by the payment provider and are not stored by us.",
           "- **Knowledge base and catalog:** uploaded documents, texts, crawled website pages, listing source address and responses. API keys are stored encrypted.",
           "- **Visitor conversations:** messages, an anonymous visitor ID stored in the browser, the page where the chat started, and any name, phone or email the visitor chooses to provide.",
           "- **Channels:** Telegram and WhatsApp user ID, name and number (if the channel is connected).",
@@ -96,7 +96,7 @@ const en: LegalPack = {
         { id: "meqsed", h: "3. Why we use data", body: [
           "- to provide the service: answers, search, operator chat, notifications;",
           "- to secure accounts, verify logins and prevent abuse (e.g. connecting one website with multiple accounts);",
-          "- to calculate balance, record payments and meet accounting obligations;",
+          "- to track the subscription limit, record payments and meet accounting obligations;",
           "- for support and important service notices;",
           "- to improve the service using aggregated, non-identifying statistics.",
           "We do not sell or share data for advertising. We do not use customer data to train our own models.",
@@ -109,7 +109,7 @@ const en: LegalPack = {
           "- **AI providers** (Anthropic — Claude, Google — Gemini): the visitor's question and the context needed to answer;",
           "- **Email delivery** (Resend): code and notification emails;",
           "- **Cloud hosting and database providers**;",
-          "- **Payment provider**: balance top-ups;",
+          "- **Payment provider**: plan and pack payments;",
           "- **Telegram and WhatsApp**: only if you connect these channels.",
           "Some providers are located outside Azerbaijan (USA, EU), so data may be transferred abroad. Such transfers are necessary to provide the service and are made with appropriate safeguards.",
           "We disclose data to authorities only when required by law.",
@@ -144,40 +144,48 @@ const en: LegalPack = {
     },
     refund: {
       title: "Payments & Refunds",
-      summary: "How the balance works, how long it can be used and the refund rules.",
+      summary: "How the subscription works, renewals, plan changes and refund rules.",
       sections: [
-        { id: "model", h: "1. How the balance works", body: [
-          "{brand} runs on a prepaid balance. You top up, and the actual cost of each answer is deducted. There are no auto-renewing subscriptions or hidden charges.",
-          "Spending history, current balance and top-ups are shown in the “Balance” section of the panel. A daily spending limit protects against unexpected spikes (e.g. bot attacks).",
-          "Each top-up can be used for **12 months from the top-up date**. Any part not used within that period expires and cannot be restored. Usage is deducted from the top-up that expires soonest. The remaining amount and expiry date of each top-up are shown in the panel, with a notice when one is about to expire.",
+        { id: "model", h: "1. How the subscription works", body: [
+          "{brand} works on a monthly subscription plan (each period is 30 days). Each plan has a monthly reply limit: every answer the assistant gives a visitor counts as one reply. Voice transcription, AI drafts for operators and question analysis do not count towards the limit.",
+          "A one-time free trial is given on sign-up: 100 replies within 14 days (whichever ends first). Unused replies do not carry over to the next period.",
+          "We email you when 80% and 100% of the limit is used. When the limit is reached, the assistant stops answering visitors and shows a contact form instead (requests are not lost).",
+          "An **extra pack** (e.g. +500 replies) is used after the plan limit runs out and is valid for 12 months from purchase. Packs can only be bought with an active plan.",
         ] },
-        { id: "odenis", h: "2. Payment", body: [
-          "Payments are accepted in Azerbaijani manat (AZN) by bank card through a licensed payment provider. We never see or store card details.",
-          "After a successful payment the balance increases automatically and a confirmation email is sent.",
+        { id: "yenileme", h: "2. Renewal, upgrade and cancellation", body: [
+          "Plans **do not renew automatically** and your card is not charged automatically. We email you 3 days before the period ends. If you renew on time, the new period starts when the old one ends: no days are lost.",
+          "There is a 3-day grace period after the period ends. If you renew during it, the new period still counts from the old end date. After the grace period the assistant stops; your knowledge base and settings are kept.",
+          "**Upgrade:** when moving to a more expensive plan you only pay the difference for the remaining days of the current period; the new limit and features are available immediately and the end date does not change.",
+          "**Moving to a cheaper plan** takes effect from the next period: the current period finishes on the plan you paid for.",
+          "**Cancellation:** simply do not renew; the service stops at the end of the period. Paid periods are not refunded.",
         ] },
-        { id: "qaytarma", h: "3. Refunds", body: [
-          "Topped-up balance is **non-refundable and cannot be cashed out**, neither after the top-up nor when you close your account. Choose the amount you need; you can start small and top up as you go.",
-          "We refund money only in these cases:",
-          "- **Incorrect charges:** if a technical error deducted too much or a payment went through twice, the excess is refunded in full.",
-          "- **If we discontinue the service:** if the platform stops operating, the unused topped-up balance is refunded.",
+        { id: "odenis", h: "3. Payment", body: [
+          "Payments are accepted in Azerbaijani manat (AZN) by bank card through a licensed payment provider. We do not see or store card details. The amount is shown in the panel before you order.",
+          "Once the payment is confirmed, the plan or pack is activated and a confirmation email is sent.",
+        ] },
+        { id: "qaytarma", h: "4. Refunds", body: [
+          "Paid subscription periods and extra packs are **non-refundable and cannot be cashed out**: not after payment, not when cancelling mid-period and not when the account is closed. We recommend checking everything with the free trial first.",
+          "Money is refunded only in these cases:",
+          "- **Erroneous charge:** if an excess amount was charged due to a technical error or a payment went through twice, the excess is refunded in full.",
+          "- **If we discontinue the service:** if the platform ceases operation, the unused days of the paid period and remaining packs are refunded.",
           "- other cases required by law.",
         ] },
-        { id: "qaytarilmir", h: "4. When we don't refund", body: [
-          "- costs already used (answers given by the assistant);",
-          "- balance that has expired (after 12 months);",
-          "- balance remaining when an account is closed or deleted;",
-          "- free balance and any balance granted as a bonus, promotion or through the partner programme (these cannot be cashed out);",
-          "- accounts suspended for breach of the terms.",
+        { id: "qaytarilmir", h: "5. Non-refundable cases", body: [
+          "- any used or unused part of a paid period (including using fewer replies than the limit);",
+          "- expired (12 months) or unused extra packs;",
+          "- the difference paid for an upgrade;",
+          "- free trial, bonus, promo or plans granted by an administrator;",
+          "- accounts suspended for breaching the terms.",
         ] },
-        { id: "nece", h: "5. How to report an incorrect charge", body: [
-          "Write to {email} with your account email, payment date and amount. We review requests within 10 business days.",
-          "Approved amounts are returned to the card used for payment. Depending on the bank this can take 5–15 business days.",
+        { id: "nece", h: "6. How to report an erroneous charge", body: [
+          "Write to {email} with your account email, the payment date and amount. We review requests within 10 business days.",
+          "Approved amounts are refunded to the card used for payment. Depending on the bank, it may take 5–15 business days to arrive.",
         ] },
-        { id: "mubahise", h: "6. Payment disputes", body: [
-          "If there is a problem with a payment, please contact us before opening a chargeback with your bank — we resolve most cases within a few days. The account may be temporarily restricted while a dispute is open.",
+        { id: "mubahise", h: "7. Payment disputes", body: [
+          "If there is a problem with a payment, please contact us before opening a dispute (chargeback) with your bank: we resolve most cases within a few days. While a dispute is open the account may be temporarily restricted.",
         ] },
-        { id: "qiymet", h: "7. Price changes", body: [
-          "We announce price changes at least 14 days in advance by email or in the panel. You can choose not to top up during that time; balance already topped up is used at the new prices after the change.",
+        { id: "qiymet", h: "8. Price changes", body: [
+          "If plan prices or limits change, we give at least 14 days' notice by email or in the panel. A period already paid for finishes under the old terms; the new terms apply from the next renewal.",
         ] },
       ],
     },

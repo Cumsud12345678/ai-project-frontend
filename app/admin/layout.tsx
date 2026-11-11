@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Activity, Bug, Globe, Coins, CornerUpLeft, HandCoins, LayoutDashboard, Megaphone, Menu, MessagesSquare, PauseCircle, ReceiptText, ScrollText, Search, Settings, Shield, Users, Wallet } from "lucide-react";
+import { Activity, Bug, Globe, Coins, CornerUpLeft, HandCoins, LayoutDashboard, Layers, Megaphone, Menu, MessagesSquare, PauseCircle, ReceiptText, ScrollText, Search, Settings, Shield, Users, Wallet } from "lucide-react";
 import { SessionProvider, useSession } from "@/components/session";
 import { Frame, type NavGroup } from "@/components/panel-shell";
 import { adminOverview, type AdminOverview } from "@/lib/api";
@@ -40,6 +40,7 @@ const GROUPS: NavGroup[] = [
   ] },
   { id: "money", label: "Maliyyə", icon: Wallet, items: [
     { href: "/admin/payments", label: "Ödənişlər", icon: ReceiptText },
+    { href: "/admin/plans", label: "Planlar", icon: Layers },
     { href: "/admin/finance", label: "Gəlir və xərc", icon: Coins },
     { href: "/admin/partners", label: "Partnyorlar", icon: HandCoins },
   ] },

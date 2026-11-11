@@ -1,4 +1,5 @@
 "use client";
+import { PlanLockNotice } from "@/components/plan-ui";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FlaskConical, KeyRound, Pencil, Plug, Plus, ShieldCheck, Trash2, Zap } from "lucide-react";
@@ -220,6 +221,7 @@ function ActionsPage() {
       <PageHeader title={t("Əməliyyatlar")}
         description={t("Çat istifadəçinin istəyi ilə sənin saytında əməliyyat icra edə bilsin: sifarişi ləğv et, bilet yarat, görüş rezerv et, müraciət göndər. Hər əməliyyat yalnız istifadəçi kartı görüb təsdiq verəndən sonra icra olunur.")}
         actions={<>{data.configured && <Button variant="outline" onClick={() => { setErr(""); setConn({ pending: null }); }}><Plug size={16} aria-hidden />{t("API bağlantısı")}</Button>}{newBtn}</>} />
+      <PlanLockNotice feature="actions" />
 
       <SetupSteps steps={[
         { title: t("Əməliyyatlar qoşulub"), done: data.configured && data.items.length > 0, action: { label: t("Əlavə et"), run: () => setPicker(true) } },

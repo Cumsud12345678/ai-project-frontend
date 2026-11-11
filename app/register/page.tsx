@@ -74,7 +74,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthShell title={t("Hesab aç")} subtitle={t("Pulsuz başla: kart lazım deyil, hər ay 2 AZN balans verilir. Emailinə təsdiq kodu göndəriləcək.")}
+    <AuthShell title={t("Hesab aç")} subtitle={t("Pulsuz başla: kart lazım deyil, 100 pulsuz cavabla sına. Emailinə təsdiq kodu göndəriləcək.")}
       footer={<>{t("Artıq hesabın var?")} <Link href="/login" className={authLink}>{t("Daxil ol")}</Link></>}>
       <form onSubmit={submit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">

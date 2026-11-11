@@ -1,5 +1,6 @@
 "use client";
 // Avtomatlaşdırmalar: "nə vaxt [hadisə] → [addımlar]". Göndərmə yerləri (Telegram qrupu, Bitrix24, webhook) "Bağlantılar"dadır.
+import { PlanLockNotice } from "@/components/plan-ui";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bell, CalendarClock, CheckCircle2, CircleAlert, FlaskConical, Inbox as InboxIcon, Mail, MessageSquareX, Pencil, Plug, Plus, Send, Sheet, Tag, ThumbsDown, Ticket, Trash2, Webhook, Workflow, type LucideIcon } from "lucide-react";
@@ -209,6 +210,7 @@ function Automations() {
       <PageHeader title={t("Avtomatlaşdırmalar")}
         description={t("Hadisə baş verəndə köməkçi sənin yerinə iş görsün: müraciəti komandaya ötürsün, narazı müştəri üçün müraciət açsın, hər səhər xülasə göndərsin.")}
         actions={<><Button variant="outline" onClick={() => setConns(true)}><Plug size={16} aria-hidden />{t("Bağlantılar")}{nConn > 0 && <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums">{nConn}</span>}</Button>{newBtn}</>} />
+      <PlanLockNotice feature="automations" />
 
       <section className="flex flex-col gap-3">
         <h2 className="flex items-center gap-2 font-semibold">{t("Mənim avtomatlaşdırmalarım")} <span className="rounded-full bg-muted px-2 text-xs tabular-nums text-muted-foreground">{items.length}</span></h2>

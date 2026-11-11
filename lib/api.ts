@@ -452,7 +452,9 @@ export type Overview = {
   limits?: { perVisitorDay: number; siteHour: number };
   live?: { enabled: boolean; open: number; waiting: number };
   feedback?: { up: number; down: number };
-  billing?: { state: BillingState; balanceAzn: number; freeAzn: number; paidAzn: number; monthAzn: number; enforced: boolean } | null;
+  billing?: { state: BillingState; balanceAzn: number; freeAzn: number; paidAzn: number; monthAzn: number; enforced: boolean;
+    plan?: { name: string; status: Subscription["status"]; used: number; included: number; packLeft: number; end: string } | null;
+    trial?: { left: number; total: number; until: string | null } | null } | null;
 };
 export const getOverview = () => call<Overview>("/tenant/overview");
 /** Sehirbazın "Məqsəd" addımı (serverdə saxlanır) */
@@ -544,7 +546,22 @@ export const getFeedback = (days = 30) => call<FeedbackSummary>(`/tenant/feedbac
 
 // Balans
 export type BillingState = "ok" | "low" | "empty";
-export type TopupRequest = { id: string; tenantId: string; amountAzn: number; status: "pending" | "approved" | "rejected"; provider: string; at: string };
+export type TopupRequest = { id: string; tenantId: string; amountAzn: number; status: "pending" | "approved" | "rejected"; provider: string; at: string;
+  /** topup — köhnə balans yükləməsi; plan/pack — abunə sifarişi */
+  kind?: "topup" | "plan" | "pack"; plan?: string; cycle?: PlanCycle; orderType?: "new" | "renew" | "upgrade"; pack?: string; replies?: number };
+
+// Abunə planları
+export const PLAN_FEATURES = ["channels", "live", "automations", "campaigns", "actions", "customerData", "noBranding"] as const;
+export type PlanFeature = (typeof PLAN_FEATURES)[number];
+export type PlanCycle = "month" | "year";
+export type Plan = { id: string; name: string; priceAzn: number; replies: number; seats: number; features: Record<PlanFeature, boolean> };
+export type PlanPack = { id: string; replies: number; priceAzn: number };
+export type PlanCatalog = { plans: Plan[]; packs: PlanPack[]; yearlyMonths?: number; graceDays: number; packDays?: number };
+export type Subscription = { plan: string; planName: string; cycle: PlanCycle; status: "active" | "grace" | "expired"; start: string; end: string; graceUntil: string;
+  used: number; included: number; windowStart: string; windowEnd: string; next: string | null; nextName: string | null };
+export type Entitlements = { source: "plan" | "trial" | "none"; plan: string | null; features: Record<PlanFeature, boolean>; seats: number };
+export type OrderQuote = { kind: "plan" | "pack"; type?: "new" | "renew" | "upgrade"; plan?: string; cycle?: PlanCycle; pack?: string; replies?: number; amountAzn: number };
+export type OrderInput = { kind: "plan" | "pack"; plan?: string; cycle?: PlanCycle; pack?: string };
 export type Billing = {
   balance: { freeAzn: number; paidAzn: number; totalAzn: number };
   /** Yüklənmiş balansın partiyaları: hər yükləmənin qalığı və bitmə tarixi (bitməyə ən yaxın birinci). expiresAt null = müddətsiz */
@@ -558,11 +575,26 @@ export type Billing = {
     /** Təxmin üçün bir mesajın qiyməti: own = öz son 30 günü, platform = bütün müştərilərin real ortası, default = hələ heç bir tarixçə yoxdur */
     estimateAzn?: number; estimateSource?: "own" | "platform" | "default"; estimateRequests?: number };
   pendingRequests: TopupRequest[];
+  catalog?: PlanCatalog;
+  subscription?: Subscription | null;
+  packs?: { left: number; expiresAt: string | null; at: string }[];
+  packLeft?: number;
+  entitlements?: Entitlements;
+  /** Pulsuz sınaq: qalan və ümumi cavab, bitmə tarixi */
+  trial?: { left: number; total: number; until: string | null; used: number } | null;
   days?: { date: string; spentAzn: number; requests: number }[];
   ledger?: { id: string; at: string; type: string; amountAzn: number; note: string }[];
   admin?: { markup: number | null; defaultMarkup: number; creditLimitAzn: number; costAzn30: number; lifetimeSpentAzn: number; dailyLimitAzn?: number | null; defaultDailyLimitAzn?: number; todayAzn?: number };
 };
 export const getBilling = () => call<Billing>("/tenant/billing");
+export const quoteOrder = (o: OrderInput) => post<{ quote: OrderQuote }>("/tenant/billing/order?dryRun=1", o);
+export const placeOrder = (o: OrderInput) => post<{ request: TopupRequest; provider: string; instructions?: string; checkoutUrl?: string }>("/tenant/billing/order", o);
+export const setNextPlan = (plan: string | null) => post<{ subscription: Subscription | null }>("/tenant/billing/plan/next", { plan });
+export const getEntitlements = () => call<Entitlements & { unlock: Record<PlanFeature, string | null> }>("/tenant/entitlements");
+export const getPublicPlans = () => call<{ plans: Plan[]; packs: PlanPack[] }>("/plans");
+export const adminGetPlans = () => call<PlanCatalog>("/admin/billing/plans");
+export const adminSavePlans = (c: PlanCatalog) => call<PlanCatalog>("/admin/billing/plans", { method: "PUT", body: c });
+export const adminAssignPlan = (tenantId: string, plan: string | null, days: number, note: string) => post<{ subscription: Subscription | null }>(`/admin/tenants/${tenantId}/billing/plan`, { plan, days, note });
 export const requestTopup = (amountAzn: number) => post<{ request: TopupRequest; provider: string; instructions?: string; checkoutUrl?: string }>("/tenant/billing/topup-request", { amountAzn });
 
 export type AdminTopupRequest = TopupRequest & { businessName: string; domain: string; email: string };

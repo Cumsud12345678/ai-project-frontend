@@ -11,5 +11,5 @@ export const COMPANY = {
   address: process.env.NEXT_PUBLIC_LEGAL_ADDRESS || "",
   email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "",
   /** Sənədlər dəyişəndə yenilə (ISO) */
-  updated: "2026-11-10",
+  updated: "2026-11-11",
 };

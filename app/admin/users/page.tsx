@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Ban, CircleCheck, Copy, Download, ExternalLink, Eye, LogOut, Search, ShieldCheck, ShieldOff, Trash2, UserCog, Users, Wallet } from "lucide-react";
-import { adminBillingSettings, adminDeleteUser, adminResetTwoFactor, adminRevokeSessions, adminSetBranding, adminRotateKey, adminSetRole, adminSuspend, adminTenantBilling, adminTopup, adminUnsuspend, adminUsage, adminUsers, type AdminUser, type AdminUsersPage, type Billing, type Usage, type UserFilter } from "@/lib/api";
+import { adminAssignPlan, adminBillingSettings, adminDeleteUser, adminResetTwoFactor, adminRevokeSessions, adminSetBranding, adminRotateKey, adminSetRole, adminSuspend, adminTenantBilling, adminTopup, adminUnsuspend, adminUsage, adminUsers, type AdminUser, type AdminUsersPage, type Billing, type Usage, type UserFilter } from "@/lib/api";
 import { DangerAction } from "@/components/danger-action";
 import { FilterPills, PageHeader } from "@/components/page-header";
 import { RotateKey } from "@/components/rotate-key";
@@ -91,6 +91,8 @@ function BillingTab({ tenantId, onChange }: { tenantId: string; onChange: () => 
         <div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t("30 gün: real xərc")}</p><p className="text-xl font-semibold tabular-nums">{(a?.costAzn30 ?? 0).toFixed(2)} ₼</p>{a?.todayAzn !== undefined && <p className="text-xs text-muted-foreground tabular-nums">{t("Bu gün xərclənib: {n} AZN", { n: a.todayAzn.toFixed(2) })}</p>}</div>
       </div>
 
+      <PlanBlock tenantId={tenantId} b={b} onChange={load} />
+
       <Block title={t("Balansı dəyiş")} note={t("Mənfi məbləğ balansdan çıxır. 100 AZN və çox olanda əlavə təsdiq istənir.")}>
         <div className="grid gap-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
           <div className="flex flex-col gap-1"><Label htmlFor={`a-${tenantId}`}>{t("Məbləğ (AZN)")}</Label><Input id={`a-${tenantId}`} value={amount} onChange={(e) => { setAmount(e.target.value); setConfirming(false); }} inputMode="decimal" placeholder="10" /></div>
@@ -130,6 +132,44 @@ function BillingTab({ tenantId, onChange }: { tenantId: string; onChange: () => 
         </Block>
       )}
     </div>
+  );
+}
+
+/** Abunə planı: cari vəziyyət, admin planı verir (pulsuz/endirimli, gün sayı ilə) və ya götürür */
+function PlanBlock({ tenantId, b, onChange }: { tenantId: string; b: Billing; onChange: () => Promise<void> | void }) {
+  const { t, day } = useI18n();
+  const plans = b.catalog?.plans ?? [];
+  const sub = b.subscription ?? null;
+  const [plan, setPlan] = useState(sub?.plan ?? plans[0]?.id ?? "");
+  const [days, setDays] = useState("30");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const d = Number(days);
+  const assign = async (p: string | null) => {
+    setBusy(true);
+    try { await adminAssignPlan(tenantId, p, d, note); toast.success(p ? t("Plan verildi.") : t("Plan götürüldü.")); setNote(""); await onChange(); }
+    catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Block title={t("Plan")} note={t("Ödənişsiz plan vermək (sınaq uzatma, kompensasiya). Ödənişli sifarişlər “Ödənişlər”dən təsdiqlənir.")}>
+      {sub ? (
+        <p className="text-sm">
+          <span className="font-medium">{sub.planName}</span> · {sub.status === "active" ? t("aktiv") : sub.status === "grace" ? t("güzəşt müddəti") : t("bitib")} · {t("{d} tarixinədək", { d: day(sub.end) })} · <span className="tabular-nums">{sub.used}/{sub.included}</span> {t("cavab")}{(b.packLeft ?? 0) > 0 ? ` · +${b.packLeft} ${t("paket")}` : ""}{sub.nextName ? ` · ${t("növbəti: {p}", { p: sub.nextName })}` : ""}
+        </p>
+      ) : <p className="text-sm text-muted-foreground">{t("Plan yoxdur.")}</p>}
+      <div className="grid gap-3 sm:grid-cols-[10rem_7rem_1fr_auto] sm:items-end">
+        <div className="flex flex-col gap-1"><Label htmlFor={`pl-${tenantId}`}>{t("Plan")}</Label>
+          <select id={`pl-${tenantId}`} value={plan} onChange={(e) => setPlan(e.target.value)} className="h-10 rounded-lg border border-border bg-card px-3 text-sm">
+            {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1"><Label htmlFor={`pd-${tenantId}`}>{t("Gün")}</Label><Input id={`pd-${tenantId}`} value={days} onChange={(e) => setDays(e.target.value)} inputMode="numeric" /></div>
+        <div className="flex flex-col gap-1"><Label htmlFor={`pn-${tenantId}`}>{t("Qeyd")}</Label><Input id={`pn-${tenantId}`} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("məs. sınaq uzadıldı")} /></div>
+        <Button disabled={busy || !plan || !(d >= 1 && d <= 3650)} onClick={() => assign(plan)}>{t("Planı ver")}</Button>
+      </div>
+      {sub && <div className="flex justify-end"><Button variant="outline" size="sm" disabled={busy} onClick={() => assign(null)}>{t("Planı götür")}</Button></div>}
+    </Block>
   );
 }
 

@@ -69,7 +69,7 @@ const GROUPS: Group[] = [
     { href: "/settings/canned", label: "Hazır cavablar", icon: Hash, section: "Söhbət qutusu" },
     { href: "/settings/security", label: "Giriş və təhlükəsizlik", icon: ShieldCheck, section: "Təhlükəsizlik" },
     { href: "/settings/api", label: "API girişi", icon: Code, section: "İnteqrasiyalar" },
-    { href: "/billing", label: "Balans", icon: Wallet, section: "Ödəniş" },
+    { href: "/billing", label: "Plan və ödəniş", icon: Wallet, section: "Ödəniş" },
     { href: "/partner", label: "Partnyor", icon: HandCoins, when: "partner" },
   ] },
 ];
@@ -100,7 +100,7 @@ function itemSignal(href: string, s: Signals): { count?: number; dot?: boolean }
   if (href === "/inbox") return s.waiting > 0 ? { count: s.waiting } : { dot: att("leads") + att("unanswered") > 0 };
   if (href === "/knowledge") return { dot: att("sourceErrors") > 0 };
   if (href === "/embed") return { dot: att("widgetOff") > 0 };
-  if (href === "/billing") return { dot: s.overview?.billing?.state === "empty" };
+  if (href === "/billing") { const b = s.overview?.billing; return { dot: b?.plan ? b.plan.status !== "active" || (b.plan.used >= b.plan.included && b.plan.packLeft <= 0) : b?.trial ? b.trial.left <= 0 : b?.state === "empty" }; }
   return {};
 }
 
@@ -148,7 +148,26 @@ function TopBar({ signals, onSearch, onMenu, menuRef }: { signals: Signals; onSe
           <span className="tabular-nums text-muted-foreground">{steps.done}/{steps.total}</span>
         </Link>
       )}
-      {!isOperator && bill && (
+      {!isOperator && bill?.plan && (() => {
+        const p = bill.plan;
+        const pct = p.included > 0 ? Math.min(100, Math.round((p.used / p.included) * 100)) : 0;
+        const stop = p.status === "expired" || (pct >= 100 && p.packLeft <= 0);
+        return (
+          <Link href="/billing" title={t("{u} / {n} cavab", { u: p.used, n: p.included })} className={cn(pill, "hidden lg:flex", stop ? "text-destructive" : pct >= 80 || p.status === "grace" ? "text-amber" : "")}>
+            <Wallet size={15} aria-hidden className={!stop && pct < 80 ? "text-muted-foreground" : ""} />
+            <span className="font-medium">{p.name}</span>
+            <span className="tabular-nums text-muted-foreground">{p.status === "expired" ? t("bitib") : `${pct}%`}</span>
+          </Link>
+        );
+      })()}
+      {!isOperator && bill && !bill.plan && bill.trial && (
+        <Link href="/billing" className={cn(pill, "hidden lg:flex", bill.trial.left <= 0 ? "text-destructive" : bill.trial.left <= 20 ? "text-amber" : "")}>
+          <Wallet size={15} aria-hidden className={bill.trial.left > 20 ? "text-muted-foreground" : ""} />
+          <span className="font-medium">{t("Sınaq")}</span>
+          <span className="tabular-nums text-muted-foreground">{bill.trial.left <= 0 ? t("bitib") : `${bill.trial.left}/${bill.trial.total}`}</span>
+        </Link>
+      )}
+      {!isOperator && bill && !bill.plan && !bill.trial && (
         <Link href="/billing" className={cn(pill, "hidden lg:flex", bill.state === "empty" ? "text-destructive" : bill.state === "low" ? "text-amber" : "")}>
           <Wallet size={15} aria-hidden className={bill.state === "ok" ? "text-muted-foreground" : ""} />
           <span className="font-medium tabular-nums">{money.format(bill.balanceAzn)} ₼</span>

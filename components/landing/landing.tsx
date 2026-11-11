@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight, BookOpen, Camera, Check, ChevronDown, Code2, Copy, FileText, Globe, Link2, ListChecks, Menu, MessagesSquare, Plug, RefreshCw, Search,
   Send, ShoppingBag, SlidersHorizontal, Sparkles, X,
@@ -12,6 +12,8 @@ import { LiveDemo } from "@/components/landing/demo";
 import { Everything, Showcase } from "@/components/landing/showcase";
 import { LangDropdown } from "@/components/lang-dropdown";
 import { BRAND_NAME, BrandMark } from "@/components/brand";
+import { PlanFeatureList } from "@/components/plan-ui";
+import { getPublicPlans, type Plan, type PlanPack } from "@/lib/api";
 
 const wrap = "mx-auto w-full max-w-6xl px-5 sm:px-6";
 // Düymələr: iki ölçü, hamısı eyni hündürlükdə; en məzmuna görədir, telefonda hero düymələri tam en olur
@@ -117,7 +119,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
   const title = t("Ziyarətçin sual yazsın, saytın özü cavab versin.");
   // Başlığın ikinci hissəsi (vergüldən sonra) vurğulanır; vergül yoxdursa bütöv qalır
   const cut = title.indexOf(", ");
-  const stats: [string, string][] = [["1", t("sətir kod")], ["4", t("dildə panel")], ["2 ₼", t("pulsuz sınaq balansı")]];
+  const stats: [string, string][] = [["1", t("sətir kod")], ["4", t("dildə panel")], ["100", t("pulsuz sınaq cavabı")]];
   return (
     <section className="relative -mt-[4.25rem] overflow-hidden pt-[4.25rem]">
       <div className="l-grid pointer-events-none absolute inset-0" aria-hidden />
@@ -339,59 +341,51 @@ function Features() {
   );
 }
 
-// Qiymət kalkulyatoru: "10 AZN ≈ 4 000 sorğu" nümunəsindən hesablanır (təxmini)
-const PER_Q = 10 / 4000;
-const FREE = 2;
-const STEPS_Q = [100, 250, 500, 800, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 50000];
+// Qiymət planları: kataloq serverdən gəlir (admin dəyişə bilir). İlk göstəriş defolt dəyərlərlədir ki, səhifə boş görünməsin.
+const DEFAULT_PLANS: Plan[] = [
+  { id: "start", name: "Start", priceAzn: 15, replies: 1000, seats: 1, features: { channels: true, live: true, automations: false, campaigns: false, actions: false, customerData: false, noBranding: false } },
+  { id: "business", name: "Biznes", priceAzn: 35, replies: 3000, seats: 3, features: { channels: true, live: true, automations: true, campaigns: true, actions: false, customerData: false, noBranding: true } },
+  { id: "pro", name: "Pro", priceAzn: 79, replies: 10000, seats: 10, features: { channels: true, live: true, automations: true, campaigns: true, actions: true, customerData: true, noBranding: true } },
+];
 
 function Pricing({ signedIn }: { signedIn: boolean }) {
   const { t } = useI18n();
-  const [i, setI] = useState(4);
+  const [cat, setCat] = useState<{ plans: Plan[]; packs: PlanPack[] }>({ plans: DEFAULT_PLANS, packs: [{ id: "p500", replies: 500, priceAzn: 10 }] });
+  useEffect(() => { getPublicPlans().then((c) => { if (c.plans?.length) setCat(c); }).catch(() => {}); }, []);
   // Server və brauzer eyni mətni versin deyə (hydration) Intl əvəzinə sadə format: 10 000
   const num = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  const q = STEPS_Q[i]!;
-  // Pulsuz sınaq balansı bir dəfə verilir: aylıq xərcdən çıxılmır, ayrıca göstərilir
-  const cost = q * PER_Q;
-  const fmt = useMemo(() => (n: number) => (n < 10 ? n.toFixed(2) : String(Math.round(n))).replace(".", ","), []);
-  const pts = [
-    t("Aylıq abunə yoxdur. Yalnız çatın real istifadəsi üçün ödəyirsən."),
-    t("Qeydiyyatda 2 AZN pulsuz sınaq balansı verilir: köməkçini real ziyarətçilərlə yoxlamağa bəs edir."),
-    t("Sonra istədiyin qədər (məs. 10 AZN) yükləyirsən, yüklənən balans 12 ay qüvvədədir. Hər sorğunun qiyməti paneldə AZN ilə görünür."),
-    t("Balans bitəndə çat dayanır, ziyarətçiyə əlaqə forması çıxır. Sonradan gələn fatura və ya gözlənilməz borc yoxdur."),
-  ];
+  const money = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(".", ","));
+  const mid = Math.floor(cat.plans.length / 2);
+  const pack = cat.packs[0];
   return (
     <section id="qiymet" className={`${wrap} scroll-mt-24 py-20 lg:py-28`}>
       <Reveal as="p" className={eyebrow}>{t("Qiymətlər")}</Reveal>
-      <Reveal as="h2" delay={60} className={`${h2} mt-3 max-w-2xl`}>{t("Qiymət: yalnız istifadə etdiyin qədər")}</Reveal>
-      <div className="mt-12 grid gap-6 lg:grid-cols-[1fr_1fr] lg:gap-10">
-        <Reveal as="ul" className="flex flex-col gap-4 self-center text-[16px] leading-relaxed text-[var(--l-sub)]">
-          {pts.map((x) => <li key={x} className="flex gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>{x}</li>)}
-        </Reveal>
-        <Reveal variant="right" delay={120}>
-          <div className="rounded-3xl border border-[var(--l-line)] bg-white p-6 shadow-[0_30px_60px_-36px_rgba(9,9,11,.45)] sm:p-8">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold">{t("Ayda neçə sual gəlir?")}</p>
-              <span className="rounded-full bg-[var(--l-mist)] px-2.5 py-1 text-xs text-[var(--l-sub)]">{t("Təxmini hesab")}</span>
-            </div>
-            <p className="l-display mt-4 text-4xl font-semibold tabular-nums">{num(q)} <span className="text-base font-medium text-[var(--l-sub)]">{t("sorğu / ay")}</span></p>
-            <input type="range" min={0} max={STEPS_Q.length - 1} step={1} value={i} onChange={(e) => setI(Number(e.target.value))} aria-label={t("Ayda neçə sual gəlir?")}
-              className="l-range mt-5 w-full cursor-pointer" style={{ "--p": `${(i / (STEPS_Q.length - 1)) * 100}%` } as React.CSSProperties} />
-            <div className="mt-1.5 flex justify-between text-xs text-[var(--l-sub)] tabular-nums"><span>{num(STEPS_Q[0]!)}</span><span>{num(STEPS_Q[STEPS_Q.length - 1]!)}</span></div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-[var(--l-mist)] p-4">
-                <p className="text-xs text-[var(--l-sub)]">{t("Ayda ödəyəcəyin")}</p>
-                <p className="l-display mt-1 text-2xl font-semibold tabular-nums">{cost === 0 ? t("Pulsuz") : `≈ ${fmt(cost)} ₼`}</p>
+      <Reveal as="h2" delay={60} className={`${h2} mt-3 max-w-2xl`}>{t("Sadə aylıq plan, gizli ödəniş yoxdur")}</Reveal>
+      <ul className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {cat.plans.map((p, i) => {
+          const dark = i === mid;
+          return (
+            <Reveal as="li" key={p.id} delay={i * 80}
+              className={`flex flex-col gap-6 rounded-3xl border p-7 ${dark ? "border-[var(--l-ink)] bg-[var(--l-ink)] text-white shadow-[0_30px_60px_-30px_rgba(9,9,11,.6)]" : "border-[var(--l-line)] bg-white"}`}>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xl font-semibold">{p.name}</h3>
+                {dark && <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">{t("Ən çox seçilən")}</span>}
               </div>
-              <div className="rounded-2xl bg-[var(--l-mist)] p-4">
-                <p className="text-xs text-[var(--l-sub)]">{t("Sınaq balansı (bir dəfə)")}</p>
-                <p className="l-display mt-1 text-2xl font-semibold tabular-nums">≈ {num(Math.round(FREE / PER_Q))} {t("sual")}</p>
+              <div>
+                <p className="l-display text-4xl font-semibold tabular-nums">{money(p.priceAzn)} ₼<span className={`text-base font-medium ${dark ? "text-white/60" : "text-[var(--l-sub)]"}`}> / {t("ay")}</span></p>
+                <p className={`mt-1 text-sm ${dark ? "text-white/60" : "text-[var(--l-sub)]"}`}>{t("cavab başına {a} ₼", { a: (p.priceAzn / p.replies).toFixed(3).replace(".", ",") })}</p>
               </div>
-            </div>
-            <p className="mt-4 text-xs leading-relaxed text-[var(--l-sub)]">{t("Təxmini hesabdır: real qiymət sualın uzunluğuna görə dəyişir və paneldə hər gün dəqiq göstərilir.")}</p>
-            <Link href={signedIn ? "/billing" : "/register"} className={`${md} ${primary} mt-6 w-full`}>{signedIn ? t("Balansa bax") : t("Pulsuz başla")}<ArrowRight size={16} aria-hidden /></Link>
-          </div>
-        </Reveal>
-      </div>
+              <PlanFeatureList plan={p} dark={dark} />
+              <Link href={signedIn ? "/billing" : "/register"} className={`${md} mt-auto w-full ${dark ? "bg-white text-[var(--l-ink)] hover:bg-white/90" : secondary}`}>{signedIn ? t("Planı seç") : t("Pulsuz sına")}<ArrowRight size={16} aria-hidden /></Link>
+            </Reveal>
+          );
+        })}
+      </ul>
+      <Reveal as="ul" delay={120} className="mt-8 grid gap-3 text-[15px] leading-relaxed text-[var(--l-sub)] md:grid-cols-3">
+        <li className="flex gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>{t("Qeydiyyatda 100 pulsuz cavab (14 gün): bütün imkanları real ziyarətçilərlə yoxla, kart tələb olunmur.")}</li>
+        <li className="flex gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>{pack ? t("Limit dolanda planı yüksəlt və ya əlavə paket al: +{n} cavab {a} ₼.", { n: num(pack.replies), a: money(pack.priceAzn) }) : t("Limit dolanda planı yüksəldə bilərsən.")}</li>
+        <li className="flex gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>{t("Limitin 80%-i və hamısı işlənəndə e-poçt gəlir. Gözlənilməz borc yoxdur: limit dolanda çat əlaqə formasına keçir.")}</li>
+      </Reveal>
     </section>
   );
 }
@@ -406,7 +400,8 @@ function Faq() {
     [t("Bilik bazasına nə əlavə edə bilərəm?"), t("PDF, Word, TXT, MD, CSV və HTML faylları (6 MB-a qədər), tək səhifənin linki, bütün saytın skanı və ya yapışdırılmış mətn. Şəkil kimi skan olunmuş PDF oxunmur, mətni seçilə bilən olmalıdır.")],
     [t("Köməkçi səhv cavab verə bilərmi? Bilmədikdə nə edir?"), t("Kataloq sualında yalnız sənin API-nin qaytardığını, digər suallarda yalnız bilik bazandakı məlumatı istifadə edir və cavabın altında mənbəni göstərir. Bilmirsə uydurmur: bunu deyir və əlaqə formasını təklif edir. Cavabsız və 👎 alan suallar paneldə ayrıca görünür ki, çatışan məzmunu əlavə edəsən. Yenə də sınaq söhbətində yoxlamağı məsləhət görürük.")],
     [t("Ziyarətçilərin yazdıqları saxlanırmı?"), t("Yalnız sən “Sorğu jurnalı”nı aktiv saxlasan. Telefon və email avtomatik gizlədilir, qeydlər 90 gündən sonra silinir. İstəsən bunu ayarlardan söndürürsən.")],
-    [t("Gözlənilmədən çox pul tutula bilərmi?"), t("Xeyr. Əvvəlcədən yüklədiyin balansdan xərclənir, bitəndə çat dayanır. Balans azalanda email gəlir, panelin Balans səhifəsində orta sorğu qiyməti və ay sonuna proqnoz göstərilir.")],
+    [t("Gözlənilmədən çox pul tutula bilərmi?"), t("Xeyr. Planın qiyməti sabitdir, əlavə fatura gəlmir. Aylıq cavab limitinin 80%-i və hamısı işlənəndə e-poçt gəlir. Limit dolanda köməkçi dayanır və ziyarətçiyə əlaqə forması çıxır: istəsən planı yüksəldir və ya əlavə paket alırsan.")],
+    [t("Plan avtomatik yenilənirmi? Necə ləğv edim?"), t("Hazırda plan avtomatik uzanmır: dövr bitməyə 3 gün qalmış e-poçtla xatırladırıq, yeniləməsən dövrün sonunda dayanır. Ödənilmiş dövr geri qaytarılmır. Ucuz plana keçid növbəti dövrdən olur, bahalı plana keçəndə isə yalnız qalan günlərin fərqini ödəyirsən.")],
   ];
   return (
     <section id="sual" className="scroll-mt-24 bg-[var(--l-mist)]/60 py-20 lg:py-28">
@@ -450,7 +445,7 @@ function Cta({ signedIn }: { signedIn: boolean }) {
             <Link href={signedIn ? "/dashboard" : "/register"} className={`${md} l-btn-arrow bg-white text-[var(--l-ink)] hover:bg-[var(--l-mist)] sm:min-w-[11rem]`}>{signedIn ? t("Panelə keç") : t("Pulsuz başla")}<ArrowRight size={16} aria-hidden /></Link>
             {!signedIn && <Link href="/login" className={`${md} border border-white/25 text-white hover:bg-white/10 sm:min-w-[11rem]`}>{t("Hesabım var, daxil ol")}</Link>}
           </div>
-          <p className="mt-6 text-xs text-white/50">{t("Kart tələb olunmur · 2 AZN pulsuz sınaq balansı")}</p>
+          <p className="mt-6 text-xs text-white/50">{t("Kart tələb olunmur · 100 pulsuz cavab")}</p>
         </div>
       </Reveal>
     </section>

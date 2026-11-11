@@ -1,4 +1,5 @@
 "use client";
+import { PlanLock } from "@/components/plan-ui";
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -51,7 +52,7 @@ export function HelpdeskCard({ data, onChange }: { data: WidgetResponse; onChang
   return (
     <Card id="live" className="scroll-mt-20">
       <CardHeader>
-        <CardTitle>{t("Canlı operator")}</CardTitle>
+        <CardTitle className="flex flex-wrap items-center gap-2">{t("Canlı operator")} <PlanLock feature="live" /></CardTitle>
         <CardDescription>{t("Operatorla canlı söhbət, işçi saatları və söhbət sonrası qiymətləndirmə.")}</CardDescription>
       </CardHeader>
       <CardContent>

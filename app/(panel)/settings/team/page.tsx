@@ -1,4 +1,5 @@
 "use client";
+import { PlanLockNotice } from "@/components/plan-ui";
 import { useCallback, useEffect, useState } from "react";
 import { Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -49,6 +50,7 @@ function Team() {
       <PageHeader title={t("Komanda üzvləri")}
         description={t("Əlavə etdiyin şəxslər öz e-poçtu ilə daxil olub yalnız canlı söhbətlərə cavab verir; ayarları və məlumatları görmür. Yeni söhbət olanda hamıya e-poçt gedir.")}
         actions={<Button onClick={() => setInvite(true)} disabled={!data || full}><UserPlus size={16} aria-hidden />{t("Üzv dəvət et")}</Button>} />
+      <PlanLockNotice feature="live" />
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-sm">

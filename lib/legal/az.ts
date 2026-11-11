@@ -10,7 +10,7 @@ const az: LegalPack = {
   docs: {
     terms: {
       title: "İstifadə şərtləri",
-      summary: "{brand} xidmətindən istifadə qaydaları: hesab, balans, məzmun, məsuliyyət və mübahisələr.",
+      summary: "{brand} xidmətindən istifadə qaydaları: hesab, abunə planı, məzmun, məsuliyyət və mübahisələr.",
       sections: [
         { id: "umumi", h: "1. Ümumi müddəalar", body: [
           "Bu şərtlər {operator} (bundan sonra “biz”) tərəfindən təqdim olunan {brand} platformasından (veb panel, çat vidjeti, Telegram və WhatsApp inteqrasiyaları, API) istifadə qaydalarını müəyyən edir.",
@@ -26,11 +26,11 @@ const az: LegalPack = {
           "- Parolun və API açarının məxfiliyinə sən cavabdehsən. İki addımlı girişi açmağı tövsiyə edirik.",
           "- Hesabında baş verən fəaliyyətə (komanda üzvlərinin hərəkətləri daxil) sən cavabdehsən. İcazəsiz girişdən şübhələnsən, dərhal bizə yaz.",
         ] },
-        { id: "balans", h: "4. Balans və ödəniş", body: [
-          "Xidmət əvvəlcədən ödənilmiş balans (AZN) əsasında işləyir. Hər cavab üçün faktiki xərc balansdan çıxılır, cari balans və xərc tarixçəsi paneldə görünür.",
-          "Balans bitəndə köməkçi ziyarətçilərə cavab vermir, əvəzinə əlaqə forması göstərilir. Balans artırılan kimi xidmət avtomatik davam edir.",
-          "Qiymətlər dəyişərsə, ən azı 14 gün əvvəl e-poçt və ya panel vasitəsilə xəbərdarlıq edirik. Artıq yüklənmiş balans dəyişiklikdən sonra yeni qiymətlərlə istifadə olunur.",
-          "Hər yükləmənin istifadə müddəti yükləmə tarixindən 12 aydır; bu müddətdə istifadə olunmayan hissə yanır. Yüklənmiş balans geri qaytarılmır və nağdlaşdırılmır (səhv tutulma və bizim tərəfimizdən xidmətin dayandırılması istisna). Ətraflı: “Ödəniş və geri qaytarma” sənədi.",
+        { id: "balans", h: "4. Abunə planı və ödəniş", body: [
+          "Xidmət aylıq abunə planı ilə göstərilir (hər dövr 30 gündür). Hər planın aylıq cavab limiti, istifadəçi sayı və imkanları paneldə və saytın qiymət bölməsində göstərilir. Yeni hesaba bir dəfə pulsuz sınaq verilir: 100 cavab, 14 gün ərzində (hansı tez bitsə).",
+          "Limitin 80%-i və hamısı işlənəndə e-poçtla xəbər veririk. Limit dolanda köməkçi ziyarətçilərə cavab vermir, əvəzinə əlaqə forması göstərilir. Planı yüksəltmək və ya əlavə cavab paketi almaqla xidmət dərhal davam edir.",
+          "Plan avtomatik uzanmır: dövr bitməyə 3 gün qalmış xatırladırıq. Dövr bitəndən sonra qısa güzəşt müddəti (3 gün) var, sonra köməkçi dayanır; məlumatların saxlanılır və plan yenilənən kimi xidmət davam edir.",
+          "Ödənilmiş dövr və əlavə paketlər geri qaytarılmır və nağdlaşdırılmır (səhv tutulma və bizim tərəfimizdən xidmətin dayandırılması istisna). Qiymət dəyişikliyi barədə ən azı 14 gün əvvəl xəbər veririk; ödənilmiş dövr köhnə qiymətlə başa çatır. Ətraflı: “Ödəniş və geri qaytarma” sənədi.",
         ] },
         { id: "mezmun", h: "5. Sənin məzmunun və öhdəliklərin", body: [
           "- Yüklədiyin və ya qoşduğun məlumat (elanlar, sənədlər, API cavabları, şirkət məlumatı) sənə məxsusdur. Bu məlumatı istifadə etməyə hüququn olduğunu təsdiq edirsən.",
@@ -55,7 +55,7 @@ const az: LegalPack = {
           "Planlı texniki işlər barədə imkan daxilində əvvəlcədən xəbər veririk.",
         ] },
         { id: "dayandirma", h: "9. Dayandırma və hesabın silinməsi", body: [
-          "Hesabını istənilən vaxt paneldən (Ayarlar → Hesab → Hesabı sil) silə bilərsən. Silinmə ilə məlumatların Məxfilik siyasətində göstərilən qaydada silinir. Hesab silinəndə istifadə olunmamış balans geri qaytarılmır.",
+          "Hesabını istənilən vaxt paneldən (Ayarlar → Hesab → Hesabı sil) silə bilərsən. Silinmə ilə məlumatların Məxfilik siyasətində göstərilən qaydada silinir. Hesab silinəndə ödənilmiş dövrün qalan hissəsi və istifadə olunmamış paketlər geri qaytarılmır.",
           "Şərtlər pozulduqda, ödəniş fırıldaqçılığı və ya qanun tələbi olduqda hesabı dayandıra bilərik. Dayandırılmış hesabda məlumat və balans dərhal silinmir, səbəb e-poçtla bildirilir.",
         ] },
         { id: "mesuliyyet", h: "10. Məsuliyyətin məhdudlaşdırılması", body: [
@@ -87,7 +87,7 @@ const az: LegalPack = {
         { id: "melumat", h: "2. Hansı məlumatları toplayırıq", body: [
           "- **Hesab:** e-poçt, parolun heşi (parolun özü saxlanmır), iki addımlı giriş ayarları, dil.",
           "- **Biznes:** biznes adı, sayt domeni, şirkət əlaqə məlumatı (telefon, ünvan, iş saatları), köməkçi ayarları.",
-          "- **Ödəniş:** yükləmə məbləği, tarixi və statusu. Kart məlumatları ödəniş provayderində emal olunur, bizdə saxlanmır.",
+          "- **Ödəniş:** plan və ya paket sifarişinin məbləği, tarixi və statusu. Kart məlumatları ödəniş provayderində emal olunur, bizdə saxlanmır.",
           "- **Bilik bazası və kataloq:** yüklədiyin sənədlər, mətnlər, oxunan sayt səhifələri, elan mənbəyinin ünvanı və cavabları. API açarları şifrələnmiş saxlanır.",
           "- **Ziyarətçi söhbətləri:** mesajlar, brauzerdə saxlanan anonim ziyarətçi ID-si, söhbətin başladığı səhifə, ziyarətçinin könüllü yazdığı ad, telefon və ya e-poçt.",
           "- **Kanallar:** Telegram və WhatsApp-da istifadəçi ID-si, adı və nömrəsi (həmin kanal qoşulubsa).",
@@ -96,7 +96,7 @@ const az: LegalPack = {
         { id: "meqsed", h: "3. Məlumatı nə üçün istifadə edirik", body: [
           "- xidməti göstərmək: köməkçinin cavab verməsi, axtarış, operator söhbəti, bildirişlər;",
           "- hesabın təhlükəsizliyi, girişin təsdiqi və sui-istifadənin (məsələn, eyni sayta çoxlu hesabla qoşulmanın) qarşısını almaq;",
-          "- balansın hesablanması, ödənişlərin uçotu və qanuni mühasibat öhdəlikləri;",
+          "- abunə limitinin hesablanması, ödənişlərin uçotu və qanuni mühasibat öhdəlikləri;",
           "- dəstək və xidmətlə bağlı vacib bildirişlər;",
           "- xidməti yaxşılaşdırmaq üçün ümumiləşdirilmiş, şəxsiyyəti açmayan statistika.",
           "Məlumatı reklam məqsədilə satmırıq və ötürmürük. Müştəri məlumatını öz modellərimizi öyrətmək üçün istifadə etmirik.",
@@ -109,7 +109,7 @@ const az: LegalPack = {
           "- **Süni intellekt provayderləri** (Anthropic — Claude, Google — Gemini): ziyarətçi sualı və cavab üçün lazım olan kontekst;",
           "- **E-poçt göndərişi** (Resend): kod və bildiriş məktubları;",
           "- **Bulud hostinq və verilənlər bazası provayderləri**;",
-          "- **Ödəniş provayderi**: balans yükləmələri;",
+          "- **Ödəniş provayderi**: plan və paket ödənişləri;",
           "- **Telegram və WhatsApp**: yalnız sən bu kanalları qoşduqda.",
           "Bəzi provayderlər Azərbaycandan kənarda (ABŞ, Avropa İttifaqı) yerləşir, ona görə məlumat sərhəddən kənara ötürülə bilər. Belə ötürmələr xidmətin göstərilməsi üçün zəruridir və müvafiq qorunma tədbirləri ilə həyata keçirilir.",
           "Məlumatı yalnız qanunla tələb olunduqda dövlət orqanlarına təqdim edirik.",
@@ -144,40 +144,48 @@ const az: LegalPack = {
     },
     refund: {
       title: "Ödəniş və geri qaytarma",
-      summary: "Balansın necə işlədiyi, istifadə müddəti və geri qaytarma qaydaları.",
+      summary: "Abunə planının necə işlədiyi, yeniləmə, plan dəyişikliyi və geri qaytarma qaydaları.",
       sections: [
-        { id: "model", h: "1. Balans necə işləyir", body: [
-          "{brand} əvvəlcədən ödənilən balansla işləyir. Balansı artırırsan, hər cavab üçün faktiki xərc balansdan çıxılır. Avtomatik yenilənən abunə və gizli ödəniş yoxdur.",
-          "Xərc tarixçəsi, cari balans və yükləmələr paneldəki “Balans” bölməsində görünür. Gündəlik xərc limiti gözlənilməz artımdan (məsələn, bot hücumundan) qoruyur.",
-          "Hər yükləmənin istifadə müddəti **yükləmə tarixindən 12 aydır**. Bu müddət ərzində istifadə olunmayan hissə yanır və bərpa olunmur. Xərc əvvəlcə müddəti ən tez bitən yükləmədən çıxılır. Hər yükləmənin qalığı və bitmə tarixi paneldə görünür; müddəti bitməyə az qalanda paneldə xəbərdarlıq göstərilir.",
+        { id: "model", h: "1. Abunə necə işləyir", body: [
+          "{brand} aylıq abunə planı ilə işləyir (hər dövr 30 gündür). Hər planın aylıq cavab limiti var: köməkçinin ziyarətçiyə verdiyi hər cavab bir cavab sayılır. Səsin mətnə çevrilməsi, operator üçün AI qaralaması və sual təhlili limitə yazılmır.",
+          "Qeydiyyatda bir dəfə pulsuz sınaq verilir: 100 cavab, 14 gün ərzində (hansı tez bitsə). İstifadə olunmamış cavablar növbəti dövrə keçmir.",
+          "Limitin 80%-i və hamısı işlənəndə e-poçtla xəbər veririk. Limit dolanda köməkçi ziyarətçilərə cavab vermir, əvəzinə əlaqə forması göstərilir (müraciətlər itmir).",
+          "**Əlavə paket** (məs. +500 cavab) plan limiti dolanda işlənir və alındığı tarixdən 12 ay qüvvədədir. Paket yalnız aktiv planla alınır.",
         ] },
-        { id: "odenis", h: "2. Ödəniş", body: [
-          "Ödənişlər Azərbaycan manatı (AZN) ilə, lisenziyalı ödəniş provayderi vasitəsilə bank kartı ilə qəbul olunur. Kart məlumatlarını biz görmürük və saxlamırıq.",
-          "Uğurlu ödənişdən sonra balans avtomatik artır və təsdiq məktubu göndərilir.",
+        { id: "yenileme", h: "2. Yeniləmə, yüksəltmə və ləğv", body: [
+          "Plan **avtomatik uzanmır** və kartdan avtomatik pul tutulmur. Dövr bitməyə 3 gün qalmış e-poçtla xatırladırıq. Vaxtında yeniləsən, yeni dövr köhnəsinin bitdiyi gündən başlayır: heç bir gün itmir.",
+          "Dövr bitəndən sonra 3 günlük güzəşt müddəti var. Bu müddətdə yeniləsən də yeni dövr köhnəsinin bitdiyi gündən sayılır. Güzəştdən sonra köməkçi dayanır; bilik bazan və ayarların saxlanılır.",
+          "**Yüksəltmə:** bahalı plana keçəndə yalnız cari dövrün qalan günləri üçün fərqi ödəyirsən; yeni limit və imkanlar dərhal açılır, dövrün bitmə tarixi dəyişmir.",
+          "**Ucuz plana keçid** növbəti dövrdən olur: cari dövr ödənildiyi planla başa çatır.",
+          "**Ləğv:** planı yeniləməmək kifayətdir, xidmət dövrün sonunda dayanır. Ödənilmiş dövr qaytarılmır.",
         ] },
-        { id: "qaytarma", h: "3. Geri qaytarma", body: [
-          "Yüklənmiş balans **geri qaytarılmır və nağdlaşdırılmır**: nə yükləmədən sonra, nə də hesab bağlananda. Ona görə məbləği ehtiyacına görə seç; kiçik məbləğlə başlayıb lazım olduqca artırmaq olar.",
+        { id: "odenis", h: "3. Ödəniş", body: [
+          "Ödənişlər Azərbaycan manatı (AZN) ilə, lisenziyalı ödəniş provayderi vasitəsilə bank kartı ilə qəbul olunur. Kart məlumatlarını biz görmürük və saxlamırıq. Məbləğ sifarişdən əvvəl paneldə göstərilir.",
+          "Ödəniş təsdiqlənən kimi plan və ya paket aktivləşir və təsdiq məktubu göndərilir.",
+        ] },
+        { id: "qaytarma", h: "4. Geri qaytarma", body: [
+          "Ödənilmiş abunə dövrü və əlavə paketlər **geri qaytarılmır və nağdlaşdırılmır**: nə ödənişdən sonra, nə dövrün ortasında ləğv edəndə, nə də hesab bağlananda. Pulsuz sınaqla əvvəlcədən yoxlamağı məsləhət görürük.",
           "Yalnız bu hallarda pul geri qaytarılır:",
           "- **Səhv tutulma:** texniki xəta ilə artıq məbləğ çıxılıbsa və ya ödəniş iki dəfə keçibsə, artıq hissə tam qaytarılır.",
-          "- **Xidməti biz dayandırsaq:** platforma fəaliyyətini dayandırarsa, istifadə olunmamış yüklənmiş balans qaytarılır.",
+          "- **Xidməti biz dayandırsaq:** platforma fəaliyyətini dayandırarsa, ödənilmiş dövrün istifadə olunmamış günləri və paketlərin qalığı qaytarılır.",
           "- qanunla tələb olunan digər hallar.",
         ] },
-        { id: "qaytarilmir", h: "4. Geri qaytarılmayan hallar", body: [
-          "- artıq istifadə olunmuş xərc (köməkçinin verdiyi cavablar);",
-          "- müddəti (12 ay) bitmiş balans;",
-          "- hesab bağlanarkən və ya silinərkən qalan balans;",
-          "- pulsuz balans, bonus, promo və ya partnyor proqramı ilə verilən balans (bunlar nağdlaşdırılmır);",
+        { id: "qaytarilmir", h: "5. Geri qaytarılmayan hallar", body: [
+          "- ödənilmiş dövrün istifadə olunmuş və ya olunmamış hissəsi (cavab limitindən az istifadə də daxil olmaqla);",
+          "- müddəti (12 ay) bitmiş və ya istifadə olunmamış əlavə paketlər;",
+          "- yüksəltmə zamanı ödənilmiş fərq;",
+          "- pulsuz sınaq, bonus, promo və ya admin tərəfindən verilən plan;",
           "- şərtlərin pozulmasına görə dayandırılmış hesab.",
         ] },
-        { id: "nece", h: "5. Səhv tutulma barədə necə müraciət etmək olar", body: [
+        { id: "nece", h: "6. Səhv tutulma barədə necə müraciət etmək olar", body: [
           "{email} ünvanına hesabının e-poçtu, ödənişin tarixi və məbləği ilə yaz. Müraciətə 10 iş günü ərzində baxırıq.",
           "Təsdiq olunan məbləğ ödənişin edildiyi karta qaytarılır. Pulun karta düşməsi bankdan asılı olaraq 5–15 iş günü çəkə bilər.",
         ] },
-        { id: "mubahise", h: "6. Ödəniş mübahisələri", body: [
+        { id: "mubahise", h: "7. Ödəniş mübahisələri", body: [
           "Ödənişlə bağlı problem olduqda bankda mübahisə (chargeback) açmazdan əvvəl bizə yaz: əksər halları bir neçə gün ərzində həll edirik. Mübahisə açıq olduğu müddətdə hesab müvəqqəti məhdudlaşdırıla bilər.",
         ] },
-        { id: "qiymet", h: "7. Qiymət dəyişiklikləri", body: [
-          "Qiymətlər dəyişərsə, ən azı 14 gün əvvəl e-poçt və ya panel vasitəsilə xəbər veririk. Bu müddətdə yeni yükləmə etməyə bilərsən; artıq yüklənmiş balans dəyişiklikdən sonra yeni qiymətlərlə istifadə olunur.",
+        { id: "qiymet", h: "8. Qiymət dəyişiklikləri", body: [
+          "Plan qiymətləri və ya limitləri dəyişərsə, ən azı 14 gün əvvəl e-poçt və ya panel vasitəsilə xəbər veririk. Artıq ödənilmiş dövr köhnə şərtlərlə başa çatır; yeni şərtlər növbəti yeniləmədən tətbiq olunur.",
         ] },
       ],
     },

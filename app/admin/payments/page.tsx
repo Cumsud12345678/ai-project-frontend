@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Check, Download, Hourglass, Plus, Search, X } from "lucide-react";
-import { adminBillingRequests, adminLedger, adminLedgerCsvUrl, adminPaymentRequests, adminResolveRequest, adminTopup, adminUsers, type AdminTopupRequest, type AdminUser, type LedgerRow, type PaymentFilters, type PaymentRequestRow } from "@/lib/api";
+import { adminBillingRequests, adminLedger, adminLedgerCsvUrl, adminPaymentRequests, adminResolveRequest, adminTopup, adminUsers, type AdminTopupRequest, type AdminUser, type LedgerRow, type PaymentFilters, type PaymentRequestRow, type TopupRequest } from "@/lib/api";
 import { FilterPills, PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -93,6 +93,10 @@ function TopupModal({ onClose, onDone }: { onClose: () => void; onDone: () => vo
 
 export default function AdminPaymentsPage() {
   const { t, short } = useI18n();
+  // Sifarişin növü: plan (yüksəltmə/yeniləmə), əlavə paket və ya köhnə balans yükləməsi
+  const orderLabel = (r: TopupRequest) => r.kind === "pack" ? t("Əlavə paket: +{n} cavab", { n: r.replies ?? 0 })
+    : r.kind === "plan" ? `${t("Plan")}: ${r.plan}${r.orderType === "upgrade" ? ` · ${t("yüksəltmə")}` : r.orderType === "renew" ? ` · ${t("yeniləmə")}` : ""}`
+    : t("Balans yükləməsi");
   const azn = useMoney();
   const [tab, setTab] = useState<Tab>("pending");
   const [pending, setPending] = useState<AdminTopupRequest[] | null>(null);
@@ -181,7 +185,7 @@ export default function AdminPaymentsPage() {
                   {pending.map((r) => (
                     <tr key={r.id}>
                       <td className="max-w-[18rem] px-4 py-3"><Link href={`/admin/users?q=${encodeURIComponent(r.tenantId)}`} className="block truncate font-medium hover:underline">{name(r.businessName)}</Link><span className="block truncate text-xs text-muted-foreground">{r.email}</span></td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-base font-semibold tabular-nums">{azn(r.amountAzn)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right"><span className="block text-base font-semibold tabular-nums">{azn(r.amountAzn)}</span><span className="block text-xs text-muted-foreground">{orderLabel(r)}</span></td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{short(r.at)}</td>
                       <td className="px-4 py-3"><span className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => setResolve({ r, action: "reject" })}><X size={14} aria-hidden />{t("Rədd et")}</Button>
@@ -271,7 +275,9 @@ export default function AdminPaymentsPage() {
         description={resolve ? `${name(resolve.r.businessName)} · ${resolve.r.email}` : undefined}
         footer={<><Button variant="outline" onClick={() => setResolve(null)} disabled={busy}>{t("Ləğv et")}</Button>
           <Button variant={resolve?.action === "reject" ? "destructive" : "default"} disabled={busy} onClick={act}>{resolve?.action === "approve" ? t("Ödəniş alındı, təsdiqlə") : t("Rədd et")}</Button></>}>
-        {resolve && <p className="text-sm">{resolve.action === "approve" ? t("Müştərinin balansına {n} əlavə olunacaq.", { n: azn(resolve.r.amountAzn) }) : t("Sorğu bağlanır, balans dəyişmir.")}</p>}
+        {resolve && <p className="text-sm">{resolve.action === "approve"
+          ? resolve.r.kind === "plan" || resolve.r.kind === "pack" ? t("{o} aktivləşəcək ({n}). Müştəriyə e-poçt gedəcək.", { o: orderLabel(resolve.r), n: azn(resolve.r.amountAzn) }) : t("Müştərinin balansına {n} əlavə olunacaq.", { n: azn(resolve.r.amountAzn) })
+          : t("Sorğu bağlanır, balans dəyişmir.")}</p>}
       </Modal>
 
       {topup && <TopupModal onClose={() => setTopup(false)} onDone={() => setRev((n) => n + 1)} />}

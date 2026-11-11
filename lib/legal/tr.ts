@@ -10,7 +10,7 @@ const tr: LegalPack = {
   docs: {
     terms: {
       title: "Kullanım şartları",
-      summary: "{brand} kullanım kuralları: hesap, bakiye, içerik, sorumluluk ve uyuşmazlıklar.",
+      summary: "{brand} kullanım kuralları: hesap, abonelik planı, içerik, sorumluluk ve uyuşmazlıklar.",
       sections: [
         { id: "umumi", h: "1. Genel hükümler", body: [
           "Bu şartlar, {operator} (bundan sonra “biz”) tarafından sunulan {brand} platformunun (web paneli, sohbet widget'ı, Telegram ve WhatsApp entegrasyonları, API) kullanımını düzenler.",
@@ -26,11 +26,11 @@ const tr: LegalPack = {
           "- Şifrenin ve API anahtarının gizliliğinden sen sorumlusun. İki adımlı girişi açmanı öneririz.",
           "- Hesabındaki tüm işlemlerden (ekip üyelerinin işlemleri dahil) sen sorumlusun. Yetkisiz erişimden şüphelenirsen hemen bize yaz.",
         ] },
-        { id: "balans", h: "4. Bakiye ve ödeme", body: [
-          "Hizmet ön ödemeli bakiye (AZN) ile çalışır. Her cevabın gerçek maliyeti bakiyeden düşülür; güncel bakiye ve harcama geçmişi panelde görünür.",
-          "Bakiye bitince asistan ziyaretçilere cevap vermez, yerine iletişim formu gösterilir. Bakiye yüklenince hizmet otomatik olarak devam eder.",
-          "Fiyat değişikliklerini en az 14 gün önceden e-posta veya panel üzerinden duyururuz. Yüklenmiş bakiye değişiklikten sonra yeni fiyatlarla kullanılır.",
-          "Her yüklemenin kullanım süresi yükleme tarihinden itibaren 12 aydır; bu sürede kullanılmayan kısım yanar. Yüklenen bakiye iade edilmez ve nakde çevrilmez (hatalı tahsilat ve hizmetin bizim tarafımızdan durdurulması hariç). Ayrıntılar: “Ödeme ve iade” belgesi.",
+        { id: "balans", h: "4. Abonelik planı ve ödeme", body: [
+          "Hizmet aylık abonelik planıyla sunulur (her dönem 30 gündür). Her planın aylık yanıt limiti, kullanıcı sayısı ve özellikleri panelde ve sitenin fiyat bölümünde gösterilir. Yeni hesaba bir kez ücretsiz deneme verilir: 14 gün içinde 100 yanıt (hangisi önce biterse).",
+          "Limitin %80'i ve tamamı kullanıldığında e-postayla bildiririz. Limit dolduğunda asistan ziyaretçilere yanıt vermez, bunun yerine iletişim formu gösterilir. Planı yükseltmek veya ek yanıt paketi almakla hizmet hemen devam eder.",
+          "Plan otomatik yenilenmez: dönem bitmeden 3 gün önce hatırlatırız. Dönem bittikten sonra kısa bir ek süre (3 gün) vardır, ardından asistan durur; verilerin saklanır ve plan yenilenir yenilenmez hizmet devam eder.",
+          "Ödenmiş dönem ve ek paketler iade edilmez ve nakde çevrilmez (hatalı tahsilat ve hizmetin tarafımızca durdurulması hariç). Fiyat değişikliğini en az 14 gün önceden bildiririz; ödenmiş dönem eski fiyatla tamamlanır. Ayrıntılar: “Ödeme ve iade” belgesi.",
         ] },
         { id: "mezmun", h: "5. İçeriğin ve yükümlülüklerin", body: [
           "- Yüklediğin veya bağladığın veriler (ilanlar, belgeler, API yanıtları, şirket bilgileri) sana aittir. Bunları kullanma hakkın olduğunu onaylarsın.",
@@ -55,7 +55,7 @@ const tr: LegalPack = {
           "Planlı bakımları mümkün olduğunca önceden duyururuz.",
         ] },
         { id: "dayandirma", h: "9. Askıya alma ve hesabın silinmesi", body: [
-          "Hesabını istediğin zaman panelden (Ayarlar → Hesap → Hesabı sil) silebilirsin. Verilerin Gizlilik politikasında belirtilen şekilde silinir. Hesap silindiğinde kullanılmayan bakiye iade edilmez.",
+          "Hesabını istediğin zaman panelden (Ayarlar → Hesap → Hesabı sil) silebilirsin. Verilerin Gizlilik politikasında belirtilen şekilde silinir. Hesap silindiğinde ödenmiş dönemin kalanı ve kullanılmayan paketler iade edilmez.",
           "Şartların ihlali, ödeme dolandırıcılığı veya yasal zorunluluk hâlinde hesabı askıya alabiliriz. Askıya alınan hesabın verileri ve bakiyesi hemen silinmez, sebep e-postayla bildirilir.",
         ] },
         { id: "mesuliyyet", h: "10. Sorumluluğun sınırlandırılması", body: [
@@ -87,7 +87,7 @@ const tr: LegalPack = {
         { id: "melumat", h: "2. Topladığımız veriler", body: [
           "- **Hesap:** e-posta, şifre özeti (şifrenin kendisi saklanmaz), iki adımlı giriş ayarları, dil.",
           "- **İşletme:** işletme adı, site alan adı, şirket iletişim bilgileri (telefon, adres, çalışma saatleri), asistan ayarları.",
-          "- **Ödeme:** yükleme tutarı, tarihi ve durumu. Kart bilgileri ödeme sağlayıcısında işlenir, bizde saklanmaz.",
+          "- **Ödeme:** plan veya paket siparişinin tutarı, tarihi ve durumu. Kart bilgileri ödeme sağlayıcısında işlenir, bizde saklanmaz.",
           "- **Bilgi bankası ve katalog:** yüklenen belgeler, metinler, okunan site sayfaları, ilan kaynağının adresi ve yanıtları. API anahtarları şifreli saklanır.",
           "- **Ziyaretçi sohbetleri:** mesajlar, tarayıcıda saklanan anonim ziyaretçi kimliği, sohbetin başladığı sayfa, ziyaretçinin kendi isteğiyle yazdığı ad, telefon veya e-posta.",
           "- **Kanallar:** Telegram ve WhatsApp kullanıcı kimliği, adı ve numarası (kanal bağlıysa).",
@@ -96,7 +96,7 @@ const tr: LegalPack = {
         { id: "meqsed", h: "3. Verileri neden kullanıyoruz", body: [
           "- hizmeti sunmak: cevaplar, arama, operatör sohbeti, bildirimler;",
           "- hesap güvenliği, giriş doğrulama ve kötüye kullanımın (ör. aynı sitenin birden fazla hesapla bağlanması) önlenmesi;",
-          "- bakiyenin hesaplanması, ödemelerin kaydı ve muhasebe yükümlülükleri;",
+          "- abonelik limitinin takibi, ödemelerin kaydı ve muhasebe yükümlülükleri;",
           "- destek ve önemli hizmet bildirimleri;",
           "- hizmeti geliştirmek için toplu, kimliği belirlemeyen istatistikler.",
           "Verileri reklam amacıyla satmayız veya paylaşmayız. Müşteri verilerini kendi modellerimizi eğitmek için kullanmayız.",
@@ -109,7 +109,7 @@ const tr: LegalPack = {
           "- **Yapay zekâ sağlayıcıları** (Anthropic — Claude, Google — Gemini): ziyaretçinin sorusu ve cevap için gereken bağlam;",
           "- **E-posta gönderimi** (Resend): kod ve bildirim e-postaları;",
           "- **Bulut barındırma ve veritabanı sağlayıcıları**;",
-          "- **Ödeme sağlayıcısı**: bakiye yüklemeleri;",
+          "- **Ödeme sağlayıcısı**: plan ve paket ödemeleri;",
           "- **Telegram ve WhatsApp**: yalnızca bu kanalları bağladığında.",
           "Bazı sağlayıcılar Azerbaycan dışında (ABD, AB) bulunduğundan veriler yurt dışına aktarılabilir. Bu aktarımlar hizmetin sunulması için gereklidir ve uygun güvencelerle yapılır.",
           "Verileri yalnızca yasa gerektirdiğinde resmi makamlara sunarız.",
@@ -144,40 +144,48 @@ const tr: LegalPack = {
     },
     refund: {
       title: "Ödeme ve iade",
-      summary: "Bakiyenin nasıl çalıştığı, kullanım süresi ve iade kuralları.",
+      summary: "Aboneliğin nasıl çalıştığı, yenileme, plan değişikliği ve iade kuralları.",
       sections: [
-        { id: "model", h: "1. Bakiye nasıl çalışır", body: [
-          "{brand} ön ödemeli bakiyeyle çalışır. Bakiyeni yüklersin, her cevabın gerçek maliyeti düşülür. Otomatik yenilenen abonelik veya gizli ücret yoktur.",
-          "Harcama geçmişi, güncel bakiye ve yüklemeler paneldeki “Bakiye” bölümünde görünür. Günlük harcama limiti beklenmedik artışlara (ör. bot saldırılarına) karşı korur.",
-          "Her yüklemenin kullanım süresi **yükleme tarihinden itibaren 12 aydır**. Bu sürede kullanılmayan kısım yanar ve geri getirilmez. Harcama önce süresi en erken dolacak yüklemeden düşülür. Her yüklemenin kalanı ve bitiş tarihi panelde görünür; süresi dolmak üzereyken panelde uyarı gösterilir.",
+        { id: "model", h: "1. Abonelik nasıl çalışır", body: [
+          "{brand} aylık abonelik planıyla çalışır (her dönem 30 gündür). Her planın aylık yanıt limiti vardır: asistanın ziyaretçiye verdiği her yanıt bir yanıt sayılır. Sesin metne çevrilmesi, operatör için AI taslağı ve soru analizi limite dahil değildir.",
+          "Kayıtta bir kez ücretsiz deneme verilir: 14 gün içinde 100 yanıt (hangisi önce biterse). Kullanılmayan yanıtlar sonraki döneme aktarılmaz.",
+          "Limitin %80'i ve tamamı kullanıldığında e-postayla bildiririz. Limit dolduğunda asistan ziyaretçilere yanıt vermez, bunun yerine iletişim formu gösterilir (başvurular kaybolmaz).",
+          "**Ek paket** (ör. +500 yanıt) plan limiti dolduktan sonra kullanılır ve satın alındığı tarihten itibaren 12 ay geçerlidir. Paket yalnızca aktif bir planla alınabilir.",
         ] },
-        { id: "odenis", h: "2. Ödeme", body: [
-          "Ödemeler Azerbaycan manatı (AZN) ile, lisanslı bir ödeme sağlayıcısı üzerinden banka kartıyla alınır. Kart bilgilerini görmeyiz ve saklamayız.",
-          "Başarılı ödemeden sonra bakiye otomatik artar ve onay e-postası gönderilir.",
+        { id: "yenileme", h: "2. Yenileme, yükseltme ve iptal", body: [
+          "Plan **otomatik yenilenmez** ve karttan otomatik ödeme alınmaz. Dönem bitmeden 3 gün önce e-postayla hatırlatırız. Zamanında yenilersen yeni dönem eskisinin bittiği günden başlar: hiçbir gün kaybolmaz.",
+          "Dönem bittikten sonra 3 günlük ek süre vardır. Bu sürede yenilersen yeni dönem yine eskisinin bitiş tarihinden sayılır. Ek süreden sonra asistan durur; bilgi tabanın ve ayarların saklanır.",
+          "**Yükseltme:** daha pahalı plana geçerken yalnızca mevcut dönemin kalan günleri için farkı ödersin; yeni limit ve özellikler hemen açılır, dönemin bitiş tarihi değişmez.",
+          "**Daha ucuz plana geçiş** sonraki dönemden itibaren olur: mevcut dönem ödenen planla tamamlanır.",
+          "**İptal:** planı yenilememen yeterlidir, hizmet dönem sonunda durur. Ödenmiş dönem iade edilmez.",
         ] },
-        { id: "qaytarma", h: "3. İade", body: [
-          "Yüklenen bakiye **iade edilmez ve nakde çevrilmez**: ne yüklemeden sonra ne de hesap kapatılırken. Bu yüzden tutarı ihtiyacına göre seç; küçük bir tutarla başlayıp gerektikçe yükleyebilirsin.",
+        { id: "odenis", h: "3. Ödeme", body: [
+          "Ödemeler Azerbaycan manatı (AZN) ile, lisanslı bir ödeme sağlayıcısı aracılığıyla banka kartıyla kabul edilir. Kart bilgilerini görmeyiz ve saklamayız. Tutar, siparişten önce panelde gösterilir.",
+          "Ödeme onaylandığında plan veya paket etkinleşir ve onay e-postası gönderilir.",
+        ] },
+        { id: "qaytarma", h: "4. İade", body: [
+          "Ödenmiş abonelik dönemi ve ek paketler **iade edilmez ve nakde çevrilmez**: ne ödemeden sonra, ne dönem ortasında iptal edildiğinde, ne de hesap kapatıldığında. Önce ücretsiz denemeyle her şeyi kontrol etmeni öneririz.",
           "Para yalnızca şu durumlarda iade edilir:",
-          "- **Hatalı tahsilat:** teknik bir hata nedeniyle fazla tutar düşüldüyse veya ödeme iki kez geçtiyse, fazlası tamamen iade edilir.",
-          "- **Hizmeti biz durdurursak:** platform faaliyetini durdurursa, kullanılmayan yüklenmiş bakiye iade edilir.",
+          "- **Hatalı tahsilat:** teknik bir hata nedeniyle fazla tutar alındıysa veya ödeme iki kez geçtiyse, fazla kısım tamamen iade edilir.",
+          "- **Hizmeti biz durdurursak:** platform faaliyetini durdurursa, ödenmiş dönemin kullanılmayan günleri ve paketlerin kalanı iade edilir.",
           "- yasanın gerektirdiği diğer durumlar.",
         ] },
-        { id: "qaytarilmir", h: "4. İade edilmeyen durumlar", body: [
-          "- zaten kullanılmış harcama (asistanın verdiği cevaplar);",
-          "- süresi (12 ay) dolmuş bakiye;",
-          "- hesap kapatılırken veya silinirken kalan bakiye;",
-          "- ücretsiz, bonus, promosyon veya ortaklık programıyla verilen bakiye (nakde çevrilmez);",
-          "- şartların ihlali nedeniyle askıya alınan hesaplar.",
+        { id: "qaytarilmir", h: "5. İade edilmeyen durumlar", body: [
+          "- ödenmiş dönemin kullanılan veya kullanılmayan kısmı (limitten az yanıt kullanılması dahil);",
+          "- süresi (12 ay) dolmuş veya kullanılmamış ek paketler;",
+          "- yükseltme sırasında ödenen fark;",
+          "- ücretsiz deneme, bonus, promosyon veya yönetici tarafından verilen plan;",
+          "- şartların ihlali nedeniyle askıya alınan hesap.",
         ] },
-        { id: "nece", h: "5. Hatalı tahsilatı nasıl bildirirsin", body: [
-          "{email} adresine hesap e-postan, ödeme tarihi ve tutarıyla yaz. Talepleri 10 iş günü içinde inceleriz.",
-          "Onaylanan tutar ödemenin yapıldığı karta iade edilir. Bankaya bağlı olarak 5–15 iş günü sürebilir.",
+        { id: "nece", h: "6. Hatalı tahsilat için nasıl başvurulur", body: [
+          "{email} adresine hesap e-postan, ödeme tarihi ve tutarıyla yaz. Başvuruları 10 iş günü içinde inceleriz.",
+          "Onaylanan tutar ödemenin yapıldığı karta iade edilir. Paranın karta geçmesi bankaya bağlı olarak 5–15 iş günü sürebilir.",
         ] },
-        { id: "mubahise", h: "6. Ödeme itirazları", body: [
-          "Ödemeyle ilgili bir sorun olursa bankada itiraz (chargeback) açmadan önce bize yaz — çoğu durumu birkaç gün içinde çözeriz. İtiraz açıkken hesap geçici olarak kısıtlanabilir.",
+        { id: "mubahise", h: "7. Ödeme uyuşmazlıkları", body: [
+          "Ödemeyle ilgili bir sorun olursa bankada itiraz (chargeback) açmadan önce bize yaz: çoğu durumu birkaç gün içinde çözeriz. İtiraz açık olduğu sürece hesap geçici olarak kısıtlanabilir.",
         ] },
-        { id: "qiymet", h: "7. Fiyat değişiklikleri", body: [
-          "Fiyat değişikliklerini en az 14 gün önceden e-posta veya panel üzerinden duyururuz. Bu sürede yükleme yapmayabilirsin; yüklenmiş bakiye değişiklikten sonra yeni fiyatlarla kullanılır.",
+        { id: "qiymet", h: "8. Fiyat değişiklikleri", body: [
+          "Plan fiyatları veya limitleri değişirse, en az 14 gün önceden e-posta veya panel aracılığıyla bildiririz. Ödenmiş dönem eski koşullarla tamamlanır; yeni koşullar sonraki yenilemeden itibaren uygulanır.",
         ] },
       ],
     },
