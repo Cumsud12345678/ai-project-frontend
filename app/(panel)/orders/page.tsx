@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { SwitchRow } from "@/components/ui/switch";
+import { Tabs } from "@/components/ui/tabs";
+import { OrdersBoard } from "@/components/orders-board";
 
 type Row = OrderField & { optionsText: string };
 const MAX = 12;
@@ -36,7 +38,7 @@ const STARTER = (t: (s: string) => string): Row[] => [
   { key: "address", label: t("Ünvan"), type: "address", required: false, description: t("Rayon, küçə, ev"), optionsText: "" },
 ];
 
-function Orders() {
+function OrderFormTab() {
   const { t } = useI18n();
   const [loaded, setLoaded] = useState(false);
   const [exists, setExists] = useState(false);
@@ -82,8 +84,7 @@ function Orders() {
   if (!loaded) return <FormSkeleton />;
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("Sifariş qəbulu")}
-        description={t("Saytınızın API-si lazım deyil. AI müştəridən bu məlumatları söhbətdə bir-bir soruşur, xülasəni göstərib təsdiq alır və sifarişi Müraciətlərə göndərir. Siz e-poçtla (və qoşulubsa Telegram qrupu və ya Bitrix24 ilə) dərhal xəbər alırsınız.")} />
+      <p className="max-w-2xl text-sm text-muted-foreground">{t("Saytınızın API-si lazım deyil. AI müştəridən bu məlumatları söhbətdə bir-bir soruşur, xülasəni göstərib təsdiq alır və sifarişi Müraciətlərə göndərir. Siz e-poçtla (və qoşulubsa Telegram qrupu və ya Bitrix24 ilə) dərhal xəbər alırsınız.")}</p>
 
       <SwitchRow checked={enabled} onChange={setEnabled} title={t("Çatda sifariş qəbul et")} description={t("Sayt vidjeti, Telegram və WhatsApp-da işləyir.")} on={t("Aktiv")} off={t("Söndürülüb")} />
 
@@ -147,6 +148,18 @@ function Orders() {
         }}>{t("Sil")}</Button></>}>
         <p className="text-sm text-muted-foreground">{t("AI çatda sifariş qəbul etməyi dayandıracaq. Artıq gəlmiş sifarişlər Müraciətlərdə qalır.")}</p>
       </Modal>
+    </div>
+  );
+}
+
+function Orders() {
+  const { t } = useI18n();
+  const [tab, setTab] = useState<"board" | "form">("board");
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title={t("Sifariş qəbulu")} description={t("Sifarişləri mərhələlərlə izlə: mərhələ dəyişəndə müştəri avtomatik xəbər alır.")} />
+      <Tabs value={tab} onChange={setTab} label={t("Sifariş qəbulu")} items={[{ value: "board", label: t("Lövhə") }, { value: "form", label: t("Forma") }]} />
+      {tab === "board" ? <OrdersBoard /> : <OrderFormTab />}
     </div>
   );
 }

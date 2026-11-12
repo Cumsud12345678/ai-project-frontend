@@ -7,6 +7,7 @@ import { getKb, kbAddText, kbAddUrl, kbDelete, kbRefresh, kbUploadFile, saveProf
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { QaCard } from "./qa-card";
+import { KbSuggestions } from "@/components/kb-suggestions";
 import { RequireTenant, useSession } from "@/components/session";
 import { CardSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -313,6 +314,7 @@ function Knowledge() {
             </div>
           ))}
           {ready > 0 && filter === "all" && <p className="-mt-3 text-xs text-muted-foreground">{t("{n} mənbə hazırdır, cəmi {chunks} hissə. Çatı “Sınaq söhbəti”ndə yoxlaya bilərsən.", { n: ready, chunks: num(info.totals.chunks) })}</p>}
+          {(filter === "all" || filter === "qa") && <KbSuggestions />}
           {(filter === "all" || filter === "qa") && <QaCard info={info} onChange={load} />}
           <p className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
             {t("Ssenarilər (köməkçi nə vaxt nə etsin) indi Köməkçi → Bacarıqlar bölməsindədir.")} <Link href="/assistant/skills#proc" className="text-primary underline">{t("Bacarıqlara keç")}</Link>

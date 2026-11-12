@@ -450,6 +450,16 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
                     <Button type="button" size="sm" variant="ghost" onClick={() => setAttach(null)} aria-label={t("Faylı sil")}><X size={14} aria-hidden /></Button>
                   </div>
                 )}
+                {chat.aiDraft && !text && !attach && (
+                  <div className="flex flex-col gap-2 border-b border-border bg-muted/50 px-3 py-2.5 text-sm">
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Sparkles size={13} aria-hidden />{t("AI qaralaması: müştəriyə hələ getməyib")}</span>
+                    <p className="whitespace-pre-wrap">{chat.aiDraft.text}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" size="sm" disabled={busy} onClick={async () => { if (!chat.aiDraft || busy) return; setBusy(true); try { await sendLive(chat.id, chat.aiDraft.text); stick.current = true; loadChat(); loadList(); onChange?.(); } catch (err) { toast.error((err as Error).message); } finally { setBusy(false); } }}>{t("Göndər")}</Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setText(chat.aiDraft?.text ?? "")}>{t("Düzəlt")}</Button>
+                    </div>
+                  </div>
+                )}
                 <textarea value={text} onChange={(e) => { setText(e.target.value); if (chat) sendTyping(chat.id); }} maxLength={1000} rows={2} aria-label={t("Cavabın")} placeholder={t("Cavabını yaz… (Enter göndərir, Shift+Enter yeni sətir)")}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }}
                   className="block w-full resize-none rounded-t-xl bg-transparent px-3.5 pt-3 text-sm outline-none" />

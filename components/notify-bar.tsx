@@ -68,9 +68,9 @@ export function NotifyBar() {
       )}
       {tg?.available && (
         tg.telegram
-          ? <span className={cn(chip, on, "cursor-default")}><Send size={14} aria-hidden />{t("Telegram: {name}", { name: tg.telegram.name || t("bağlıdır") })}
+          ? <span className={cn(chip, on, "cursor-default")} title={t("Müştəriyə cavab yazmaq üçün Telegram-da bildirişə “Reply” et")}><Send size={14} aria-hidden />{t("Telegram: {name}", { name: tg.telegram.name || t("bağlıdır") })}
               <button type="button" onClick={unlinkTg} className="ml-1 cursor-pointer underline">{t("Ayır")}</button></span>
-          : <button type="button" onClick={linkTg} disabled={linking} className={cn(chip, off)}><Send size={14} aria-hidden />{linking ? t("Telegram-da Start bas…") : t("Telegram-da bildiriş al")}</button>
+          : <button type="button" onClick={linkTg} disabled={linking} className={cn(chip, off)}><Send size={14} aria-hidden />{linking ? t("Telegram-da Start bas…") : t("Telegram-da bildiriş al və cavab yaz")}</button>
       )}
     </div>
   );

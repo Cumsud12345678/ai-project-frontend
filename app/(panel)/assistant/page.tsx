@@ -7,6 +7,7 @@ import { getFunnel, getKb, getOverview, getUnanswered, getWidget, type Funnel, t
 import { useI18n } from "@/lib/i18n";
 import { RequireTenant, useSession } from "@/components/session";
 import { KnowledgeGaps } from "@/components/knowledge-gaps";
+import { KbSuggestions } from "@/components/kb-suggestions";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { factsFromOverview, setupSteps } from "@/lib/setup-steps";
@@ -163,6 +164,7 @@ function Assistant() {
           : gaps.length ? <KnowledgeGaps rows={gaps} canAnswer={mode !== "listings"} reload={loadGaps} limit={5} />
           : <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 text-sm"><CircleCheck size={20} aria-hidden className="text-emerald-600" /><div><p className="font-medium">{t("Hələlik boşluq yoxdur.")}</p><p className="text-muted-foreground">{t("Köməkçi cavab tapa bilməyəndə sual burada görünəcək, sən də bir kliklə öyrədəcəksən.")}</p></div></div>}
       </section>
+      {mode !== "listings" && <KbSuggestions limit={5} />}
     </div>
   );
 }

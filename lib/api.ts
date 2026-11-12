@@ -475,6 +475,38 @@ export const deleteOperatorProfile = () => call<OperatorProfileView>("/tenant/op
 /** API-siz sifariş forması: AI söhbətdə bu sahələri soruşur, təsdiqdən sonra sifariş müraciətlər qutusuna düşür */
 export type OrderFieldType = "text" | "phone" | "email" | "number" | "select" | "address";
 export type OrderField = { key: string; label: string; type: OrderFieldType; required: boolean; description?: string; options?: string[] };
+/** Sifariş lövhəsi: mərhələ dəyişəndə müştəriyə (Telegram/WhatsApp və ya e-poçt) mesaj gedə bilər */
+export type OrderStage = "new" | "confirmed" | "shipped" | "delivered" | "cancelled";
+export type OrderCard = { id: string; at: string; name: string; contact: string; question: string; status: string; updatedAt?: string;
+  order: { title: string; fields: { label: string; value: string }[]; channel?: "widget" | "telegram" | "whatsapp" | "api"; stage: OrderStage; notify: "channel" | "email" | null } };
+export const getOrders = () => call<{ items: OrderCard[] }>("/tenant/orders");
+export const setOrderStage = (id: string, b: { stage: OrderStage; notify: boolean; note?: string }) => call<{ lead: OrderCard; notified: "channel" | "email" | null; notifyError?: string }>(`/tenant/orders/${id}/stage`, { method: "PATCH", body: b });
+
+/** API-siz randevu təqvimi */
+export type BookingService = { name: string; duration: number; price?: string };
+export type BookingDay = { from: string; to: string } | null;
+export type BookingSettings = { enabled: boolean; title?: string; instructions?: string; tz?: string; services: BookingService[]; days: BookingDay[]; step: number; capacity: number; noticeMin: number; horizonDays: number; closedDates: string[]; reminders: boolean; updatedAt?: string };
+export type BookingStatus = "booked" | "done" | "noshow" | "cancelled";
+export type BookingItem = { id: string; at: string; name: string; contact: string; question: string;
+  booking: { service: string; duration: number; price?: string; date: string; time: string; start: string; end: string; status: BookingStatus; note?: string; channel?: "widget" | "telegram" | "whatsapp" | "api"; notify: "channel" | null } };
+export const getBooking = () => call<{ booking: BookingSettings | null }>("/tenant/booking");
+export const saveBooking = (b: BookingSettings) => call<{ booking: BookingSettings }>("/tenant/booking", { method: "PUT", body: b });
+export const deleteBooking = () => call<{ ok: true }>("/tenant/booking", { method: "DELETE" });
+export const getBookings = () => call<{ items: BookingItem[] }>("/tenant/bookings");
+export const setBookingStatus = (id: string, b: { status: BookingStatus; notify?: boolean; note?: string }) => call<{ lead: BookingItem; notified: "channel" | null; notifyError?: string }>(`/tenant/bookings/${id}`, { method: "PATCH", body: b });
+
+/** Kanal üzrə AI rejimi: avtomatik / qaralama (operator göndərir) / söndürülüb */
+export type AiMode = "auto" | "draft" | "off";
+export type AiModes = { telegram: AiMode; whatsapp: AiMode };
+export const getAiMode = () => call<{ aiMode: AiModes }>("/tenant/ai-mode");
+export const saveAiMode = (m: AiModes) => call<{ aiMode: AiModes }>("/tenant/ai-mode", { method: "PUT", body: m });
+
+/** Operator cavablarından öyrənilən sual-cavab təklifləri */
+export type KbSuggestion = { id: string; at: string; question: string; answer: string; chatId?: string };
+export const getKbSuggestions = () => call<{ total: number; items: KbSuggestion[] }>("/tenant/kb/suggestions");
+export const acceptKbSuggestion = (id: string, b: { questions: string[]; answer: string }) => post<{ source: unknown }>(`/tenant/kb/suggestions/${id}/accept`, b);
+export const deleteKbSuggestion = (id: string) => call<{ ok: true }>(`/tenant/kb/suggestions/${id}`, { method: "DELETE" });
+
 export type OrderForm = { enabled: boolean; title?: string; instructions?: string; successMessage?: string; fields: OrderField[]; updatedAt?: string };
 export const getOrderForm = () => call<{ form: OrderForm | null }>("/tenant/order-form");
 export const saveOrderForm = (form: OrderForm) => call<{ form: OrderForm }>("/tenant/order-form", { method: "PUT", body: form });
@@ -518,7 +550,7 @@ export type LiveMsg = { from: "visitor" | "operator" | "system"; text: string; a
 export type LiveAssignee = { id?: string; userId?: string; name: string } | null;
 export type LiveNote = { text: string; by: string; at: string };
 export type LiveItem = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; createdAt: string; updatedAt: string; count: number; waiting: boolean; tags?: string[]; csat?: number | null; notes?: number; last: LiveMsg | null };
-export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[]; visitor?: VisitorInfo | null; blocked?: boolean; summary?: SavedSummary & { stale?: boolean } };
+export type LiveChat = { id: string; channel?: "telegram" | "whatsapp" | null; assignee?: LiveAssignee; name: string; contact: string; status: "open" | "closed"; context: { role: "user" | "model"; text: string }[]; messages: LiveMsg[]; createdAt: string; notes?: LiveNote[]; tags?: string[]; csat?: { rating: number; comment?: string; at: string } | null; page?: { path: string; title?: string } | null; previous?: LivePrevious[]; visitor?: VisitorInfo | null; blocked?: boolean; summary?: SavedSummary & { stale?: boolean }; /** "AI qaralama" rejimində AI-ın hazırladığı cavab */ aiDraft?: { text: string; at: string } };
 /** Söhbətin AI xülasəsi: niyyət, əhval, etirazlar, növbəti addım, almağa yaxınlıq */
 export type ChatSummary = { summary: string; intent: string; mood: "positive" | "neutral" | "negative"; objections: string[]; nextStep: string; temperature: "hot" | "warm" | "cold" };
 export type SavedSummary = ChatSummary & { at: string; count: number };
