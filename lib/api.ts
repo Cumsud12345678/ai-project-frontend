@@ -55,7 +55,7 @@ export type TenantInfo = {
   /** Admin hesabı dayandırıbsa: vidjet və kanallar işləmir */
   suspended?: { at: string; reason: string } | null;
   /** Sehirbaz: seçilmiş məqsədlər və real məlumatla sınaq edilibmi (köhnə backend-də yoxdur) */
-  setup?: { goals: ("answer" | "catalog")[]; tested: boolean };
+  setup?: { goals: ("answer" | "catalog")[]; tested: boolean; bizType?: BizType };
 };
 export type TenantResponse = { tenant: TenantInfo | null; advisorUrl: string; role?: "owner" | "operator" };
 
@@ -540,7 +540,9 @@ export type Overview = {
 };
 export const getOverview = () => call<Overview>("/tenant/overview");
 /** Sehirbazın "Məqsəd" addımı (serverdə saxlanır) */
-export const saveSetupGoals = (goals: ("answer" | "catalog")[]) => pinged(call<{ goals: ("answer" | "catalog")[] }>("/tenant/setup", { method: "PUT", body: { goals } }));
+/** Biznesin növü: sehirbaz hazır ayarları (sifariş forması, randevu, xatırlatma) buna görə seçir */
+export type BizType = "shop" | "social" | "service" | "food" | "edu" | "other";
+export const saveSetupGoals = (goals: ("answer" | "catalog")[], bizType?: BizType) => pinged(call<{ goals: ("answer" | "catalog")[]; bizType?: BizType }>("/tenant/setup", { method: "PUT", body: { goals, ...(bizType && { bizType }) } }));
 /** Uğurlu sorğudan sonra hazırlıq göstəricisini yeniləyir (cavabı dəyişmir) */
 function pinged<T>(p: Promise<T>): Promise<T> { return p.then((r) => { pingOverview(); return r; }); }
 /** Hazırlıq dəyişə biləcək bir iş görüləndə (məlumat əlavə, sınaq, kanal) yuxarı zolaqdakı göstərici dərhal yenilənsin */

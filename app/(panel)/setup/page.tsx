@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner";
 import {
   activate, chat, getKb, getOverview, saveSetupGoals, getTelegram, getWhatsApp, getWidget, kbAddText, kbAddUrl, kbUploadFile, saveProfile, saveWidget, updateConfig,
-  type CompanyInfo, type KbInfo, type Listing, type Overview, type TelegramStatus, type WhatsAppStatus, type WidgetResponse,
+  type BizType, type CompanyInfo, type KbInfo, type Listing, type Overview, type TelegramStatus, type WhatsAppStatus, type WidgetResponse,
 } from "@/lib/api";
 import { wooBaseUrl, wooConfig } from "@/lib/presets/woocommerce";
 import { dataDone, readiness, setupSteps, type Goal, type StepId } from "@/lib/setup-steps";
@@ -28,6 +28,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SetupRequestCard } from "@/components/setup-request-card";
+import { QuickStart, ReadySummary, bizTypes, testIdeas } from "@/components/setup-quickstart";
 
 // ---------------------------------------------------------------- vəziyyət
 // Addımlar, adları və "hazırdır" şərtləri lib/setup-steps.ts-dədir: yuxarı zolaq, Ümumi baxış və Köməkçi səhifəsi eyni mənbədən oxuyur.
@@ -66,9 +67,10 @@ export default function SetupPage() {
     setGoals(local);
     if (tenant?.setup && local.length) void saveSetupGoals(local).then(refresh).catch(() => {});
   }, [tenant?.tenantId, serverGoals.join()]); // eslint-disable-line react-hooks/exhaustive-deps
-  async function chooseGoals(g: Goal[]) {
+  const bizType = tenant?.setup?.bizType;
+  async function chooseGoals(g: Goal[], type?: BizType) {
     setGoals(g);
-    await saveSetupGoals(g);
+    await saveSetupGoals(g, type);
     await refresh();
   }
 
@@ -153,10 +155,10 @@ export default function SetupPage() {
 
         <div key={step} className="min-w-0">
           {step === "business" && <StepBusiness onDone={() => go("goals")} />}
-          {step === "goals" && tenant && <StepGoals goals={goals} site={site} onSave={async (g) => { await chooseGoals(g); go("data"); }} onBack={back} />}
-          {step === "data" && tenant && <StepData goals={goals} kb={kb} reload={loadKb} site={site} kbReady={kbReady} catalogReady={catalogReady} onDone={() => go("test")}
+          {step === "goals" && tenant && <StepGoals goals={goals} bizType={bizType} site={site} onSave={async (g, type) => { await chooseGoals(g, type); go("data"); }} onBack={back} />}
+          {step === "data" && tenant && <StepData goals={goals} bizType={bizType} onQuick={() => { loadKb(); go("test"); }} kb={kb} reload={loadKb} site={site} kbReady={kbReady} catalogReady={catalogReady} onDone={() => go("test")}
             onAddAnswer={() => void chooseGoals([...goals, "answer"])} onNext={next} onBack={back} />}
-          {step === "test" && tenant && <StepTest goals={goals} dataReady={dataReady} accent={widget?.widget.color} onTested={() => setTestedNow(true)} onFix={() => go(goals.length ? "data" : "goals")} onNext={next} onBack={back} />}
+          {step === "test" && tenant && <StepTest goals={goals} bizType={bizType} dataReady={dataReady} accent={widget?.widget.color} onTested={() => setTestedNow(true)} onFix={() => go(goals.length ? "data" : "goals")} onNext={next} onBack={back} />}
           {step === "launch" && tenant && <StepLaunch widget={widget} reload={loadWidget} site={site} goals={goals} onBack={back} />}
         </div>
       </div>
@@ -290,29 +292,31 @@ function StepBusiness({ onDone }: { onDone: () => void }) {
 }
 
 // ---------------------------------------------------------------- 2. Məqsəd
-function StepGoals({ goals, site, onSave, onBack }: { goals: Goal[]; site: boolean; onSave: (g: Goal[]) => Promise<void>; onBack: () => void }) {
+function StepGoals({ goals, bizType, site, onSave, onBack }: { goals: Goal[]; bizType?: BizType; site: boolean; onSave: (g: Goal[], type: BizType) => Promise<void>; onBack: () => void }) {
   const { t } = useI18n();
-  const [g, setG] = useState<Goal[]>(goals);
+  const [type, setType] = useState<BizType | null>(bizType ?? null);
+  const [catalog, setCatalog] = useState(goals.includes("catalog"));
   const [busy, setBusy] = useState(false);
-  const toggle = (x: Goal) => setG((cur) => (cur.includes(x) ? cur.filter((y) => y !== x) : [...cur, x]));
+  const canCatalog = type === "shop" || type === "social" || type === "other";
   async function save() {
+    if (!type) return;
     setBusy(true);
-    try {
-      await onSave(g);
-    } finally { setBusy(false); }
+    try { await onSave(canCatalog && catalog ? ["answer", "catalog"] : ["answer"], type); } finally { setBusy(false); }
   }
   return (
-    <Panel icon={Target} title={t("Köməkçi nə etsin?")} desc={t("Bir və ya bir neçəsini seç. Növbəti addımlar seçiminə görə qurulur, qalanını sonra da aça bilərsən.")}
-      footer={<Nav onBack={onBack} next={<Button disabled={busy || !g.length} onClick={save}>{t("Davam et")}<ArrowRight size={16} aria-hidden /></Button>} />}>
-      <div role="group" aria-label={t("Məqsəd")} className="grid gap-3 md:grid-cols-2">
-        <Choice role="checkbox" on={g.includes("answer")} onClick={() => toggle("answer")} icon={BookOpen} title={t("Suallara cavab versin")} badge={t("Ən çox seçilən")}
-          text={t("Çatdırılma, ödəniş, iş saatı, qaydalar: cavabı sənin sənədlərindən, saytından və ya yazdığın mətndən götürür.")} />
-        <Choice role="checkbox" on={g.includes("catalog")} onClick={() => toggle("catalog")} icon={ShoppingBag} title={t("Məhsul və elan axtarsın")}
-          text={t("“150 AZN-ə qədər qulaqlıq” kimi istəyə kataloqundan uyğun məhsul, elan və ya xidmət tapır. Saytın filtrləri ilə də işləyir.")} />
+    <Panel icon={Target} title={t("Biznesin nədir?")} desc={t("Seçiminə görə köməkçi hazır ayarlarla qurulur: sifariş, randevu, xatırlatma. Hamısını sonra dəyişə bilərsən.")}
+      footer={<Nav onBack={onBack} next={<Button disabled={busy || !type} onClick={save}>{t("Davam et")}<ArrowRight size={16} aria-hidden /></Button>} />}>
+      <div role="radiogroup" aria-label={t("Biznesin nədir?")} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {bizTypes(t).map((b) => <Choice key={b.id} on={type === b.id} onClick={() => setType(b.id)} icon={b.icon} title={b.title} text={b.text} />)}
       </div>
-      {!g.length && <p className="text-sm text-muted-foreground">{t("Ən azı birini seç.")}</p>}
+      {canCatalog && (
+        <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
+          <input type="checkbox" className="mt-0.5" checked={catalog} onChange={(e) => setCatalog(e.target.checked)} />
+          <span><span className="block font-medium">{t("Məhsul kataloqum da var (sayt API-si, WooCommerce, CSV və ya Excel)")}</span><span className="block text-muted-foreground">{t("Köməkçi “150 AZN-ə qədər qulaqlıq” kimi istəyə kataloqdan uyğun məhsul tapıb kart kimi göstərəcək. İstəyə bağlıdır.")}</span></span>
+        </label>
+      )}
+      {!site && canCatalog && catalog && <p className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">{t("Saytın yoxdursa da kataloq işləyir: məhsulları CSV və ya Excel faylı ilə yükləyə bilərsən, köməkçi Telegram və WhatsApp-da onlardan axtaracaq.")}</p>}
       <p className="flex items-start gap-2 text-xs text-muted-foreground"><Headset size={14} className="mt-0.5 shrink-0" aria-hidden />{t("Canlı operator (köməkçi bilmədikdə komandana ötürmə) son addımda bir düymə ilə açılır.")}</p>
-      {!site && g.includes("catalog") && <p className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">{t("Saytın yoxdursa da kataloq işləyir: məhsulları CSV və ya Excel faylı ilə yükləyə bilərsən, köməkçi Telegram və WhatsApp-da onlardan axtaracaq.")}</p>}
     </Panel>
   );
 }
@@ -323,8 +327,8 @@ function StepGoals({ goals, site, onSave, onBack }: { goals: Goal[]; site: boole
  * Hansı bölmənin görünəcəyini Məqsəd seçimi həll edir: yalnız elan istəyən müştəri bilik hissəsini ümumiyyətlə görmür.
  * İkisi də seçilibsə akkordeon: hazır olmayan birinci açılır, hər başlıqda vəziyyət yazılır.
  */
-function StepData({ goals, kb, reload, site, kbReady, catalogReady, onAddAnswer, onDone, onNext, onBack }: {
-  goals: Goal[]; kb: KbInfo | null; reload: () => void; site: boolean; kbReady: boolean; catalogReady: boolean; onAddAnswer: () => void; onDone: () => void; onNext: () => void; onBack: () => void;
+function StepData({ goals, bizType, onQuick, kb, reload, site, kbReady, catalogReady, onAddAnswer, onDone, onNext, onBack }: {
+  goals: Goal[]; bizType?: BizType; onQuick: () => void; kb: KbInfo | null; reload: () => void; site: boolean; kbReady: boolean; catalogReady: boolean; onAddAnswer: () => void; onDone: () => void; onNext: () => void; onBack: () => void;
 }) {
   const { t } = useI18n();
   const cat = goals.includes("catalog");
@@ -344,6 +348,8 @@ function StepData({ goals, kb, reload, site, kbReady, catalogReady, onAddAnswer,
   return (
     <Panel icon={cat ? ShoppingBag : BookOpen} title={title} desc={desc}
       footer={<Nav onBack={onBack} skip={!ready ? <Button variant="ghost" onClick={onNext}>{t("Sonra edərəm")}</Button> : undefined} next={<Button disabled={!ready} onClick={onNext}>{t("Davam et")}<ArrowRight size={16} aria-hidden /></Button>} />}>
+      {ans && bizType && <QuickStart type={bizType} onDone={onQuick} />}
+      {ans && bizType && <p className="-mb-2 text-sm font-medium">{t("Daha çox məlumat (istəyə bağlı)")}</p>}
       {both ? (
         <div className="flex flex-col gap-3">
           <Block icon={ShoppingBag} title={t("Elanlar və kataloq")} note={t("Qiymət, marka, şəhər üzrə axtarış")} ready={catalogReady} open={open === "catalog"} onToggle={() => setOpen(open === "catalog" ? null : "catalog")}>{catalog}</Block>
@@ -572,13 +578,14 @@ function CatalogSection({ goals, ready, onSaved }: { goals: Goal[]; ready: boole
 }
 
 // ---------------------------------------------------------------- 5. Sınaq
-function StepTest({ goals, dataReady, accent, onTested, onFix, onNext, onBack }: { goals: Goal[]; dataReady: boolean; accent?: string; onTested: () => void; onFix: () => void; onNext: () => void; onBack: () => void }) {
+function StepTest({ goals, bizType, dataReady, accent, onTested, onFix, onNext, onBack }: { goals: Goal[]; bizType?: BizType; dataReady: boolean; accent?: string; onTested: () => void; onFix: () => void; onNext: () => void; onBack: () => void }) {
   const { t } = useI18n();
   const [msgs, setMsgs] = useState<{ role: "user" | "model"; text: string; listings?: Listing[] }[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  const ideas = [
+  const typed = testIdeas(bizType, t);
+  const ideas = typed.length ? [...typed, ...(goals.includes("catalog") ? [t("Ən ucuz variant hansıdır?")] : [])] : [
     ...(goals.includes("answer") ? [t("İş saatlarınız necədir?"), t("Çatdırılma var?")] : []),
     ...(goals.includes("catalog") ? [t("1000 AZN-ə qədər nə təklif edərsiniz?"), t("Ən ucuz variant hansıdır?")] : []),
     t("Sizinlə necə əlaqə saxlaya bilərəm?"),
@@ -671,6 +678,7 @@ function StepLaunch({ widget, reload, site, goals, onBack }: { widget: WidgetRes
 
   return (
     <div className="flex flex-col gap-6">
+      <ReadySummary />
       {site && (
         <Panel icon={Code2} title={t("Çatı saytına qoş")} desc={t("Bir sətir kod. Bir dəfə yapışdırırsan, sonrakı dəyişikliklər (rəng, mətn) paneldən avtomatik tətbiq olunur.")}>
           <FilterPills value={pf} onChange={setPf} label={t("Platforma")} items={[{ value: "html", label: "HTML" }, { value: "wordpress", label: "WordPress" }, { value: "next", label: "Next.js / React" }, { value: "gtm", label: "Tag Manager" }, { value: "builder", label: "Tilda · Wix · Shopify" }]} />

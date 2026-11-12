@@ -16,7 +16,7 @@ export function setupSteps(f: SetupFacts, t: T): SetupStep[] {
   const href = (id: StepId) => `/setup?step=${id}`;
   return [
     { id: "business", label: t("Biznes"), note: t("Ad və sayt"), done: f.hasTenant, href: href("business") },
-    { id: "goals", label: t("Məqsəd"), note: t("Köməkçi nə etsin"), done: f.hasTenant && f.goals.length > 0, href: href("goals") },
+    { id: "goals", label: t("Biznes növü"), note: t("Hazır ayarlar"), done: f.hasTenant && f.goals.length > 0, href: href("goals") },
     { id: "data", label: t("Məlumat"), note: f.goals.includes("catalog") ? t("Elanlar və kataloq") : t("Cavablar nədən gəlsin"), done: f.dataReady, href: href("data") },
     { id: "test", label: t("Sınaq"), note: t("Müştəri kimi yoxla"), done: f.dataReady && f.tested, href: href("test") },
     { id: "launch", label: t("Yayımla"), note: f.hasSite ? t("Sayta və kanallara qoş") : t("Telegram və WhatsApp"), done: f.launched, href: href("launch") },
