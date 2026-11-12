@@ -15,8 +15,8 @@ export function usePlanLabels() {
     live: t("Canlı operator söhbəti"),
     automations: t("Avtomatlaşdırmalar"),
     campaigns: t("Proaktiv kampaniyalar"),
-    actions: t("Əməliyyatlar (sifariş, rezerv və s.)"),
-    customerData: t("Müştəri məlumatı (giriş etmiş istifadəçi)"),
+    actions: t("Əməliyyatlar (sənin API-n ilə)"),
+    customerData: t("Müştəri məlumatı və sifariş statusu"),
     noBranding: t("“Hazırcavab” yazısı olmadan"),
   };
   return {

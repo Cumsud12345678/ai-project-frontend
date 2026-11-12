@@ -381,6 +381,7 @@ function Pricing({ signedIn }: { signedIn: boolean }) {
           );
         })}
       </ul>
+      <Reveal as="p" delay={100} className="mt-6 text-center text-[15px] text-[var(--l-sub)]">{t("Bütün planlarda: bilik bazası, sifariş və randevu qəbulu, ağıllı operator çağırışı, AI qaralama rejimi və müştəriyə xatırlatmalar.")}</Reveal>
       <Reveal as="ul" delay={120} className="mt-8 grid gap-3 text-[15px] leading-relaxed text-[var(--l-sub)] md:grid-cols-3">
         <li className="flex gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>{t("Qeydiyyatda 100 pulsuz cavab (14 gün): bütün imkanları real ziyarətçilərlə yoxla, kart tələb olunmur.")}</li>
         <li className="flex gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--l-ink)] text-white"><Check size={14} strokeWidth={3} aria-hidden /></span>{pack ? t("Limit dolanda planı yüksəlt və ya əlavə paket al: +{n} cavab {a} ₼.", { n: num(pack.replies), a: money(pack.priceAzn) }) : t("Limit dolanda planı yüksəldə bilərsən.")}</li>
@@ -395,6 +396,7 @@ function Faq() {
   const [open, setOpen] = useState(0);
   const items = [
     [t("Texniki biliyim azdırsa, qura bilərəm?"), t("Bəli. Yalnız bilik bazası (dəstək botu) istəyirsənsə, texniki iş yoxdur: fayl yüklə, sayt linki ver. Kataloq axtarışı üçün API-nin nümunə cavabını yapışdırırsan, panel sahələri özü tanıyır. Çətin hal olsa, paneldəki hazır tapşırığı saytını yazan AI alətinə verirsən, o konfiqurasiyanı hazırlayır. Sən cavabı yapışdırıb sınaq söhbəti ilə yoxlayırsan, sonra bir sətir kodu saytına əlavə edirsən.")],
+    [t("Vaxtım yoxdur. Qurulumu siz edə bilərsiniz?"), t("Bəli, pulsuz. Qeydiyyatdan sonra paneldə “Qurulumu bizə həvalə et” bas və biznesin, məhsul və qiymətlərin haqqında yaz: köməkçini komandamız öyrədib qurur, sən yalnız yoxlayırsan.")],
     [t("Verilənlər bazama giriş verməliyəm?"), t("Xeyr. Köməkçi yalnız saytının açıq API-sindən və sənin əlavə etdiyin fayl, link və mətnlərdən oxuyur. Bazaya heç bir giriş lazım deyil.")],
     [t("Hansı saytlarla işləyir?"), t("Elan, e-ticarət və ya xidmət saytı fərqi yoxdur. Kataloqu API ilə qaytaran istənilən sayt qoşula bilər. Kataloqun yoxdursa, yalnız dəstək botu kimi (sənədlər və sayt məzmunu ilə) qurmaq olar. İkisi birlikdə də işləyir.")],
     [t("Bilik bazasına nə əlavə edə bilərəm?"), t("PDF, Word, TXT, MD, CSV və HTML faylları (6 MB-a qədər), tək səhifənin linki, bütün saytın skanı və ya yapışdırılmış mətn. Şəkil kimi skan olunmuş PDF oxunmur, mətni seçilə bilən olmalıdır.")],

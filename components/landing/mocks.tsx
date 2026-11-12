@@ -71,3 +71,36 @@ export function ProactiveMock() {
     </div>
   );
 }
+
+/** Sifariş və randevu: lövhədəki mərhələ, müştəriyə gedən avtomatik mesaj və randevu üçün boş vaxtlar (statik nümunə). */
+export function OrdersMock() {
+  const { t } = useI18n();
+  const stages = [t("Yeni"), t("Təsdiqləndi"), t("Yoldadır"), t("Çatdırıldı")];
+  return (
+    <div className="relative mx-auto w-full max-w-md">
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--l-line)] bg-white shadow-[0_1px_2px_rgba(9,9,11,.06),0_24px_48px_-28px_rgba(9,9,11,.28)]" role="img" aria-label={t("Nümunə: sifariş mərhələsi və randevu")}>
+        <div className="border-b border-[var(--l-line)] px-4 py-3" aria-hidden>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold">{t("Tort sifarişi")} №A1B2C3</p>
+            <span className="text-xs text-[#71717a]">Telegram</span>
+          </div>
+          <div className="mt-3 grid grid-cols-4 gap-1.5 text-[11px] font-medium">
+            {stages.map((s, i) => <span key={s} className={`rounded-full px-2 py-1 text-center ${i === 2 ? "bg-[var(--l-ink)] text-white" : i < 2 ? "bg-[var(--l-teal)]/10 text-[var(--l-teal)]" : "bg-[var(--l-mist)] text-[#a1a1aa]"}`}>{s}</span>)}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2.5 bg-[#fafafa] p-4 text-sm" aria-hidden>
+          <Reveal className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-[var(--l-teal)] px-3.5 py-2.5 text-white shadow-sm">{t("🚚 Sifarişiniz yola çıxdı. Kuryer: 050 000 00 00")}</Reveal>
+          <Reveal delay={250} className="max-w-[85%] rounded-2xl rounded-bl-md bg-white px-3.5 py-2.5 shadow-sm">{t("Cümə günü manikürə boş vaxt var?")}</Reveal>
+          <Reveal delay={450} className="ml-auto max-w-[90%] rounded-2xl rounded-br-md bg-white px-3.5 py-2.5 shadow-sm">
+            <p>{t("Cümə günü boş vaxtlar:")}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">{["11:00", "13:30", "16:00"].map((x) => <span key={x} className="rounded-lg border border-[var(--l-line)] px-2.5 py-1 text-xs font-semibold tabular-nums">{x}</span>)}</div>
+          </Reveal>
+        </div>
+        <div className="flex items-center gap-2 border-t border-[var(--l-line)] px-4 py-3 text-xs text-[#71717a]" aria-hidden>
+          <span className="grid size-6 place-items-center rounded-full bg-[var(--l-mist)]"><MessageCircle size={13} /></span>
+          {t("Randevudan bir gün əvvəl müştəriyə xatırlatma gedir.")}
+        </div>
+      </div>
+    </div>
+  );
+}

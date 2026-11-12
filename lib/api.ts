@@ -277,6 +277,7 @@ export type ChannelRow = {
   tenantId: string; businessName: string; domain: string; email: string; errors24h: number; problems: ("wa_down" | "wa_connecting" | "errors" | "suspended")[];
   telegram: { enabled: boolean; bot: string; connectedAt: string; lastAt: string | null; idle: boolean } | null;
   whatsapp: { enabled: boolean; phone: string | null; connectedAt: string; state: WhatsAppState; error: string | null; lastAt: string | null; idle: boolean } | null;
+  /** kanal üzrə AI rejimi (sahibin seçimi) */ aiMode?: { telegram: "auto" | "draft" | "off"; whatsapp: "auto" | "draft" | "off" };
 };
 export const adminChannels = () => call<{ rows: ChannelRow[]; summary: { telegram: number; whatsapp: number; waOpen: number; problems: number; waCapacity: { used: number; max: number } } }>("/admin/channels");
 

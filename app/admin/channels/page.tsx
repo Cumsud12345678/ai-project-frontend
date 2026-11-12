@@ -33,6 +33,8 @@ export default function AdminChannelsPage() {
   const problemText: Record<ChannelRow["problems"][number], string> = {
     wa_down: t("WhatsApp bağlantısı yoxdur"), wa_connecting: t("WhatsApp yenidən qoşulur"), errors: t("24 saatda çox xəta"), suspended: t("hesab dayandırılıb"),
   };
+  // AI rejimi avtomatik deyilsə (qaralama / yalnız operator): "bot cavab vermir" şikayətinin səbəbi ola bilər
+  const aiBadge = (m?: "auto" | "draft" | "off") => (m === "draft" ? <Badge tone="warning">{t("AI qaralama")}</Badge> : m === "off" ? <Badge tone="warning">{t("AI söndürülüb")}</Badge> : null);
   const ago = (iso: string | null) => (iso ? short(iso) : t("hələ söhbət yoxdur"));
   const pick = { problems: (r: ChannelRow) => r.problems.some((p) => p !== "suspended"), all: () => true, telegram: (r: ChannelRow) => Boolean(r.telegram), whatsapp: (r: ChannelRow) => Boolean(r.whatsapp) };
   const rows = d ? d.rows.filter(pick[view]) : [];
@@ -77,13 +79,13 @@ export default function AdminChannelsPage() {
                       </td>
                       <td className="px-3 py-3">
                         {r.telegram ? <>
-                          <span className="flex items-center gap-1.5"><span className="font-mono text-xs">@{r.telegram.bot}</span>{!r.telegram.enabled && <Badge>{t("söndürülüb")}</Badge>}</span>
+                          <span className="flex items-center gap-1.5"><span className="font-mono text-xs">@{r.telegram.bot}</span>{!r.telegram.enabled && <Badge>{t("söndürülüb")}</Badge>}{aiBadge(r.aiMode?.telegram)}</span>
                           <span className={cn("block text-xs", r.telegram.idle ? "text-amber" : "text-muted-foreground")}>{t("son söhbət:")} {ago(r.telegram.lastAt)}</span>
                         </> : <span className="text-muted-foreground">–</span>}
                       </td>
                       <td className="px-3 py-3">
                         {r.whatsapp ? <>
-                          <span className="flex flex-wrap items-center gap-1.5"><span className="font-mono text-xs">{r.whatsapp.phone ?? "—"}</span><Badge className={waLabel[r.whatsapp.state][1]}>{waLabel[r.whatsapp.state][0]}</Badge>{!r.whatsapp.enabled && <Badge>{t("söndürülüb")}</Badge>}</span>
+                          <span className="flex flex-wrap items-center gap-1.5"><span className="font-mono text-xs">{r.whatsapp.phone ?? "—"}</span><Badge className={waLabel[r.whatsapp.state][1]}>{waLabel[r.whatsapp.state][0]}</Badge>{!r.whatsapp.enabled && <Badge>{t("söndürülüb")}</Badge>}{aiBadge(r.aiMode?.whatsapp)}</span>
                           {r.whatsapp.error && <span className="block text-xs text-destructive">{r.whatsapp.error}</span>}
                           <span className={cn("block text-xs", r.whatsapp.idle ? "text-amber" : "text-muted-foreground")}>{t("son söhbət:")} {ago(r.whatsapp.lastAt)}</span>
                         </> : <span className="text-muted-foreground">–</span>}
@@ -102,7 +104,7 @@ export default function AdminChannelsPage() {
               </table>
             </div>
           )}
-          <p className="text-xs text-muted-foreground">{t("WhatsApp qırılanda müştəri paneldən QR ilə yenidən qoşmalıdır. 7 gündən çox söhbət olmayan kanal sarı ilə göstərilir.")}</p>
+          <p className="text-xs text-muted-foreground">{t("WhatsApp qırılanda müştəri paneldən QR ilə yenidən qoşmalıdır. 7 gündən çox söhbət olmayan kanal sarı ilə göstərilir.")} {t("“AI qaralama” və “AI söndürülüb”: sahib AI-ı həmin kanalda özü dayandırıb, mesajlara operator cavab verir.")}</p>
         </div>
       )}
     </div>

@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, BarChart3, BellRing, Check, ChevronDown, Headset, Languages, Send, UserRound, Users, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, BellRing, CalendarClock, Check, ChevronDown, Headset, Languages, Send, UserRound, Users, Zap } from "lucide-react";
 import { Reveal } from "@/components/landing/reveal";
 import { ActionFlowVisual, ChannelsVisual, DataAccessVisual, InboxVisual, LanguagesVisual } from "@/components/landing/visuals";
-import { DeskMock, ProactiveMock } from "@/components/landing/mocks";
+import { DeskMock, OrdersMock, ProactiveMock } from "@/components/landing/mocks";
 import { useI18n } from "@/lib/i18n";
 
 const wrap = "mx-auto w-full max-w-6xl px-5 sm:px-6";
@@ -38,7 +38,7 @@ function Funnel() {
 }
 
 /**
- * "Daha çox": səkkiz imkan bir interaktiv bölmədə. Solda (telefonda yuxarıda) mövzular, sağda seçilənin izahı və vizualı.
+ * "Daha çox": doqquz imkan bir interaktiv bölmədə. Solda (telefonda yuxarıda) mövzular, sağda seçilənin izahı və vizualı.
  * Əvvəl hər biri ayrıca uzun blok idi; indi səhifə qısalıb, ziyarətçi maraqlandığını özü seçir.
  */
 export function Showcase() {
@@ -50,7 +50,7 @@ export function Showcase() {
       visual: <InboxVisual /> },
     { id: "masa", icon: Users, label: t("Operator iş masası və komanda"), title: t("Operatorlar üçün hazır iş masası: qeyd, etiket, hazır cavab, AI qaralaması"),
       body: t("Canlı söhbət qutusu yalnız yazışma deyil. Komanda söhbətə daxili qeyd yazır, etiket qoyur, hazır cavabı seçib redaktə edir və istəsə AI-dan qaralama alır. Qaralama yalnız yazı sahəsinə düşür, operator oxuyub özü göndərir."),
-      points: [t("Komandanı dəvət et: operatorlar email ilə qoşulur və yalnız canlı söhbət qutusunu görür, ayarlara və ödənişə toxuna bilmir."), t("Daxili qeydləri yalnız komanda görür, müştəriyə heç vaxt getmir. Hər söhbətə 5-ə qədər etiket qoy."), t("Hazır cavabları bir dəfə yaz, operatorlar bir kliklə seçir. AI qaralaması planın limitinə yazılmır."), t("İşçi saatlarını və saat qurşağını təyin et: kənarda canlı operator düyməsi gizlənir, ziyarətçiyə əlaqə forması çıxır."), t("Söhbət bitəndə ziyarətçi 1-5 ulduzla qiymət verir, orta qiyməti paneldə görürsən.")],
+      points: [t("Komandanı dəvət et: operatorlar email ilə qoşulur və yalnız canlı söhbət qutusunu görür, ayarlara və ödənişə toxuna bilmir."), t("Daxili qeydləri yalnız komanda görür, müştəriyə heç vaxt getmir. Hər söhbətə 5-ə qədər etiket qoy."), t("Hazır cavabları bir dəfə yaz, operatorlar bir kliklə seçir. AI qaralaması planın limitinə yazılmır."), t("İşçi saatlarını və saat qurşağını təyin et: kənarda canlı operator düyməsi gizlənir, ziyarətçiyə əlaqə forması çıxır."), t("Söhbət bitəndə ziyarətçi 1-5 ulduzla qiymət verir, orta qiyməti paneldə görürsən."), t("Narazı və ya almağa hazır müştərini AI özü səbəbi ilə operatora ötürür. Operator Telegram-dan da cavab yaza bilir."), t("AI-a hələ güvənmirsənsə qaralama rejimi: AI cavabı hazırlayır, operator bir kliklə göndərir.")],
       visual: <DeskMock /> },
     { id: "musteri", icon: UserRound, label: t("Müştərinin öz məlumatı"), title: t("“Sifarişim haradadır?” sualına cavab verir"),
       body: t("Hesabına daxil olmuş müştəri öz sifarişini, ödəniş tarixçəsini, müraciət və şikayətlərinin statusunu çatdan soruşa bilər. Hansı məlumat növlərinin açılacağını sən seçirsən: sifariş, ödəniş, şikayət, abunə və ya istənilən başqası."),
@@ -60,13 +60,17 @@ export function Showcase() {
       body: t("İstifadəçi “sifarişimi ləğv et”, “bilet aç”, “görüş rezerv et” və ya “mənimlə əlaqə saxlayın” yazanda köməkçi hərəkəti təklif edir. Nə olacağı kartda bütün dəyərlərlə göstərilir və yalnız istifadəçi “Təsdiq et” basandan sonra sənin API-nə göndərilir."),
       points: [t("AI əməliyyatı özü icra etmir: yalnız təklif yaradır, qərarı istifadəçi verir."), t("Yalnız sənin yazdığın əməliyyatlar və parametrlər mümkündür, hər dəyər tip və uzunluq üzrə yoxlanır."), t("Sorğular imzalanır, təkrar icra olunmur, cavab gəlməsə uğur uydurulmur: “bəlli deyil” bildirilir."), t("Hər addım jurnala yazılır, istifadəçi və sayt üzrə limit var."), t("Bunun üçün saytının API-si lazımdır: əməliyyatı orada sən yazırsan.")],
       visual: <ActionFlowVisual /> },
+    { id: "sifaris", icon: CalendarClock, label: t("Sifariş və randevu"), title: t("Sifarişi və randevunu çatda qəbul edir, API lazım deyil"),
+      body: t("Sahələri və ya xidmətlərlə iş saatlarını paneldə yazırsan. AI məlumatı söhbətdə toplayır, təsdiq alır və sənə göndərir. Randevuda yalnız boş vaxtları təklif edir."),
+      points: [t("Sifarişlər lövhədə: mərhələ dəyişəndə müştəri Telegram, WhatsApp və ya e-poçtla avtomatik xəbər alır."), t("Randevudan bir gün əvvəl müştəriyə xatırlatma gedir, eyni vaxta iki nəfər yazılmır."), t("Müştəri sifariş nömrəsi və telefonu ilə girişsiz status soruşa bilər.")],
+      visual: <OrdersMock /> },
     { id: "proaktiv", icon: BellRing, label: t("Proaktiv mesajlar"), title: t("Ziyarətçi yazmamış, çat özü təklif göstərir"),
       body: t("Məhsul səhifəsində 20 saniyə qalan ziyarətçiyə çat düyməsinin yanında qısa təklif çıxır. Mətni, gözləmə vaxtını və hansı səhifələrdə göstəriləcəyini sən seçirsən."),
       points: [t("Mətn sənin yazdığındır, ona görə AI xərci yoxdur."), t("Ən çox 5 qayda: hər biri üçün gözləmə vaxtı və səhifə şablonu (məs. /products/*)."), t("Eyni ziyarətçiyə bir sessiyada hər mesaj yalnız bir dəfə göstərilir."), t("Səbət tərk edilib kimi öz şərtin üçün saytın skriptindən bir sətirlə çağıra bilərsən.")],
       visual: <ProactiveMock /> },
     { id: "kanallar", icon: Send, label: t("Telegram və WhatsApp"), title: t("Müştəri yazsa da, səsli mesaj göndərsə də cavab alır"),
       body: t("Öz Telegram botunu bir tokenlə, WhatsApp nömrəni QR kodla qoşursan. Müştəri orada yazanda və ya səsli mesaj göndərəndə köməkçi saytdakı çatla eyni bilik bazasından cavab verir, tapmasa operatora yönləndirir."),
-      points: [t("Səsli mesaj (60 saniyəyə qədər) mətnə çevrilir və adi sual kimi cavablandırılır. Səs heç yerdə saxlanmır."), t("Telegram: BotFather-dən aldığın tokeni yapışdırmaq kifayətdir."), t("WhatsApp QR ilə qoşulur: bu, rəsmi API deyil və nömrənin bloklanma riski var, ona görə ayrıca iş nömrəsi məsləhətdir."), t("Cavab tapılmayanda köməkçi telefon və ya e-poçt istəyir, operator həmin söhbətə paneldən qoşulub cavab verə bilər."), t("Qrup yazışmalarına cavab vermir, sifariş və ödəniş kimi müştəri məlumatı bu kanallarda açılmır.")],
+      points: [t("Səsli mesaj (60 saniyəyə qədər) mətnə çevrilir və adi sual kimi cavablandırılır. Səs heç yerdə saxlanmır."), t("Telegram: BotFather-dən aldığın tokeni yapışdırmaq kifayətdir."), t("WhatsApp QR ilə qoşulur: bu, rəsmi API deyil və nömrənin bloklanma riski var, ona görə ayrıca iş nömrəsi məsləhətdir."), t("Cavab tapılmayanda köməkçi telefon və ya e-poçt istəyir, operator həmin söhbətə paneldən qoşulub cavab verə bilər."), t("Müştəri cavabdan sonra susubsa, istəsən ona bir dəfə nəzakətli xatırlatma gedir."), t("Qrup yazışmalarına cavab vermir, sifariş və ödəniş kimi müştəri məlumatı bu kanallarda açılmır.")],
       visual: <ChannelsVisual /> },
     { id: "diller", icon: Languages, label: t("İstənilən dildə"), title: t("Ziyarətçi hansı dildə yazırsa, o dildə cavab alır"),
       body: t("Sənədlərin Azərbaycan dilindədirsə belə, rus, ingilis və ya başqa dildə gələn suala həmin dildə cavab verir. Ayrıca tərcümə hazırlamaq lazım deyil."),
@@ -96,7 +100,7 @@ export function Showcase() {
     <section id="daha" className={`${wrap} scroll-mt-24 py-20 lg:py-28`}>
       <Reveal as="p" className="inline-flex items-center gap-2 text-[13px] font-semibold tracking-wide text-[var(--l-orange-d)] uppercase">{t("Daha çox")}</Reveal>
       <Reveal as="h2" delay={60} className="l-display mt-3 max-w-3xl text-[clamp(1.75rem,3.6vw,2.75rem)] font-semibold leading-[1.08]">{t("Çat cavab verməklə bitmir")}</Reveal>
-      <Reveal as="p" delay={120} className="mt-5 max-w-2xl text-[17px] leading-relaxed text-[var(--l-sub)]">{t("Canlı operator və komanda, müştərinin öz məlumatı, saytında icra olunan əməliyyatlar, proaktiv mesajlar, səsli mesajla birlikdə Telegram və WhatsApp, statistika. Aşağıda hər birinin ziyarətçiyə və sənə necə göründüyünü görə bilərsən.")}</Reveal>
+      <Reveal as="p" delay={120} className="mt-5 max-w-2xl text-[17px] leading-relaxed text-[var(--l-sub)]">{t("Canlı operator və komanda, sifariş və randevu qəbulu, müştərinin öz məlumatı, saytında icra olunan əməliyyatlar, proaktiv mesajlar, səsli mesajla birlikdə Telegram və WhatsApp, statistika. Aşağıda hər birinin ziyarətçiyə və sənə necə göründüyünü görə bilərsən.")}</Reveal>
 
       <Reveal delay={160} className="mt-12 grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
         <div ref={pills} role="tablist" aria-orientation="vertical" aria-label={t("Daha çox")} onKeyDown={onKey}
@@ -136,12 +140,13 @@ export function Everything() {
   const [all, setAll] = useState(false); // telefonda əvvəlcə 3 qrup, qalanı düymə ilə
   const groups: [string, string[]][] = [
     [t("Söhbət"), [t("Canlı operator söhbəti"), t("“Operator yazır” göstəricisi"), t("Söhbətin 7 gün davam etməsi"), t("Ziyarətçiyə e-poçtla cavab"), t("Əlaqə forması və gələn qutusu"), t("Proaktiv mesajlar (səhifə və vaxta görə)")]],
-    [t("Operator iş masası"), [t("Daxili qeydlər"), t("Etiketlər"), t("Hazır cavablar"), t("AI qaralaması (operator özü göndərir)"), t("İşçi saatları"), t("Söhbət sonrası qiymət (CSAT)"), t("Komanda: 5 operatora qədər")]],
+    [t("Operator iş masası"), [t("Daxili qeydlər"), t("Etiketlər"), t("Hazır cavablar"), t("AI qaralaması (operator özü göndərir)"), t("İşçi saatları"), t("Söhbət sonrası qiymət (CSAT)"), t("Komanda: 5 operatora qədər"), t("Ağıllı operator çağırışı (səbəb etiketi ilə)"), t("AI qaralama rejimi"), t("Operatorun ad və şəkli, AI nişanı"), t("Telegram-dan cavab")]],
+    [t("Sifariş və randevu"), [t("API-siz sifariş forması və lövhə"), t("Mərhələ dəyişəndə müştəriyə mesaj"), t("Randevu təqvimi və xatırlatma"), t("Girişsiz sifariş statusu")]],
     [t("Əməliyyatlar"), [t("Sifarişin ləğvi, bilet, görüş rezervi, müraciət"), t("İstifadəçi kartda təsdiq verir"), t("İmzalı sorğu və təkrar icradan qorunma"), t("Əməliyyat jurnalı və limitlər")]],
-    [t("Kanallar"), [t("Telegram botu"), t("WhatsApp (QR ilə, qeyri-rəsmi)"), t("Səsli mesajlar mətnə çevrilir"), t("Operatorun müştəriyə ilk yazması"), t("Ziyarətçinin dilində cavab"), t("Çat və panel: AZ, EN, RU, TR")]],
+    [t("Kanallar"), [t("Telegram botu"), t("WhatsApp (QR ilə, qeyri-rəsmi)"), t("Səsli mesajlar mətnə çevrilir"), t("Operatorun müştəriyə ilk yazması"), t("Susan müştəriyə xatırlatma"), t("Ziyarətçinin dilində cavab"), t("Çat və panel: AZ, EN, RU, TR")]],
     [t("Axtarış və cavab"), [t("Kataloq axtarışı (REST və GraphQL API)"), t("Bilik bazası: fayl, link, bütün sayt, mətn"), t("Məna və açar söz üzrə birgə axtarış"), t("Cavabın altında mənbə"), t("Bilmədikdə uydurmaq əvəzinə operatora yönləndirmə"), t("Şəkillə axtarış"), t("Ssenarilər və dəqiq cavablar"), t("Saytın avtomatik yenilənməsi"), t("CSV, JSON, XML fayl və ya feed"), t("Nümunə cavabdan sahələrin avtomatik tanınması")]],
     [t("Müştəri məlumatı"), [t("Sifariş, ödəniş, şikayət, abunə və başqa növlər"), t("İmzalı müştəri açarı"), t("Sahə siyahısı və maskalama"), t("Müştəri üzrə sorğu limiti"), t("Başqasının qeydinə baxmağa qarşı qoruma")]],
-    [t("İdarəetmə"), [t("Söhbət tarixçəsi və satış hunisi"), t("Sualların AI ilə mövzulara bölünməsi"), t("Cavablara 👍/👎 rəyi"), t("CSV ixracı"), t("Aylıq e-poçt hesabatı"), t("Aylıq plan, limit xəbərdarlığı (80% və 100%)"), t("Rəng, başlıq və yer paneldən dəyişir")]],
+    [t("İdarəetmə"), [t("Söhbət tarixçəsi və satış hunisi"), t("AI söhbət xülasəsi"), t("Operator cavablarından öyrənmə"), t("Sualların AI ilə mövzulara bölünməsi"), t("Cavablara 👍/👎 rəyi"), t("CSV ixracı"), t("Aylıq e-poçt hesabatı"), t("Aylıq plan, limit xəbərdarlığı (80% və 100%)"), t("Rəng, başlıq və yer paneldən dəyişir")]],
     [t("Təhlükəsizlik"), [t("Telefon və e-poçtun avtomatik gizlədilməsi"), t("API açarı şifrələnib saxlanır"), t("Vidjet yalnız sənin domenində işləyir"), t("Qeydlərin 90 gündən sonra silinməsi"), t("E-poçt təsdiqi, güclü parol")]],
   ];
   return (
