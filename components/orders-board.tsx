@@ -4,8 +4,9 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { ArrowRight, Mail, MessageCircle, RefreshCw, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
-import { getOrders, setOrderStage, type OrderCard, type OrderStage } from "@/lib/api";
+import { getOrders, markSeen, setOrderStage, type OrderCard, type OrderStage } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { useLiveEvents } from "@/lib/live-socket";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,10 @@ export function OrdersBoard() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(() => { getOrders().then((r) => setItems(r.items)).catch((e) => { setItems([]); toast.error((e as Error).message); }); }, []);
+  const load = useCallback(() => { getOrders().then((r) => { setItems(r.items); markSeen("orders").catch(() => {}); }).catch((e) => { setItems([]); toast.error((e as Error).message); }); }, []);
   useEffect(load, [load]);
+  // Çat yeni sifariş qəbul etdi: lövhə dərhal yenilənir
+  useLiveEvents((e) => { if (e.t === "leads" && e.kind === "order") load(); });
 
   function show(o: OrderCard, to?: OrderStage) { setOpen(o); setStage(to ?? NEXT[o.order.stage] ?? o.order.stage); setNotify(Boolean(o.order.notify)); setNote(""); }
   async function save() {

@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarClock, CalendarX2, Check, Plus, Settings2, Trash2, UserX } from "lucide-react";
 import { toast } from "sonner";
-import { deleteBooking, getBooking, getBookings, saveBooking, setBookingStatus, type BookingDay, type BookingItem, type BookingService, type BookingSettings, type BookingStatus } from "@/lib/api";
+import { deleteBooking, getBooking, getBookings, markSeen, saveBooking, setBookingStatus, type BookingDay, type BookingItem, type BookingService, type BookingSettings, type BookingStatus } from "@/lib/api";
+import { useLiveEvents } from "@/lib/live-socket";
 import { useI18n } from "@/lib/i18n";
 import { PageHeader, FilterPills } from "@/components/page-header";
 import { RequireTenant } from "@/components/session";
@@ -125,7 +126,8 @@ function Bookings() {
   const [notify, setNotify] = useState(true);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = useCallback(() => getBookings().then((r) => setItems(r.items)).catch((e) => toast.error((e as Error).message)), []);
+  const load = useCallback(() => getBookings().then((r) => { setItems(r.items); markSeen("bookings").catch(() => {}); }).catch((e) => toast.error((e as Error).message)), []);
+  useLiveEvents((e) => { if (e.t === "leads" && e.kind === "booking") void load(); });
   useEffect(() => { getBooking().then((r) => setCfg(r.booking)).catch(() => setCfg(null)); void load(); }, [load]);
 
   const statusLabel: Record<BookingStatus, [string, BadgeTone]> = { booked: [t("Gözlənilir"), "info"], done: [t("Gəldi"), "success"], noshow: [t("Gəlmədi"), "warning"], cancelled: [t("Ləğv olundu"), "neutral"] };

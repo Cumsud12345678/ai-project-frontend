@@ -55,7 +55,7 @@ export function NotifyBar() {
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
-      <span className="mr-1 text-xs font-medium text-muted-foreground">{t("Yeni söhbət bildirişləri:")}</span>
+      <span className="mr-1 text-xs font-medium text-muted-foreground">{t("Bildirişlər (söhbət, sifariş, randevu):")}</span>
       <button type="button" aria-pressed={sound} onClick={toggleSound} className={cn(chip, sound ? on : off)}>
         {sound ? <Volume2 size={14} aria-hidden /> : <VolumeX size={14} aria-hidden />}{sound ? t("Səs açıqdır") : t("Səs bağlıdır")}
       </button>

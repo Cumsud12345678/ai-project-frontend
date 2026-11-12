@@ -100,6 +100,8 @@ const isActive = (pathname: string, href: string) => pathname === href || pathna
 function itemSignal(href: string, s: Signals): { count?: number; dot?: boolean } {
   const att = (k: string) => s.overview?.attention?.find((a) => a.kind === k)?.count ?? 0;
   if (href === "/inbox") return s.waiting > 0 ? { count: s.waiting } : { dot: att("leads") + att("unanswered") > 0 };
+  if (href === "/orders" && att("orders") > 0) return { count: att("orders") };
+  if (href === "/bookings" && att("bookings") > 0) return { count: att("bookings") };
   if (href === "/knowledge") return { dot: att("sourceErrors") > 0 };
   if (href === "/embed") return { dot: att("widgetOff") > 0 };
   if (href === "/billing") { const b = s.overview?.billing; return { dot: b?.plan ? b.plan.status !== "active" || (b.plan.used >= b.plan.included && b.plan.packLeft <= 0) : b?.trial ? b.trial.left <= 0 : b?.state === "empty" }; }
@@ -137,7 +139,7 @@ function TopBar({ signals, onSearch, onMenu, menuRef }: { signals: Signals; onSe
     <header className="flex h-14 min-w-0 items-center gap-2 px-2 md:px-3">
       <button ref={menuRef} type="button" onClick={onMenu} aria-label={t("Menyu")} className="relative grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg hover:bg-card md:hidden">
         <Menu size={20} aria-hidden />
-        {["/inbox", "/knowledge", "/embed", "/billing"].some((h) => { const x = itemSignal(h, signals); return x.count || x.dot; }) && <span className="absolute top-2 right-2 size-2 rounded-full bg-destructive" />}
+        {["/inbox", "/orders", "/bookings", "/knowledge", "/embed", "/billing"].some((h) => { const x = itemSignal(h, signals); return x.count || x.dot; }) && <span className="absolute top-2 right-2 size-2 rounded-full bg-destructive" />}
       </button>
       <Link href={isOperator ? "/inbox" : "/settings"} className={cn(pill, "min-w-0 max-w-[16rem] pl-1.5")} title={tenant?.domain}>
         <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{(tenant?.businessName ?? "C").trim().charAt(0).toUpperCase()}</span>

@@ -6,12 +6,14 @@
 //  - Mağaza, sosial şəbəkə, yemək, kurs → sifariş/yazılış forması
 //  - Sosial şəbəkə və yemək → susan müştəriyə xatırlatma
 // Artıq qurulmuş forma və ya təqvim varsa üzərinə yazılmır.
-import { useEffect, useState } from "react";
+// Yazılanlar növ üzrə qaralama kimi serverdə saxlanır (növü dəyişib qayıdanda itmir, sehirbaz bitəndə silinir).
+// Yenidən "Köməkçini hazırla" basılanda əvvəlki dəfə yaradılanlar silinir, sonra yenidən yaradılır: köhnə seçim qarışmır.
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, BookOpen, CalendarClock, CircleCheck, GraduationCap, Headset, Instagram, Loader2, MoreHorizontal, ShoppingBag, ShoppingCart, Sparkles, UtensilsCrossed, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  getAiMode, getBooking, getFollowup, getKb, getOrderForm, kbAddText, saveAiMode, saveBooking, saveFollowup, saveOrderForm, saveProfile,
+  getAiMode, getBooking, getFollowup, getKb, getOrderForm, kbAddText, resetQuickstart, saveAiMode, saveBooking, saveFollowup, saveOrderForm, saveProfile, saveSetupDraft, saveSetupMade,
   type BizType, type BookingService, type CompanyInfo, type OrderForm,
 } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -81,26 +83,41 @@ export function QuickStart({ type, onDone }: { type: BizType; onDone: () => void
   const { t } = useI18n();
   const { tenant, refresh } = useSession();
   const company = tenant?.config.profile?.company ?? {};
-  const [c, setC] = useState<CompanyInfo>({ phone: company.phone ?? "", whatsapp: company.whatsapp ?? "", address: company.address ?? "", hours: company.hours ?? "" });
-  const [list, setList] = useState("");
-  const [delivery, setDelivery] = useState("");
-  const [from, setFrom] = useState("10:00");
-  const [to, setTo] = useState("19:00");
-  const [sat, setSat] = useState(true);
-  const [sun, setSun] = useState(false);
+  // Bu növ üçün əvvəl yazılmış qaralama (varsa)
+  const d = tenant?.setup?.drafts?.[type] ?? {};
+  const s = (k: string, def: string) => (typeof d[k] === "string" ? (d[k] as string) : def);
+  const b = (k: string, def: boolean) => (typeof d[k] === "boolean" ? (d[k] as boolean) : def);
+  const [c, setC] = useState<CompanyInfo>({ phone: s("phone", company.phone ?? ""), whatsapp: s("whatsapp", company.whatsapp ?? ""), address: s("address", company.address ?? ""), hours: s("hours", company.hours ?? "") });
+  const [list, setList] = useState(s("list", ""));
+  const [delivery, setDelivery] = useState(s("delivery", ""));
+  const [from, setFrom] = useState(s("from", "10:00"));
+  const [to, setTo] = useState(s("to", "19:00"));
+  const [sat, setSat] = useState(b("sat", true));
+  const [sun, setSun] = useState(b("sun", false));
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string[] | null>(null);
   // Bu biznes üçün qoşulacaq imkanlar: ekranda görünür, sahib istəmədiyini söndürür
-  const [useBook, setUseBook] = useState(true);
-  const [capacity, setCapacity] = useState(1);
-  const [useRem, setUseRem] = useState(true);
-  const [useOrder, setUseOrder] = useState(type !== "other");
-  const [useFu, setUseFu] = useState(type === "social" || type === "food");
+  const [useBook, setUseBook] = useState(b("useBook", true));
+  const [capacity, setCapacity] = useState(typeof d.capacity === "number" ? d.capacity : 1);
+  const [useRem, setUseRem] = useState(b("useRem", true));
+  const [useOrder, setUseOrder] = useState(b("useOrder", type !== "other"));
+  const [useFu, setUseFu] = useState(b("useFu", type === "social" || type === "food"));
+  // Sahibin özünün qurduqları (sehirbazın əvvəlki dəfə yaratdıqları sayılmır: onlar yenidən hazırlananda əvəz olunur)
+  const made = tenant?.setup?.made?.type === type ? tenant.setup.made : undefined;
   const [has, setHas] = useState<{ booking: boolean; order: boolean; fu: boolean }>({ booking: false, order: false, fu: false });
   useEffect(() => {
     void Promise.all([getBooking().catch(() => null), getOrderForm().catch(() => null), getFollowup().catch(() => null)])
-      .then(([b, o, f]) => setHas({ booking: Boolean(b?.booking), order: Boolean(o?.form), fu: Boolean(f?.followup.enabled) }));
-  }, []);
+      .then(([bk, o, f]) => setHas({ booking: Boolean(bk?.booking) && !made?.booking, order: Boolean(o?.form) && !made?.orderForm, fu: Boolean(f?.followup.enabled) && !made?.followup }));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Qaralama: yazmağı dayandırandan 1 saniyə sonra serverdə saxlanır
+  const values = { ...c, list, delivery, from, to, sat, sun, capacity, useBook, useRem, useOrder, useFu };
+  const key = JSON.stringify(values);
+  const firstKey = useRef(key);
+  useEffect(() => {
+    if (key === firstKey.current) return;
+    const id = setTimeout(() => { void saveSetupDraft(type, JSON.parse(key)).catch(() => {}); }, 1000);
+    return () => clearTimeout(id);
+  }, [key, type]);
   const service = type === "service";
   const sells = type === "shop" || type === "social" || type === "food";
   const L = {
@@ -116,30 +133,35 @@ export function QuickStart({ type, onDone }: { type: BizType; onDone: () => void
     if (service && (!HM.test(from) || !HM.test(to) || to <= from)) { toast.error(t("İş saatını düzgün yaz, məs. 10:00 — 19:00")); return; }
     setBusy(true);
     const made: string[] = [];
+    const rec = { type, kbSources: [] as string[], booking: false, orderForm: false, followup: false };
     try {
+      // Əvvəlki dəfə sehirbazın yaratdıqları silinir (məs. köhnə xidmət siyahısı, köhnə sifariş forması)
+      await resetQuickstart();
       const hours = service ? `${from}–${to}${sat ? "" : `, ${t("şənbə bağlı")}`}${sun ? "" : `, ${t("bazar bağlı")}`}` : c.hours?.trim();
       const comp = { ...company, ...Object.fromEntries(Object.entries({ ...c, hours }).map(([k, v]) => [k, (v ?? "").trim()]).filter(([, v]) => v)) };
       if (Object.values(comp).some(Boolean)) { await saveProfile({ company: comp }); made.push(t("Əlaqə məlumatı")); }
-      if (list.trim()) { await kbAddText(L[0], list.trim()); made.push(L[0]); }
-      if (sells && delivery.trim()) { await kbAddText(t("Çatdırılma və ödəniş"), delivery.trim()); made.push(t("Çatdırılma və ödəniş")); }
+      if (list.trim()) { rec.kbSources.push((await kbAddText(L[0], list.trim())).source.id); made.push(L[0]); }
+      if (sells && delivery.trim()) { rec.kbSources.push((await kbAddText(t("Çatdırılma və ödəniş"), delivery.trim())).source.id); made.push(t("Çatdırılma və ödəniş")); }
       if (service) {
         const services = parseServices(list);
         const existing = (await getBooking().catch(() => ({ booking: null }))).booking;
         if (useBook && !existing && services.length) {
           const day = { from, to };
           await saveBooking({ enabled: true, services, days: [sun ? day : null, day, day, day, day, day, sat ? day : null], step: 30, capacity: Math.min(20, Math.max(1, capacity || 1)), noticeMin: 60, horizonDays: 30, closedDates: [], reminders: useRem });
+          rec.booking = true;
           made.push(useRem ? t("Randevu təqvimi və xatırlatma") : t("Randevu qəbulu"));
         }
       } else if (useOrder) {
         const form = orderPreset(type === "other" ? "shop" : type, t, names(list));
         const existing = form ? (await getOrderForm().catch(() => ({ form: null }))).form : null;
-        if (form && !existing) { await saveOrderForm(form); made.push(form.title ?? t("Sifariş forması")); }
+        if (form && !existing) { await saveOrderForm(form); rec.orderForm = true; made.push(form.title ?? t("Sifariş forması")); }
       }
       if (useFu && type !== "service") {
         const f = await getFollowup().catch(() => null);
-        if (f && !f.followup.enabled) { await saveFollowup({ ...f.followup, enabled: true }); made.push(t("Susan müştəriyə xatırlatma")); }
+        if (f && !f.followup.enabled) { await saveFollowup({ ...f.followup, enabled: true }); rec.followup = true; made.push(t("Susan müştəriyə xatırlatma")); }
       }
       if (!made.length) { toast.error(t("Ən azı bir sahəni doldur.")); return; }
+      await saveSetupMade(rec);
       await refresh();
       setDone(made);
       onDone();

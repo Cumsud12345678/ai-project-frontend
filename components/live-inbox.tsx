@@ -82,7 +82,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
       typingTimer.current = setTimeout(() => { setTyping(false); setPeek(""); }, e.draft ? 20000 : 4000);
       return;
     }
-    if (e.t === "channels") return; // botun kanal cavabları canlı söhbət siyahısını dəyişmir
+    if (e.t === "channels" || e.t === "leads") return; // botun kanal cavabları və yeni sifariş canlı söhbət siyahısını dəyişmir
     loadList(); onChange?.();
     if (e.id === selRef.current) { if (e.t === "live" && e.kind === "message") { setTyping(false); setPeek(""); } loadChat(); }
   }, enabled);

@@ -55,7 +55,15 @@ export type TenantInfo = {
   /** Admin hesabı dayandırıbsa: vidjet və kanallar işləmir */
   suspended?: { at: string; reason: string } | null;
   /** Sehirbaz: seçilmiş məqsədlər və real məlumatla sınaq edilibmi (köhnə backend-də yoxdur) */
-  setup?: { goals: ("answer" | "catalog")[]; tested: boolean; bizType?: BizType };
+  setup?: {
+    goals: ("answer" | "catalog")[]; tested: boolean; bizType?: BizType;
+    /** Təsdiqlənmiş son addım (1 biznes … 5 bitdi). Yoxdursa köhnə hesabdır: addımlar əvvəlki qayda ilə */
+    stage?: number;
+    /** Sürətli başlanğıc qaralamaları (növ üzrə), sehirbaz bitəndə silinir */
+    drafts?: Partial<Record<BizType, SetupDraft>>;
+    /** Sürətli başlanğıcın son dəfə yaratdıqları */
+    made?: { type: BizType; booking: boolean; orderForm: boolean; followup: boolean };
+  };
 };
 export type TenantResponse = { tenant: TenantInfo | null; advisorUrl: string; role?: "owner" | "operator" };
 
@@ -525,10 +533,10 @@ export type Overview = {
   setup: {
     dataReady: boolean; dataCount: number; widgetInstalled: boolean; widgetEnabled: boolean; firstQuestion: boolean; queriesLogged: boolean;
     /** Yeni backend: sehirbazın addımları ilə eyni hazırlıq siqnalları (köhnə backend-də olmaya bilər) */
-    catalogReady?: boolean; kbReady?: boolean; tested?: boolean; launched?: boolean; hasSite?: boolean; channels?: { telegram: boolean; whatsapp: boolean };
+    catalogReady?: boolean; kbReady?: boolean; tested?: boolean; stage?: number; launched?: boolean; hasSite?: boolean; channels?: { telegram: boolean; whatsapp: boolean };
     goals?: string[]; goalsSet?: boolean;
   };
-  attention: { kind: "widgetOff" | "live" | "leads" | "unanswered" | "sourceErrors" | "noResults"; count: number }[];
+  attention: { kind: "widgetOff" | "live" | "leads" | "orders" | "bookings" | "unanswered" | "sourceErrors" | "noResults"; count: number }[];
   quality: { total: number; noResults: number; errors: number; answerRate: number | null; handoffs: number | null };
   top: { message: string; count: number }[];
   limits?: { perVisitorDay: number; siteHour: number };
@@ -546,6 +554,15 @@ export const saveSetupGoals = (goals: ("answer" | "catalog")[], bizType?: BizTyp
 /** Uğurlu sorğudan sonra hazırlıq göstəricisini yeniləyir (cavabı dəyişmir) */
 function pinged<T>(p: Promise<T>): Promise<T> { return p.then((r) => { pingOverview(); return r; }); }
 /** Hazırlıq dəyişə biləcək bir iş görüləndə (məlumat əlavə, sınaq, kanal) yuxarı zolaqdakı göstərici dərhal yenilənsin */
+/** Sifariş / randevu səhifəsi açıldı: menyudakı qırmızı sayğac sıfırlanır */
+export const markSeen = (kind: "orders" | "bookings") => pinged(post<{ ok: true }>("/tenant/seen", { kind }));
+export type SetupDraft = Record<string, string | number | boolean>;
+/** Sehirbaz addımının təsdiqi. changed: həmin addımda məlumat dəyişdi, sonrakılar (sınaq) yenidən keçilməlidir. 5 = bitdi (qaralamalar silinir) */
+export const setSetupStage = (stage: 3 | 5, changed = false) => pinged(call<{ stage: number }>("/tenant/setup/stage", { method: "PUT", body: { stage, ...(changed && { changed }) } }));
+export const saveSetupDraft = (type: BizType, values: SetupDraft) => call<{ ok: true }>("/tenant/setup/draft", { method: "PUT", body: { type, values } });
+/** Sürətli başlanğıcın əvvəlki dəfə yaratdıqlarını silir (yenidən işə salmazdan əvvəl) */
+export const resetQuickstart = () => post<{ ok: true }>("/tenant/setup/quickstart/reset");
+export const saveSetupMade = (m: { type: BizType; kbSources: string[]; booking: boolean; orderForm: boolean; followup: boolean }) => pinged(call<{ stage: number }>("/tenant/setup/made", { method: "PUT", body: m }));
 export const pingOverview = () => { try { window.dispatchEvent(new Event("ca:overview")); } catch { /* server tərəfi */ } };
 
 // Canlı operator söhbəti və cavablara rəy

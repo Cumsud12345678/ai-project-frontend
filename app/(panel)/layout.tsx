@@ -1,7 +1,8 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { getLiveCount, getOverview, type Overview } from "@/lib/api";
+import { toast } from "sonner";
+import { getLiveCount, getOverview, pingOverview, type Overview } from "@/lib/api";
 import { AnnouncementBanner, SuspendedBanner } from "@/components/announcement-banner";
 import { PanelFrame } from "@/components/panel-shell";
 import { SessionProvider, useSession } from "@/components/session";
@@ -34,11 +35,18 @@ function Shell({ children }: { children: React.ReactNode }) {
   // Canlı söhbət açıqdırsa: yeni mesaj siqnalı ilə sayğac dərhal yenilənir
   // Ziyarətçi yazanda: qısa səs, tab gizlidirsə brauzer bildirişi və başlıqda sayğac (lib/live-alerts.ts)
   useLiveEvents((e) => {
+    if (e.t === "leads") {
+      if (isOperator) return;
+      pingOverview();
+      if (!pathname.startsWith(e.kind === "booking" ? "/bookings" : "/orders")) toast.success(e.kind === "booking" ? t("Yeni randevu gəldi") : t("Yeni sifariş gəldi"), { action: { label: t("Bax"), onClick: () => router.push(e.kind === "booking" ? "/bookings" : "/orders") } });
+      return;
+    }
+    if (!liveOn) return;
     if (e.t === "visitors") { if (!isOperator) alertVisitor(e, { visitor: t("Sayta yeni ziyarətçi girdi"), returning: t("Qayıdan ziyarətçi saytdadır"), body: t("Kimin saytda olduğunu Müştərilər bölməsində gör.") }); return; }
     if (e.t !== "live") return;
     refreshWaiting.current();
     alertLive(e, { start: t("Yeni canlı söhbət"), message: t("Ziyarətçi yeni mesaj yazdı"), body: t("Cavab vermək üçün Müraciətlər bölməsini aç.") }, pathname.startsWith("/inbox"));
-  }, liveOn);
+  }, Boolean(tenant)); // sahib üçün həmişə: yeni sifariş/randevu siqnalı canlı söhbət sönülü olsa da gəlir
   // Yuxarı zolaq və qırmızı nöqtələr üçün: hazırlıq, balans, diqqət tələb edənlər. Səhifə keçidində ən çox 30 saniyədə bir yenilənir.
   useEffect(() => {
     if (!tenant || isOperator || Date.now() - lastOverview.current < 30_000) return;

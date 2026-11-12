@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  activate, chat, getKb, getOverview, saveSetupGoals, getTelegram, getWhatsApp, getWidget, kbAddText, kbAddUrl, kbUploadFile, saveProfile, saveWidget, updateConfig,
+  activate, chat, getKb, getOverview, saveSetupGoals, setSetupStage, getTelegram, getWhatsApp, getWidget, kbAddText, kbAddUrl, kbUploadFile, saveProfile, saveWidget, updateConfig,
   type BizType, type CompanyInfo, type KbInfo, type Listing, type Overview, type TelegramStatus, type WhatsAppStatus, type WidgetResponse,
 } from "@/lib/api";
 import { wooBaseUrl, wooConfig } from "@/lib/presets/woocommerce";
@@ -68,6 +68,14 @@ export default function SetupPage() {
     if (tenant?.setup && local.length) void saveSetupGoals(local).then(refresh).catch(() => {});
   }, [tenant?.tenantId, serverGoals.join()]); // eslint-disable-line react-hooks/exhaustive-deps
   const bizType = tenant?.setup?.bizType;
+  const stage = tenant?.setup?.stage;
+  // Addım dəyişdi (məs. geri qayıdıb növü dəyişdi): yerli "sınandı" işarəsi də sıfırlanır, server nə deyirsə o
+  useEffect(() => { setTestedNow(false); }, [stage]);
+  /** Məlumat addımı təsdiqləndi (changed: sehirbazda məlumat dəyişdi, sınaq yenidən) */
+  const confirmData = useCallback(async (changed = false) => {
+    if (stage === undefined) return;
+    try { await setSetupStage(3, changed); await refresh(); } catch { /* növbəti açılışda yenə yoxlanır */ }
+  }, [stage, refresh]);
   async function chooseGoals(g: Goal[], type?: BizType) {
     setGoals(g);
     await saveSetupGoals(g, type);
@@ -95,10 +103,16 @@ export default function SetupPage() {
 
   const steps = useMemo(() => setupSteps({
     hasTenant: Boolean(tenant), goals, dataReady,
-    tested: testedNow || Boolean(tenant?.setup?.tested) || Boolean(rd?.tested),
+    tested: testedNow || Boolean(tenant?.setup?.tested) || (stage === undefined && Boolean(rd?.tested)),
     launched: Boolean(widget?.widget.lastSeenAt) || Boolean(rd?.launched),
-    hasSite: site,
-  }, t), [t, tenant, goals, dataReady, testedNow, rd?.tested, rd?.launched, widget, site]);
+    hasSite: site, stage,
+  }, t), [t, tenant, goals, dataReady, testedNow, rd?.tested, rd?.launched, widget, site, stage]);
+
+  // Bütün addımlar keçilib və Yayımla açıldı: sehirbaz bitir, qaralamalar və köhnə seçimlərin izləri silinir
+  useEffect(() => {
+    if (step !== "launch" || stage === undefined || stage < 4 || stage >= 5) return;
+    void setSetupStage(5).then(refresh).catch(() => {});
+  }, [step, stage, refresh]);
 
   // İlk açılışda: ?step=… (Ümumi baxışdan gələndə) və ya ilk bitməmiş addım
   const first = useRef(true);
@@ -156,9 +170,10 @@ export default function SetupPage() {
         <div key={step} className="min-w-0">
           {step === "business" && <StepBusiness onDone={() => go("goals")} />}
           {step === "goals" && tenant && <StepGoals goals={goals} bizType={bizType} site={site} onSave={async (g, type) => { await chooseGoals(g, type); go("data"); }} onBack={back} />}
-          {step === "data" && tenant && <StepData goals={goals} bizType={bizType} onQuick={() => { loadKb(); go("test"); }} kb={kb} reload={loadKb} site={site} kbReady={kbReady} catalogReady={catalogReady} onDone={() => go("test")}
-            onAddAnswer={() => void chooseGoals([...goals, "answer"])} onNext={next} onBack={back} />}
-          {step === "test" && tenant && <StepTest goals={goals} bizType={bizType} dataReady={dataReady} accent={widget?.widget.color} onTested={() => setTestedNow(true)} onFix={() => go(goals.length ? "data" : "goals")} onNext={next} onBack={back} />}
+          {step === "data" && tenant && <StepData goals={goals} bizType={bizType} onQuick={() => { loadKb(); go("test"); }} kb={kb} reload={loadKb} site={site} kbReady={kbReady} catalogReady={catalogReady}
+            onDone={() => { void confirmData(true); go("test"); }} onChanged={() => void confirmData(true)}
+            onAddAnswer={() => void chooseGoals([...goals, "answer"])} onNext={async () => { await confirmData(); next(); }} onSkip={next} onBack={back} />}
+          {step === "test" && tenant && <StepTest goals={goals} bizType={bizType} dataReady={dataReady} accent={widget?.widget.color} onTested={() => { setTestedNow(true); void refresh(); }} onFix={() => go(goals.length ? "data" : "goals")} onNext={next} onBack={back} />}
           {step === "launch" && tenant && <StepLaunch widget={widget} reload={loadWidget} site={site} goals={goals} onBack={back} />}
         </div>
       </div>
@@ -327,8 +342,10 @@ function StepGoals({ goals, bizType, site, onSave, onBack }: { goals: Goal[]; bi
  * Hansı bölmənin görünəcəyini Məqsəd seçimi həll edir: yalnız elan istəyən müştəri bilik hissəsini ümumiyyətlə görmür.
  * İkisi də seçilibsə akkordeon: hazır olmayan birinci açılır, hər başlıqda vəziyyət yazılır.
  */
-function StepData({ goals, bizType, onQuick, kb, reload, site, kbReady, catalogReady, onAddAnswer, onDone, onNext, onBack }: {
-  goals: Goal[]; bizType?: BizType; onQuick: () => void; kb: KbInfo | null; reload: () => void; site: boolean; kbReady: boolean; catalogReady: boolean; onAddAnswer: () => void; onDone: () => void; onNext: () => void; onBack: () => void;
+function StepData({ goals, bizType, onQuick, kb, reload, site, kbReady, catalogReady, onAddAnswer, onDone, onChanged, onNext, onSkip, onBack }: {
+  goals: Goal[]; bizType?: BizType; onQuick: () => void; kb: KbInfo | null; reload: () => void; site: boolean; kbReady: boolean; catalogReady: boolean; onAddAnswer: () => void; onDone: () => void;
+  /** Sehirbazda məlumat dəyişdi: sınaq addımı yenidən keçilməlidir */
+  onChanged: () => void; onNext: () => void; onSkip: () => void; onBack: () => void;
 }) {
   const { t } = useI18n();
   const cat = goals.includes("catalog");
@@ -342,12 +359,12 @@ function StepData({ goals, bizType, onQuick, kb, reload, site, kbReady, catalogR
     : t("Bir və ya bir neçə mənbə əlavə et. Köməkçi yalnız bunlara əsasən cavab verir, bilmədiyini uydurmur.");
 
   // API saxlananda: suallar bölməsi hələ boşdursa onu aç, yoxsa sınağa keç
-  const catalog = <CatalogSection goals={goals} ready={catalogReady} onSaved={() => (both && !kbReady ? setOpen("kb") : onDone())} />;
-  const knowledge = <KnowledgeSection kb={kb} reload={reload} site={site} catalog={cat} />;
+  const catalog = <CatalogSection goals={goals} ready={catalogReady} onSaved={() => { if (both && !kbReady) { onChanged(); setOpen("kb"); } else onDone(); }} />;
+  const knowledge = <KnowledgeSection kb={kb} reload={reload} site={site} catalog={cat} onChanged={onChanged} />;
 
   return (
     <Panel icon={cat ? ShoppingBag : BookOpen} title={title} desc={desc}
-      footer={<Nav onBack={onBack} skip={!ready ? <Button variant="ghost" onClick={onNext}>{t("Sonra edərəm")}</Button> : undefined} next={<Button disabled={!ready} onClick={onNext}>{t("Davam et")}<ArrowRight size={16} aria-hidden /></Button>} />}>
+      footer={<Nav onBack={onBack} skip={!ready ? <Button variant="ghost" onClick={onSkip}>{t("Sonra edərəm")}</Button> : undefined} next={<Button disabled={!ready} onClick={onNext}>{t("Davam et")}<ArrowRight size={16} aria-hidden /></Button>} />}>
       {ans && bizType && <QuickStart type={bizType} onDone={onQuick} />}
       {ans && bizType && <p className="-mb-2 text-sm font-medium">{t("Daha çox məlumat (istəyə bağlı)")}</p>}
       {both ? (
@@ -385,7 +402,7 @@ function Block({ icon: Icon, title, note, ready, open, onToggle, children }: { i
 }
 
 type KTab = "site" | "file" | "text" | "contact";
-function KnowledgeSection({ kb, reload, site, catalog }: { kb: KbInfo | null; reload: () => void; site: boolean; catalog: boolean }) {
+function KnowledgeSection({ kb, reload, site, catalog, onChanged }: { kb: KbInfo | null; reload: () => void; site: boolean; catalog: boolean; onChanged: () => void }) {
   const { t } = useI18n();
   const { tenant, refresh } = useSession();
   const [tab, setTab] = useState<KTab>(site ? "site" : "file");
@@ -402,7 +419,7 @@ function KnowledgeSection({ kb, reload, site, catalog }: { kb: KbInfo | null; re
 
   const run = async (fn: () => Promise<unknown>, ok: string) => {
     setBusy(true);
-    try { await fn(); toast.success(ok); reload(); return true; } catch (err) { toast.error((err as Error).message); return false; } finally { setBusy(false); }
+    try { await fn(); toast.success(ok); reload(); onChanged(); return true; } catch (err) { toast.error((err as Error).message); return false; } finally { setBusy(false); }
   };
   async function onFiles(list: FileList | null) {
     for (const f of Array.from(list ?? [])) {
