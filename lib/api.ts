@@ -465,6 +465,13 @@ export type HandoffSettings = { cantHelp: boolean; upset: boolean; ready: boolea
 export const getHandoff = () => call<{ handoff: HandoffSettings }>("/tenant/handoff");
 export const saveHandoff = (h: HandoffSettings) => call<{ handoff: HandoffSettings }>("/tenant/handoff", { method: "PUT", body: h });
 
+/** Operatorun müştəriyə görünən adı və şəkli (canlı söhbət) */
+export type OperatorProfileView = { profile: { name: string; photoUrl: string | null } | null };
+export const getOperatorProfile = () => call<OperatorProfileView>("/tenant/operator-profile");
+/** photo: base64 = yeni şəkil, null = silinsin, yoxdursa köhnə qalır */
+export const saveOperatorProfile = (p: { name: string; photo?: string | null }) => call<OperatorProfileView>("/tenant/operator-profile", { method: "PUT", body: p });
+export const deleteOperatorProfile = () => call<OperatorProfileView>("/tenant/operator-profile", { method: "DELETE" });
+
 /** API-siz sifariş forması: AI söhbətdə bu sahələri soruşur, təsdiqdən sonra sifariş müraciətlər qutusuna düşür */
 export type OrderFieldType = "text" | "phone" | "email" | "number" | "select" | "address";
 export type OrderField = { key: string; label: string; type: OrderFieldType; required: boolean; description?: string; options?: string[] };

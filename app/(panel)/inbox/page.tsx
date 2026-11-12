@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LiveInbox, type LiveFolder } from "@/components/live-inbox";
 import { NotifyBar } from "@/components/notify-bar";
+import { OperatorProfileButton } from "@/components/operator-profile";
 import { KnowledgeGaps } from "@/components/knowledge-gaps";
 import { FolderPane, Pane, type FolderItem } from "@/components/folder-pane";
 import { ChannelChats } from "@/components/channel-chats";
@@ -259,7 +260,7 @@ function Inbox() {
     )}
     {error && <p role="alert" className="shrink-0 px-4 py-2 text-sm text-destructive">{error}</p>}
   </>;
-  return <FolderPane title={t("Müraciətlər")} groups={groups} value={cur.id} onPick={pick} footer={<NotifyBar />} banner={banner}>{content}</FolderPane>;
+  return <FolderPane title={t("Müraciətlər")} groups={groups} value={cur.id} onPick={pick} footer={<div className="flex flex-col gap-2"><OperatorProfileButton /><NotifyBar /></div>} banner={banner}>{content}</FolderPane>;
 }
 
 export default function InboxPage() {

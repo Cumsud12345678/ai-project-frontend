@@ -63,7 +63,7 @@ function AssistantProfile() {
                 <span className="flex-1">{d.agentName || <span className="text-muted-foreground">{t("Ad qoyulmayıb")}</span>}</span><Pencil size={15} aria-hidden className="text-muted-foreground" />
               </button>
             )}
-            <p className="text-xs text-muted-foreground">{t("Köməkçi özünü bu adla təqdim edir. Boş qalsa, şirkətin köməkçisi kimi danışır.")}</p>
+            <p className="text-xs text-muted-foreground">{t("Köməkçi özünü bu adla təqdim edir. Boş qalsa, şirkətin köməkçisi kimi danışır.")} {t("Saytdakı çatda adın yanında “AI” nişanı görünür: müştəri AI ilə yazışdığını bilir, operator qoşulanda isə operatorun öz adı və şəkli göstərilir.")}</p>
           </div>
           <div className={tile}>
             <Label htmlFor="lang" className="text-xs font-normal text-muted-foreground">{t("Əsas dil")}</Label>
