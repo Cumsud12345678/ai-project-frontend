@@ -86,6 +86,7 @@ export function OperatorProfileButton() {
             <Label htmlFor="op-name">{t("Görünən ad")}</Label>
             <Input id="op-name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder={t("məs. Leyla")} />
             <p className="text-xs text-muted-foreground">{t("Yalnız ad yaz (e-poçt və ya link olmaz). Profil yoxdursa müştəri sadəcə “Operator” görür.")}</p>
+            <p className="text-xs text-muted-foreground">{t("Telegram və WhatsApp-da göndərdiyin mesajların əvvəlinə adın yazılır, məs. “Leyla: Salam”.")}</p>
           </div>
           <div className="flex items-center gap-3">
             <Avatar src={shown} size={56} />

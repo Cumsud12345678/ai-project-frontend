@@ -3475,4 +3475,5 @@ export const tr: Record<string, string> = {
   "Şəkil əlavə et": "Fotoğraf ekle",
   "Şəkli dəyiş": "Fotoğrafı değiştir",
   "Şəkli sil": "Fotoğrafı kaldır",
+  "Telegram və WhatsApp-da göndərdiyin mesajların əvvəlinə adın yazılır, məs. “Leyla: Salam”.": "Telegram ve WhatsApp'ta gönderdiğiniz mesajların başına adınız eklenir, örn. “Leyla: Merhaba”.",
 };

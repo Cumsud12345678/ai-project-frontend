@@ -3475,4 +3475,5 @@ export const en: Record<string, string> = {
   "Şəkil əlavə et": "Add photo",
   "Şəkli dəyiş": "Change photo",
   "Şəkli sil": "Remove photo",
+  "Telegram və WhatsApp-da göndərdiyin mesajların əvvəlinə adın yazılır, məs. “Leyla: Salam”.": "In Telegram and WhatsApp your name is added at the start of your messages, e.g. “Leyla: Hello”.",
 };
