@@ -84,7 +84,7 @@ export function AssistantPreview({ name, className }: { name: string; className?
           className="absolute right-1 grid size-9 cursor-pointer place-items-center rounded-full bg-card shadow-sm ring-1 ring-border/60 hover:bg-muted"><RotateCcw size={15} aria-hidden /></button>
       </div>
       <div ref={box} className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
-        {!messages.length && <p className="px-1 text-center text-xs text-muted-foreground">{t("Burada köməkçini ziyarətçi kimi yoxla. Dəyişikliyi saxlayandan sonra növbəti cavab yeni ayarla gəlir. Hər mesaj balansdan çıxılır.")}</p>}
+        {!messages.length && <p className="px-1 text-center text-xs text-muted-foreground">{t("Burada köməkçini ziyarətçi kimi yoxla. Dəyişikliyi saxlayandan sonra növbəti cavab yeni ayarla gəlir. Hər cavab plan limitindən 1 cavab sayılır.")}</p>}
         <ol className="flex flex-col gap-3 text-sm">
           {messages.map((m, i) => m.role === "user"
             ? <li key={i} className="max-w-[85%] self-end rounded-2xl rounded-br-md px-3.5 py-2" style={accentStyle(accent)}>{m.text}</li>

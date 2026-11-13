@@ -75,7 +75,7 @@ export function Insights({ days, onDays, enabled }: { days: number; onDays: (d: 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-medium">{t("Mövzular və çatışmayan bilik")}</h2>
-            <p className="text-sm text-muted-foreground">{t("AI sualları mövzulara bölür və biliyə nə əlavə etməli olduğunu deyir. Balansdan kiçik məbləğ çıxılır; nəticə 6 saat saxlanır.")}</p>
+            <p className="text-sm text-muted-foreground">{t("AI sualları mövzulara bölür və biliyə nə əlavə etməli olduğunu deyir. Plan limitinə sayılmır; nəticə 6 saat saxlanır.")}</p>
           </div>
           <Button onClick={() => analyze(Boolean(res))} disabled={busy || total === 0}><Sparkles size={16} aria-hidden />{busy ? t("Təhlil edilir…") : res ? t("Yenidən təhlil et") : t("AI ilə təhlil et")}</Button>
         </div>

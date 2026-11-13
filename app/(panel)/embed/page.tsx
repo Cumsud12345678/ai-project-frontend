@@ -233,7 +233,7 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
         <SaveCard dirty={limitsDirty} onSave={saveLimits}>
           <CardHeader>
             <CardTitle>{t("İstifadə limitləri")}</CardTitle>
-            <CardDescription>{t("Çatın sənin balansından həddindən artıq xərclənməsinin qarşısını almaq üçün. İstəsən limitsiz edə bilərsən.")}</CardDescription>
+            <CardDescription>{t("Bir ziyarətçinin planındakı cavabları tez bitirməsinin qarşısını almaq üçün. İstəsən limitsiz edə bilərsən.")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 text-sm">
             <div className="flex flex-col gap-2">
@@ -256,7 +256,7 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
                   <span>{t("mesaj")}</span>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">{t("Çox ziyarətçisi olan sayt üçün limitsiz saxlamaq olar: xərci balans məhdudlaşdırır və balans bitəndə çat dayanır.")}</p>
+              <p className="text-xs text-muted-foreground">{t("Çox ziyarətçisi olan sayt üçün limitsiz saxlamaq olar: planındakı cavab sayı bitəndə çat dayanır.")}</p>
             </div>
             <p className="text-xs text-muted-foreground">{t("Botlardan qorunmaq üçün ziyarətçi başına dəqiqədə 10 mesaj həddi həmişə qalır, bunu real insan keçmir. Ziyarətçini tanımaq üçün brauzerdə təsadüfi anonim ID saxlanır (şəxsi məlumat deyil), saytının məxfilik siyasətində bunu qeyd etməyi məsləhət görürük.")}</p>
           </CardContent>

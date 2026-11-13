@@ -101,7 +101,7 @@ function Queries() {
         <Stat label={t("Sual")} value={stats.total} />
         <Stat label={t("Nəticəsiz")} value={stats.noResults} />
         <Stat label={t("Xəta")} value={stats.errors} />
-        <Stat label={t("Keşdən (pulsuz)")} value={stats.cached} />
+        <Stat label={t("Keşdən (sürətli)")} value={stats.cached} />
       </div>
       
       <div className="grid gap-4 md:grid-cols-2">
@@ -135,7 +135,7 @@ function Queries() {
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full min-w-[38rem] text-left text-sm">
             <thead className="border-b border-border text-xs text-muted-foreground">
-              <tr><th className="px-4 py-2 font-medium">{t("Vaxt")}</th><th className="px-4 py-2 font-medium">{t("Sual")}</th><th className="px-4 py-2 font-medium">{t("Nəticə")}</th><th className="px-4 py-2 text-right font-medium">{t("Xərc")}</th></tr>
+              <tr><th className="px-4 py-2 font-medium">{t("Vaxt")}</th><th className="px-4 py-2 font-medium">{t("Sual")}</th><th className="px-4 py-2 font-medium">{t("Nəticə")}</th></tr>
             </thead>
             <tbody>
               {list.queries.map((r) => (
@@ -144,9 +144,6 @@ function Queries() {
                   <td className="px-4 py-2 break-words">{r.message}</td>
                   <td className="whitespace-nowrap px-4 py-2">
                     {r.error ? <Badge className="bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">{t("Xəta")}</Badge> : r.results === 0 ? <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("Tapılmadı")}</Badge> : r.results === -1 ? <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Cavablandı")}</Badge> : r.results === -2 ? <Badge className="bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20">{t("Operatora yönləndirildi")}</Badge> : supportMode ? <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Cavablandı")}</Badge> : <span className="tabular-nums">{t("{n} elan", { n: r.results })}</span>}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums text-muted-foreground">
-                    {r.costAzn == null ? "–" : r.costAzn === 0 ? (r.cached ? t("keşdən") : "0 AZN") : r.costAzn < 0.0001 ? "< 0.0001 AZN" : `${r.costAzn.toFixed(4)} AZN`}
                   </td>
                 </tr>
               ))}

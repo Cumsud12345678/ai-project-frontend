@@ -27,7 +27,7 @@ export function ChatSummaryCard({ initial, stale, load, compact }: { initial?: S
   const temp = { hot: [Flame, t("Almağa hazırdır"), "bg-red-50 text-red-700 ring-red-600/20"], warm: [Sun, t("Maraqlanır"), "bg-amber-50 text-amber-800 ring-amber-600/20"], cold: [Snowflake, t("Maraq azdır"), "bg-sky-50 text-sky-700 ring-sky-600/20"] } as const;
 
   if (!s) return (
-    <Button type="button" size="sm" variant="outline" className="self-start" onClick={() => run(false)} disabled={busy} title={t("Niyyət, əhval, etirazlar və növbəti addım. Balansdan az xərc çıxır.")}>
+    <Button type="button" size="sm" variant="outline" className="self-start" onClick={() => run(false)} disabled={busy} title={t("Niyyət, əhval, etirazlar və növbəti addım. Plan limitinə sayılmır.")}>
       <Sparkles size={14} aria-hidden />{busy ? t("Hazırlanır…") : t("AI xülasə")}
     </Button>
   );

@@ -96,7 +96,7 @@ function Telegram() {
             <li>{t("Yazılı və səsli mesajlara, həmçinin şəkillərə cavab verir (səs mətnə çevrilir, şəkli köməkçi özü anlayır).")}</li>
             <li>{t("Cavab tapılmayanda bot telefon və ya e-poçt istəyir, müraciət “Müraciətlər” bölməsinə düşür və sənə e-poçt gəlir.")}</li>
             <li>{t("Sifariş və ödəniş kimi müştəri məlumatı Telegram-da işləmir (orada müştərini təsdiqləmək mümkün deyil).")}</li>
-            <li>{t("Hər cavab saytdakı çat kimi balansdan çıxılır. Günlük limit “Saytına qoş” səhifəsindəki ziyarətçi limitidir.")}</li>
+            <li>{t("Hər cavab saytdakı çat kimi plan limitindən 1 cavab sayılır. Günlük limit “Saytına qoş” səhifəsindəki ziyarətçi limitidir.")}</li>
           </ul>
         </div>
       </CardContent>

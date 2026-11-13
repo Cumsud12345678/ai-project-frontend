@@ -472,7 +472,7 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
                       {canned.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                     </select>
                   )}
-                  <Button type="button" size="sm" variant="ghost" onClick={aiDraft} disabled={drafting || !chat.messages.some((m) => m.from === "visitor")} title={t("Qaralama yalnız sahəyə yazılır, sən oxuyub göndərirsən. Balansdan az xərc çıxır.")}><Sparkles size={14} aria-hidden />{drafting ? t("Hazırlanır…") : t("AI qaralaması")}</Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={aiDraft} disabled={drafting || !chat.messages.some((m) => m.from === "visitor")} title={t("Qaralama yalnız sahəyə yazılır, sən oxuyub göndərirsən. Plan limitinə sayılmır.")}><Sparkles size={14} aria-hidden />{drafting ? t("Hazırlanır…") : t("AI qaralaması")}</Button>
                   <Button size="sm" className="ml-auto" disabled={busy || (!text.trim() && !attach)}><Send size={14} aria-hidden />{t("Göndər")}</Button>
                 </div>
               </div>

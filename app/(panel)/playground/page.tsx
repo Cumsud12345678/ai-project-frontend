@@ -36,7 +36,7 @@ function Playground() {
     try {
       const r = await chat(text, history);
       setMessages((m) => [...m, { role: "model", text: r.answer, listings: r.listings, sources: r.sources, unanswered: r.unanswered }]);
-      setCost((c) => c + (r.billing?.billedAzn ?? 0));
+      setCost((c) => c + 1);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -49,7 +49,7 @@ function Playground() {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-semibold">{t("Sınaq söhbəti")}</h1>
-        <p className="text-sm text-muted-foreground">{t("Saytındakı istifadəçi kimi yaz və məsləhətçinin cavabına bax. Hər mesajın xərci balansından çıxılır.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Saytındakı istifadəçi kimi yaz və məsləhətçinin cavabına bax. Hər cavab plan limitindən 1 cavab kimi sayılır.")}</p>
       </header>
 
       {messages.length === 0 && (
@@ -91,7 +91,7 @@ function Playground() {
         <Input aria-label={t("Mesaj")} maxLength={500} value={input} onChange={(e) => setInput(e.target.value)} placeholder={mode === "support" ? t("Məsələn: Çatdırılma haqqında soruş") : t("Məsələn: 3000 AZN-ə qədər skuter")} className="border-0" />
         <Button disabled={busy || !input.trim()}><Send size={16} aria-hidden /> {t("Göndər")}</Button>
       </form>
-      {cost > 0 && <p className="text-xs text-muted-foreground">{t("Bu söhbətin xərci: {a} AZN", { a: cost.toFixed(3) })}</p>}
+      {cost > 0 && <p className="text-xs text-muted-foreground">{t("Bu söhbətdə {n} cavab işləndi", { n: cost })}</p>}
     </div>
   );
 }

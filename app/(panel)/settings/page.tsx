@@ -68,7 +68,7 @@ export default function AccountPage() {
 
       {me.role !== "admin" && (
         <Card className="border-destructive/40">
-          <CardHeader><CardTitle>{t("Hesabı sil")}</CardTitle><CardDescription>{t("Hesabın, elan mənbəyi qoşulması, API açarı və çat vidjeti həmişəlik silinir. Geri qaytarmaq mümkün deyil. İstifadə olunmamış balans geri ödənilmir.")}</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t("Hesabı sil")}</CardTitle><CardDescription>{t("Hesabın, elan mənbəyi qoşulması, API açarı və çat vidjeti həmişəlik silinir. Geri qaytarmaq mümkün deyil. Ödənilmiş plan dövrü geri qaytarılmır.")}</CardDescription></CardHeader>
           <CardContent>
             <DangerAction label="Hesabımı sil" confirm={{ kind: "password" }}
               warning={tenant ? t("{name} üçün API açarı və çat vidjeti dərhal işləməyi dayandıracaq. Saytına qoyduğun script xəta verəcək.", { name: tenant.businessName }) : t("Hesabın silinəcək.")}

@@ -218,7 +218,7 @@ export function Campaigns({ widget, stats, filter, onChange, reloadStats }: {
     <div className="flex flex-col gap-4">
       <PlanLockNotice feature="campaigns" />
       <SwitchRow checked={enabled} onChange={(v) => void persist(rules, v, v ? t("Kampaniyalar aktivləşdi.") : t("Bütün kampaniyalar dayandırıldı."))} on={t("Aktiv")} off={t("Söndürülüb")}
-        title={t("Kampaniyalar saytda göstərilir")} description={t("Ziyarətçi yazmamış, şərtə uyğun gələndə çat düyməsinin yanında kart çıxır. Mətn sənindir, AI xərci yoxdur. Söndürsən, heç bir kampaniya göstərilmir.")} />
+        title={t("Kampaniyalar saytda göstərilir")} description={t("Ziyarətçi yazmamış, şərtə uyğun gələndə çat düyməsinin yanında kart çıxır. Mətn sənindir, plan limitinə sayılmır. Söndürsən, heç bir kampaniya göstərilmir.")} />
 
       {picking && (
         <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">

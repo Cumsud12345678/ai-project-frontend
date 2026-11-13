@@ -91,7 +91,7 @@ export default function DashboardPage() {
         <div role="alert" className={cn("flex items-start gap-3 rounded-lg border p-4 text-sm", overview.billing.state === "empty" ? "border-destructive/50 bg-destructive/10" : "border-amber/50 bg-amber/10")}>
           <AlertTriangle size={18} className={cn("mt-0.5 shrink-0", overview.billing.state === "empty" ? "text-destructive" : "text-amber")} aria-hidden />
           <div>
-            <p className="font-medium">{overview.billing.state === "empty" ? t("Köməkçi dayanıb: davam etmək üçün plan seç.") : t("Balansda {a} AZN qalıb.", { a: overview.billing.balanceAzn.toFixed(2) })}</p>
+            <p className="font-medium">{overview.billing.state === "empty" ? t("Köməkçi dayanıb: davam etmək üçün plan seç.") : t("Köməkçi tezliklə dayanacaq: davam etmək üçün plan seç.")}</p>
             <Link href="/billing" className="text-primary underline">{t("Plan seç")}</Link>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function DashboardPage() {
           <StatTile icon={Coins} tone={2} label={t("Cavab limiti")} value={`${num(plan.used)} / ${num(plan.included)}`} hint={plan.packLeft > 0 ? t("+{n} paketdə", { n: num(plan.packLeft) }) : t("{p}% işlənib", { p: planPct })} />
         </>) : (<>
           <StatTile icon={Wallet} tone={3} label={t("Pulsuz sınaq")} value={trial ? `${num(trial.left)} / ${num(trial.total)}` : "–"} hint={trial?.until ? t("{d} tarixinədək", { d: day(trial.until) }) : t("Plan seçilməyib")} />
-          <StatTile icon={Coins} tone={2} label={t("Bu ay xərc")} value={bill ? `${bill.monthAzn.toFixed(2)} AZN` : "–"} hint={t("Ətraflı: Plan və ödəniş")} />
+          <StatTile icon={Coins} tone={2} label={t("Plan")} value={t("Seçilməyib")} hint={t("Plan və ödəniş bölməsindən seç")} />
         </>)}
         <StatTile icon={Zap} tone={1} label={t("Sorğu")} value={usage ? num(used) : "–"} hint={limit ? t("Admin limiti: {n}", { n: num(limit) }) : undefined} />
         <StatTile icon={Gauge} tone={4} label={t("Ziyarətçi limiti")} value={overview?.limits ? (overview.limits.perVisitorDay > 0 ? num(overview.limits.perVisitorDay) : t("limitsiz")) : "–"} hint={overview?.limits && overview.limits.perVisitorDay > 0 ? t("mesaj / gün") : undefined} />

@@ -202,7 +202,7 @@ function AutoRefreshCard({ info }: { info: KbInfo }) {
   }
   return (
     <Card>
-      <CardHeader><CardTitle>{t("Saytın avtomatik yenilənməsi")}</CardTitle><CardDescription>{t("Əlavə etdiyin saytlar seçdiyin vaxtda özü yenidən oxunur. Məzmun dəyişməyibsə heç nə edilmir və xərc çıxmır.")}</CardDescription></CardHeader>
+      <CardHeader><CardTitle>{t("Saytın avtomatik yenilənməsi")}</CardTitle><CardDescription>{t("Əlavə etdiyin saytlar seçdiyin vaxtda özü yenidən oxunur. Məzmun dəyişməyibsə heç nə edilmir.")}</CardDescription></CardHeader>
       <CardContent className="flex flex-col gap-3">
         <Segmented value={value} onChange={(v) => { if (!busy) void change(v); }} label={t("Yenilənmə tezliyi")} options={[{ value: "off", label: t("Söndürülüb") }, { value: "daily", label: t("Hər gün") }, { value: "weekly", label: t("Hər həftə") }]} />
         <p className="text-sm text-muted-foreground">{hasSites ? t("Yalnız sayt linkləri yenilənir. Fayl və mətnlər dəyişmir. İstəsən istənilən vaxt “Yenilə” düyməsi ilə dərhal yeniləyə bilərsən.") : t("Hələ sayt linki əlavə etməmisən. Əlavə edəndə burada seçdiyin tezliklə yenilənəcək.")}</p>
