@@ -1815,9 +1815,7 @@ export const tr: Record<string, string> = {
   "Zərərdə": "Zararda",
   "Zərərə işləyən müştəri yoxdur.": "Zararına çalışan müşteri yok.",
   "Son 30 gündə istifadə yoxdur.": "Son 30 günde kullanım yok.",
-  "Vuruq": "Kâr marjı katsayısı",
   "dayandırılıb": "askıda",
-  "fərdi": "özel",
   "Admin panel üçün iki addımlı giriş lazımdır": "Yönetim paneli için iki adımlı giriş gerekli",
   "Admin hesabı balansları və istifadəçiləri idarə edir. Davam etmək üçün authenticator tətbiqini qoş.": "Yönetici hesabı bakiyeleri ve kullanıcıları yönetir. Devam etmek için bir authenticator uygulaması bağla.",
   "mənfəət": "kâr",
@@ -3662,4 +3660,5 @@ export const tr: Record<string, string> = {
   "balansdan çıxılıb": "bakiyeden düşüldü",
   "Balans vuruğu (boş = ümumi {m})": "Bakiye çarpanı (boş = genel {m})",
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "Plan müşterilerinde gerçek yapay zeka maliyetine göre sayılır. Çarpan yalnızca eski bakiye modeline aittir, planları etkilemez.",
+  "balans vuruğu": "bakiye çarpanı",
 };

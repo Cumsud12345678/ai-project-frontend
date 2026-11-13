@@ -1815,9 +1815,7 @@ export const ru: Record<string, string> = {
   "Zərərdə": "В убытке",
   "Zərərə işləyən müştəri yoxdur.": "Убыточных клиентов нет.",
   "Son 30 gündə istifadə yoxdur.": "За последние 30 дней использования не было.",
-  "Vuruq": "Наценка",
   "dayandırılıb": "приостановлен",
-  "fərdi": "индивидуально",
   "Admin panel üçün iki addımlı giriş lazımdır": "Для админ-панели нужен двухэтапный вход",
   "Admin hesabı balansları və istifadəçiləri idarə edir. Davam etmək üçün authenticator tətbiqini qoş.": "Аккаунт администратора управляет балансами и пользователями. Чтобы продолжить, подключите приложение-аутентификатор.",
   "mənfəət": "прибыль",
@@ -3662,4 +3660,5 @@ export const ru: Record<string, string> = {
   "balansdan çıxılıb": "списано с баланса",
   "Balans vuruğu (boş = ümumi {m})": "Наценка баланса (пусто = общая {m})",
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "Для клиентов с тарифом считается по реальным расходам на ИИ. Наценка относится только к старой модели баланса и на тарифы не влияет.",
+  "balans vuruğu": "наценка баланса",
 };

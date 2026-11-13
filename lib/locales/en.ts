@@ -1815,9 +1815,7 @@ export const en: Record<string, string> = {
   "Zərərdə": "Loss-making",
   "Zərərə işləyən müştəri yoxdur.": "No loss-making customers.",
   "Son 30 gündə istifadə yoxdur.": "No usage in the last 30 days.",
-  "Vuruq": "Markup",
   "dayandırılıb": "suspended",
-  "fərdi": "custom",
   "Admin panel üçün iki addımlı giriş lazımdır": "The admin panel requires two-step login",
   "Admin hesabı balansları və istifadəçiləri idarə edir. Davam etmək üçün authenticator tətbiqini qoş.": "Admin accounts manage balances and users. Connect an authenticator app to continue.",
   "mənfəət": "profit",
@@ -3662,4 +3660,5 @@ export const en: Record<string, string> = {
   "balansdan çıxılıb": "charged from balance",
   "Balans vuruğu (boş = ümumi {m})": "Balance markup (empty = default {m})",
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "For plan customers it counts the real AI cost. The markup only applies to the old balance model and doesn't affect plans.",
+  "balans vuruğu": "balance markup",
 };

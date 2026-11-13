@@ -226,7 +226,7 @@ export type FinanceMonth = {
   billedAzn: number; freeAzn: number; /** müddəti bitib yanan yüklənmiş balans (gəlirə daxildir) */ expiredAzn?: number; revenueAzn: number; costAzn: number; profitAzn: number; marginPct: number | null; requests: number;
 };
 export type FinanceModel = { model: string; provider: "anthropic" | "google" | "other"; costAzn: number; calls: number; tokens: number; months: Record<string, number> };
-export type FinanceTenant = { tenantId: string; businessName: string; domain: string; email: string; suspended: boolean; requests: number; billedAzn: number; freeAzn: number; revenueAzn: number; costAzn: number; profitAzn: number; markup: number; customMarkup: boolean; balanceAzn: number };
+export type FinanceTenant = { tenantId: string; businessName: string; domain: string; email: string; suspended: boolean; requests: number; billedAzn: number; freeAzn: number; revenueAzn: number; costAzn: number; profitAzn: number; markup: number; customMarkup: boolean; balanceAzn: number; plan?: string | null; trial?: boolean };
 export type AdminFinance = {
   months: FinanceMonth[]; models: FinanceModel[]; tenants: FinanceTenant[];
   totals: { cashInAzn: number; cashInMonthAzn: number; outstandingPaidAzn: number; creditUsedAzn: number; defaultMarkup: number; usdAzn: number };

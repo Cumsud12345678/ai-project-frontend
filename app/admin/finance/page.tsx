@@ -36,8 +36,10 @@ export default function AdminFinancePage() {
 
   const cur = f?.months.at(-1);
   const totalModelCost = f?.models.reduce((s, m) => s + m.costAzn, 0) ?? 0;
-  const tenants = f ? (losingOnly ? f.tenants.filter((x) => x.profitAzn < 0) : f.tenants) : [];
-  const losing = f?.tenants.filter((x) => x.profitAzn < 0).length ?? 0;
+  // Pulsuz sınaqdakı müştəri təbii olaraq gəlirsizdir: "zərərdə" sayılmır
+  const isLosing = (x: { profitAzn: number; trial?: boolean }) => x.profitAzn < 0 && !x.trial;
+  const tenants = f ? (losingOnly ? f.tenants.filter(isLosing) : f.tenants) : [];
+  const losing = f?.tenants.filter(isLosing).length ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -175,7 +177,7 @@ export default function AdminFinancePage() {
                       <th className="px-3 py-2 text-right font-medium">{t("Gəlir")}</th>
                       <th className="px-3 py-2 text-right font-medium">{t("AI xərci")}</th>
                       <th className="px-3 py-2 text-right font-medium">{t("Mənfəət")}</th>
-                      <th className="px-5 py-2 text-right font-medium">{t("Vuruq")}</th>
+                      <th className="px-5 py-2 text-right font-medium">{t("Plan")}</th>
                     </tr>
                   </thead>
                   <tbody className="tabular-nums">
@@ -188,7 +190,7 @@ export default function AdminFinancePage() {
                         <td className="px-3 py-2.5 text-right">{azn(x.revenueAzn)}{x.freeAzn > 0 && <span className="block text-xs text-muted-foreground">{t("pulsuz")} {azn(x.freeAzn)}</span>}</td>
                         <td className="px-3 py-2.5 text-right">{azn(x.costAzn)}</td>
                         <td className={cn("px-3 py-2.5 text-right font-medium", x.profitAzn < 0 ? "text-destructive" : "text-foreground")}>{azn(x.profitAzn)}</td>
-                        <td className="px-5 py-2.5 text-right">×{x.markup}{x.customMarkup && <span className="block text-xs text-muted-foreground">{t("fərdi")}</span>}</td>
+                        <td className="px-5 py-2.5 text-right">{x.plan ? x.plan.charAt(0).toUpperCase() + x.plan.slice(1) : x.trial ? t("Pulsuz sınaq") : "—"}{x.customMarkup && <span className="block text-xs text-muted-foreground">{t("balans vuruğu")} ×{x.markup}</span>}</td>
                       </tr>
                     ))}
                   </tbody>
