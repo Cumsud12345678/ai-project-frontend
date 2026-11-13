@@ -87,8 +87,9 @@ function BillingTab({ tenantId, onChange }: { tenantId: string; onChange: () => 
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t("Balans")}</p><p className="text-xl font-semibold tabular-nums">{b.balance.totalAzn.toFixed(2)} ₼</p><p className="text-xs text-muted-foreground tabular-nums">{t("pulsuz")} {b.balance.freeAzn.toFixed(2)} · {t("yüklənmiş")} {b.balance.paidAzn.toFixed(2)}</p></div>
-        <div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t("30 gün: müştəriyə")}</p><p className="text-xl font-semibold tabular-nums">{b.spend.last30Azn.toFixed(2)} ₼</p><p className="text-xs text-muted-foreground tabular-nums">{b.spend.last30Requests} {t("sorğu")}</p></div>
-        <div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t("30 gün: real xərc")}</p><p className="text-xl font-semibold tabular-nums">{(a?.costAzn30 ?? 0).toFixed(2)} ₼</p>{a?.todayAzn !== undefined && <p className="text-xs text-muted-foreground tabular-nums">{t("Bu gün xərclənib: {n} AZN", { n: a.todayAzn.toFixed(2) })}</p>}</div>
+        {/* Real AI xərci: provayderə ödənən, vuruqsuz. Vuruq yalnız köhnə balans modelində balansdan çıxılan məbləğə tətbiq olunur. */}
+        <div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t("Bu ay: real AI xərci")}</p><p className="text-xl font-semibold tabular-nums">{(a?.monthCostAzn ?? 0).toFixed(3)} ₼</p><p className="text-xs text-muted-foreground tabular-nums">{t("bu gün")} {(a?.todayCostAzn ?? 0).toFixed(3)} ₼</p></div>
+        <div className="rounded-xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t("30 gün: real AI xərci")}</p><p className="text-xl font-semibold tabular-nums">{(a?.costAzn30 ?? 0).toFixed(3)} ₼</p><p className="text-xs text-muted-foreground tabular-nums">{b.spend.last30Requests} {t("sorğu")}{b.spend.last30Azn > 0 && <> · {t("balansdan çıxılıb")} {b.spend.last30Azn.toFixed(2)} ₼</>}</p></div>
       </div>
 
       <PlanBlock tenantId={tenantId} b={b} onChange={load} />
@@ -110,11 +111,11 @@ function BillingTab({ tenantId, onChange }: { tenantId: string; onChange: () => 
 
       <Block title={t("Qiymət və limitlər")}>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="flex flex-col gap-1"><Label htmlFor={`m-${tenantId}`}>{t("Vuruq (boş = ümumi {m})", { m: a?.defaultMarkup ?? 1.5 })}</Label><Input id={`m-${tenantId}`} value={markup} onChange={(e) => setMarkup(e.target.value)} inputMode="decimal" /></div>
+          <div className="flex flex-col gap-1"><Label htmlFor={`m-${tenantId}`}>{t("Balans vuruğu (boş = ümumi {m})", { m: a?.defaultMarkup ?? 1.5 })}</Label><Input id={`m-${tenantId}`} value={markup} onChange={(e) => setMarkup(e.target.value)} inputMode="decimal" /></div>
           <div className="flex flex-col gap-1"><Label htmlFor={`c-${tenantId}`}>{t("Kredit limiti (AZN)")}</Label><Input id={`c-${tenantId}`} value={credit} onChange={(e) => setCredit(e.target.value)} inputMode="decimal" /></div>
           <div className="flex flex-col gap-1"><Label htmlFor={`d-${tenantId}`}>{t("Gündəlik limit (AZN)")}</Label><Input id={`d-${tenantId}`} value={daily} onChange={(e) => setDaily(e.target.value)} inputMode="decimal" placeholder={a?.defaultDailyLimitAzn ? String(a.defaultDailyLimitAzn) : "0"} /></div>
         </div>
-        <p className="text-xs text-muted-foreground">{a?.defaultDailyLimitAzn ? t("Gündəlik limit (boş = ümumi {m} AZN, 0 = yoxdur)", { m: a.defaultDailyLimitAzn }) : t("Gündəlik limit (AZN, boş və ya 0 = yoxdur)")}</p>
+        <p className="text-xs text-muted-foreground">{a?.defaultDailyLimitAzn ? t("Gündəlik limit (boş = ümumi {m} AZN, 0 = yoxdur)", { m: a.defaultDailyLimitAzn }) : t("Gündəlik limit (AZN, boş və ya 0 = yoxdur)")} {t("Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.")}</p>
         <div className="flex justify-end"><Button variant="outline" disabled={busy} onClick={saveLimits}>{t("Saxla")}</Button></div>
       </Block>
 

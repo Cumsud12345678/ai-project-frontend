@@ -690,7 +690,9 @@ export type Billing = {
   trial?: { left: number; total: number; until: string | null; used: number } | null;
   days?: { date: string; spentAzn: number; requests: number }[];
   ledger?: { id: string; at: string; type: string; amountAzn: number; note: string }[];
-  admin?: { markup: number | null; defaultMarkup: number; creditLimitAzn: number; costAzn30: number; lifetimeSpentAzn: number; dailyLimitAzn?: number | null; defaultDailyLimitAzn?: number; todayAzn?: number };
+  admin?: { markup: number | null; defaultMarkup: number; creditLimitAzn: number; costAzn30: number; lifetimeSpentAzn: number; dailyLimitAzn?: number | null; defaultDailyLimitAzn?: number; todayAzn?: number;
+    /** Real (vuruqsuz) AI xərci: provayderə ödənən */
+    todayCostAzn?: number; monthCostAzn?: number };
 };
 export const getBilling = () => call<Billing>("/tenant/billing");
 export const quoteOrder = (o: OrderInput) => post<{ quote: OrderQuote }>("/tenant/billing/order?dryRun=1", o);
