@@ -19,6 +19,8 @@ export type WidgetSettings = {
   key: string;
   enabled: boolean;
   origins: string[];
+  /** Kod icazəsiz saytda işə düşdü (domen uyğun deyil) */
+  blockedOrigin?: { origin: string; at: string };
   title: string;
   greeting: string;
   color: string;
@@ -112,7 +114,7 @@ async function call<T>(path: string, init: { method?: string; body?: unknown } =
 const post = <T,>(path: string, body?: unknown) => call<T>(path, { method: "POST", body });
 
 // Kanallar (Telegram)
-export type TelegramStatus = { connected: boolean; enabled: boolean; botUsername: string | null; connectedAt: string | null; httpsReady: boolean; keyReady: boolean };
+export type TelegramStatus = { connected: boolean; enabled: boolean; botUsername: string | null; connectedAt: string | null; /** saatlıq yoxlamada token işləmədi */ error?: string | null; httpsReady: boolean; keyReady: boolean };
 export const getTelegram = () => call<TelegramStatus>("/tenant/channels/telegram");
 export const connectTelegram = (token: string) => pinged(call<TelegramStatus>("/tenant/channels/telegram", { method: "PUT", body: { token } }));
 export const setTelegramEnabled = (enabled: boolean) => pinged(call<TelegramStatus>("/tenant/channels/telegram", { method: "PATCH", body: { enabled } }));

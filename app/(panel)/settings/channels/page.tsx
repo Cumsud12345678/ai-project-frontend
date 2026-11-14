@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type State = "on" | "off" | "soon" | "setup" | "ready";
+type State = "on" | "off" | "soon" | "setup" | "ready" | "error";
 type Ch = { id: string; icon: React.ElementType; name: string; note: string; state: State; detail?: string; href?: string; cta?: string };
 
 function Channels() {
@@ -30,10 +30,10 @@ function Channels() {
   const list: Ch[] = [
     { id: "widget", icon: Globe, name: t("Sayt vidjeti"), note: t("Saytının küncündəki çat pəncərəsi: köməkçi, canlı operator, kampaniyalar."), state: site,
       detail: w?.widget.lastSeenAt ? t("Saytda son görünmə: {date}", { date: day(w.widget.lastSeenAt) }) : t("Hələ saytda görünməyib"), href: "/embed", cta: site === "setup" ? t("Saytına qoş") : t("Ayarla") },
-    { id: "telegram", icon: Send, name: "Telegram", note: t("Öz botunu qoş: müştərilər Telegram-da yazır, köməkçi cavab verir."), state: !tg?.connected ? "setup" : tg.enabled ? "on" : "off",
-      detail: tg?.botUsername ? `@${tg.botUsername}` : undefined, href: "/channels?c=telegram", cta: tg?.connected ? t("Ayarla") : t("Qoş") },
-    { id: "whatsapp", icon: MessageCircle, name: "WhatsApp", note: t("Nömrəni QR kodla qoş: WhatsApp mesajlarına köməkçi cavab verir."), state: !wa?.connected ? "setup" : wa.enabled ? "on" : "off",
-      detail: wa?.phone ? `+${wa.phone.replace(/^\+/, "")}` : undefined, href: "/channels?c=whatsapp", cta: wa?.connected ? t("Ayarla") : t("Qoş") },
+    { id: "telegram", icon: Send, name: "Telegram", note: t("Öz botunu qoş: müştərilər Telegram-da yazır, köməkçi cavab verir."), state: !tg?.connected ? "setup" : tg.error ? "error" : tg.enabled ? "on" : "off",
+      detail: tg?.error ? t("Token işləmir: yenidən qoş") : tg?.botUsername ? `@${tg.botUsername}` : undefined, href: "/channels?c=telegram", cta: tg?.connected ? t("Ayarla") : t("Qoş") },
+    { id: "whatsapp", icon: MessageCircle, name: "WhatsApp", note: t("Nömrəni QR kodla qoş: WhatsApp mesajlarına köməkçi cavab verir."), state: !wa?.connected ? "setup" : wa.state === "error" || wa.state === "replaced" ? "error" : wa.enabled ? "on" : "off",
+      detail: wa?.connected && (wa.state === "error" || wa.state === "replaced") ? t("Bağlantı kəsilib: yenidən qoş") : wa?.phone ? `+${wa.phone.replace(/^\+/, "")}` : undefined, href: "/channels?c=whatsapp", cta: wa?.connected ? t("Ayarla") : t("Qoş") },
     { id: "api", icon: Code, name: t("Öz saytın / tətbiqin (API)"), note: t("Öz çat pəncərən və ya mobil tətbiqin varsa, köməkçini API ilə çağır."), state: "ready", href: "/settings/api", cta: t("Aç") },
     { id: "instagram", icon: Instagram, name: "Instagram", note: t("Direkt mesajlarına cavab."), state: "soon" },
     { id: "messenger", icon: Facebook, name: "Messenger", note: t("Facebook səhifənin mesajlarına cavab."), state: "soon" },
@@ -43,6 +43,7 @@ function Channels() {
   const shown = list.filter((c) => f === "all" || (f === "on" ? isOn(c) : !isOn(c)));
   const badge = (s: State) => s === "on" ? <Badge className="bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">{t("Aktiv")}</Badge>
     : s === "off" ? <Badge className="bg-muted text-muted-foreground">{t("Söndürülüb")}</Badge>
+    : s === "error" ? <Badge className="bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">{t("Xəta")}</Badge>
     : s === "ready" ? <Badge className="bg-muted text-muted-foreground">{t("Lazım olsa")}</Badge>
     : s === "setup" ? <Badge className="bg-muted text-muted-foreground">{t("Qoşulmayıb")}</Badge>
     : <Badge className="border border-dashed border-border bg-transparent text-muted-foreground">{t("Tezliklə")}</Badge>;

@@ -57,6 +57,7 @@ function Telegram() {
 
         {st?.connected ? (
           <>
+            {st.error && <p role="alert" className="flex gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"><TriangleAlert size={18} className="mt-0.5 shrink-0 text-destructive" aria-hidden /><span>{t("Bot işləmir: tokeni etibarsızdır (BotFather-də yenilənib və ya bot silinib). Müştərilərə cavab getmir. Botu ayırıb yeni tokenlə yenidən qoş.")}</span></p>}
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-sm">{t("Qoşulmuş bot")}: <strong>@{st.botUsername}</strong>{st.connectedAt && <span className="text-muted-foreground"> · {date(st.connectedAt)}</span>}</p>
               <a href={`https://t.me/${st.botUsername}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">{t("Telegram-da aç")} <ExternalLink size={14} aria-hidden /></a>

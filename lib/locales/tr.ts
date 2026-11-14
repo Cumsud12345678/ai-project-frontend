@@ -3662,4 +3662,13 @@ export const tr: Record<string, string> = {
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "Plan müşterilerinde gerçek yapay zeka maliyetine göre sayılır. Çarpan yalnızca eski bakiye modeline aittir, planları etkilemez.",
   "balans vuruğu": "bakiye çarpanı",
   "“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.": "“sid”: kullanıcının senin sistemindeki sabit kimliği (6–100 karakter). Gönderirsen sipariş ve randevu limitleri her kullanıcı için ayrı hesaplanır.",
+  "Açmaq üçün hesab sahibinə müraciət et.": "Açmak için hesap sahibine başvur.",
+  "Bağlantı kəsilib: yenidən qoş": "Bağlantı koptu: yeniden bağla",
+  "Bot işləmir: tokeni etibarsızdır (BotFather-də yenilənib və ya bot silinib). Müştərilərə cavab getmir. Botu ayırıb yeni tokenlə yenidən qoş.": "Bot çalışmıyor: token geçersiz (BotFather'da yenilendi veya bot silindi). Müşterilere yanıt gitmiyor. Botu ayırıp yeni tokenla yeniden bağla.",
+  "Kod {o} ünvanında tapıldı, amma bu ünvan icazəli deyil.": "Kod {o} adresinde bulundu, ancak bu adrese izin verilmemiş.",
+  "Ona görə vidjet orada açılmır. Bu sənin saytındırsa, icazə ver.": "Bu yüzden widget orada açılmıyor. Bu senin sitense izin ver.",
+  "Token işləmir: yenidən qoş": "Token çalışmıyor: yeniden bağla",
+  "{n} yeni randevu baxılmayıb.": "{n} yeni randevuya henüz bakılmadı.",
+  "{n} yeni sifariş baxılmayıb.": "{n} yeni siparişe henüz bakılmadı.",
+  "İcazə verildi. Saytı yenilə.": "İzin verildi. Siteyi yenile.",
 };

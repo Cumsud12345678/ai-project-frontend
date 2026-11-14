@@ -18,11 +18,12 @@ const KEY = "ca:test-dock";
 
 export function useTestDock() {
   const pathname = usePathname();
-  const { tenant } = useSession();
+  const { tenant, isOperator } = useSession();
   const [open, setOpen] = useState(false);
   useEffect(() => { try { setOpen(localStorage.getItem(KEY) === "1"); } catch { /* */ } }, []);
   const set = (v: boolean) => { setOpen(v); try { localStorage.setItem(KEY, v ? "1" : "0"); } catch { /* */ } };
-  const available = Boolean(tenant) && !HAS_OWN_CHAT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  // Operatorun köməkçi ayarlarına çıxışı yoxdur: sınaq çatı ona göstərilmir (sahibin API-lərini çağırırdı)
+  const available = Boolean(tenant) && !isOperator && !HAS_OWN_CHAT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   return { available, open: available && open, setOpen: set };
 }
 

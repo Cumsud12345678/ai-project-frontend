@@ -3662,4 +3662,13 @@ export const en: Record<string, string> = {
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "For plan customers it counts the real AI cost. The markup only applies to the old balance model and doesn't affect plans.",
   "balans vuruğu": "balance markup",
   "“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.": "“sid”: the user's stable ID in your system (6–100 characters). If you send it, order and booking limits are counted per user.",
+  "Açmaq üçün hesab sahibinə müraciət et.": "Ask the account owner to turn it on.",
+  "Bağlantı kəsilib: yenidən qoş": "Disconnected: reconnect",
+  "Bot işləmir: tokeni etibarsızdır (BotFather-də yenilənib və ya bot silinib). Müştərilərə cavab getmir. Botu ayırıb yeni tokenlə yenidən qoş.": "The bot isn't working: its token is invalid (it was regenerated in BotFather or the bot was deleted). Customers aren't getting replies. Disconnect the bot and connect it again with the new token.",
+  "Kod {o} ünvanında tapıldı, amma bu ünvan icazəli deyil.": "The code was found on {o}, but this address isn't allowed.",
+  "Ona görə vidjet orada açılmır. Bu sənin saytındırsa, icazə ver.": "That's why the widget doesn't open there. If this is your site, allow it.",
+  "Token işləmir: yenidən qoş": "Token not working: reconnect",
+  "{n} yeni randevu baxılmayıb.": "{n} new bookings not viewed yet.",
+  "{n} yeni sifariş baxılmayıb.": "{n} new orders not viewed yet.",
+  "İcazə verildi. Saytı yenilə.": "Allowed. Reload your site.",
 };

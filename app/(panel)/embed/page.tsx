@@ -326,13 +326,21 @@ function Editor({ data, onChange }: { data: WidgetResponse; onChange: (d: Widget
   );
 }
 
-function InstallStatus({ data, onRecheck }: { data: WidgetResponse; onRecheck: () => Promise<void> }) {
+function InstallStatus({ data, onRecheck, onAllow }: { data: WidgetResponse; onRecheck: () => Promise<void>; onAllow: (origin: string) => Promise<void> }) {
   const { t, short } = useI18n();
   const [busy, setBusy] = useState(false);
   const seen = data.widget.lastSeenAt ? new Date(data.widget.lastSeenAt) : null;
   const recent = seen ? Date.now() - seen.getTime() < 24 * 3600_000 : false;
+  const blocked = data.widget.blockedOrigin;
   return (
     <Card>
+      {blocked && (
+        // Kod başqa ünvanda qoyulub (məs. sayt qurucusunun alt domeni): vidjet orada açılmır, bir kliklə icazə verilir
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-amber/10 px-6 py-4 text-sm">
+          <p className="min-w-0"><strong>{t("Kod {o} ünvanında tapıldı, amma bu ünvan icazəli deyil.", { o: blocked.origin })}</strong> {t("Ona görə vidjet orada açılmır. Bu sənin saytındırsa, icazə ver.")}</p>
+          <Button size="sm" onClick={() => void onAllow(blocked.origin)}>{t("İcazə ver")}</Button>
+        </div>
+      )}
       <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6 text-sm">
         <div role="status" className="flex min-w-0 flex-col gap-1">
           {!seen ? (
@@ -378,7 +386,7 @@ export default function EmbedPage() {
       ) : (
         // Saxlama və ya açar yenilənməsindən sonra forma təzə məlumatla yenidən qurulur
         <>
-          <InstallStatus data={data} onRecheck={load} />
+          <InstallStatus data={data} onRecheck={load} onAllow={async (o) => { try { setData(await saveWidget({ origins: [...data.widget.origins, o] })); toast.success(t("İcazə verildi. Saytı yenilə.")); } catch (e) { toast.error((e as Error).message); } }} />
           <Editor key={data.widget.key} data={data} onChange={setData} />
         </>
       )}

@@ -13,6 +13,8 @@ import { TrendChart, compact } from "@/components/charts";
 import { StatTile } from "@/components/stat-tile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+const MONTHS = ["yan", "fev", "mar", "apr", "may", "iyn", "iyl", "avq", "sen", "okt", "noy", "dek"]; // tərcümə açarları
+
 export default function DashboardPage() {
   const router = useRouter();
   const { tenant } = useSession();
@@ -61,6 +63,8 @@ export default function DashboardPage() {
     unanswered: { text: t("Son 7 gündə {n} sual cavabsız qaldı: çatışan məlumatı əlavə et.", { n: att.find((a) => a.kind === "unanswered")?.count ?? 0 }), href: "/inbox" },
     sourceErrors: { text: t("{n} mənbə oxuna bilmədi.", { n: att.find((a) => a.kind === "sourceErrors")?.count ?? 0 }), href: "/knowledge" },
     noResults: { text: t("Son 30 gündə {n} sorğuya uyğun elan tapılmadı.", { n: att.find((a) => a.kind === "noResults")?.count ?? 0 }), href: "/queries" },
+    orders: { text: t("{n} yeni sifariş baxılmayıb.", { n: att.find((a) => a.kind === "orders")?.count ?? 0 }), href: "/orders" },
+    bookings: { text: t("{n} yeni randevu baxılmayıb.", { n: att.find((a) => a.kind === "bookings")?.count ?? 0 }), href: "/bookings" },
   };
   const s = overview?.setup;
   // Quraşdırma sehirbazı ilə eyni addımlar, adlar və şərtlər (lib/setup-steps.ts)
@@ -73,7 +77,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-2xl font-semibold">{t("Bu ayın istifadəsi")}</h1>
-        <p className="text-sm text-muted-foreground">{usage?.month ?? "…"}</p>
+        <p className="text-sm text-muted-foreground">{usage?.month && /^\d{4}-\d{2}$/.test(usage.month) ? `${t(MONTHS[Number(usage.month.slice(5, 7)) - 1]!)} ${usage.month.slice(0, 4)}` : usage?.month ?? "…"}</p>
       </header>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
@@ -129,11 +133,11 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {att.length > 0 && (
+      {att.some((a) => attText[a.kind]) && (
         <Card>
           <CardHeader><CardTitle>{t("Diqqət tələb edir")}</CardTitle></CardHeader>
           <ul className="divide-y divide-border">
-            {att.map((a) => (
+            {att.filter((a) => attText[a.kind]).map((a) => (
               <li key={a.kind}>
                 <Link href={attText[a.kind]!.href} className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-muted/50">
                   <span className="min-w-0 flex-1">{attText[a.kind]!.text}</span>

@@ -190,7 +190,8 @@ export function LiveInbox({ enabled, folder, title, empty, open: openId, onChang
       <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground"><MessagesSquare size={22} aria-hidden /></span>
       <p className="text-sm font-medium">{t("Canlı operator söhbəti söndürülüb.")}</p>
       <p className="text-sm text-muted-foreground">{t("Açanda ziyarətçi çatda “Operatorla canlı yaz” düyməsini görür, Telegram və WhatsApp müştəriləri isə /operator yazır; sən buradan onlara real vaxtda cavab verirsən. Bu bölməyə baxa bildiyin vaxtlarda aç.")}</p>
-      <Link href="/embed#live" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">{t("Saytına qoş bölməsində aç")}</Link>
+      {isOperator ? <p className="text-sm font-medium">{t("Açmaq üçün hesab sahibinə müraciət et.")}</p>
+        : <Link href="/embed#live" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">{t("Saytına qoş bölməsində aç")}</Link>}
     </div>
   );
 

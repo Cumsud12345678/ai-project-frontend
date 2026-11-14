@@ -3662,4 +3662,13 @@ export const ru: Record<string, string> = {
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "Для клиентов с тарифом считается по реальным расходам на ИИ. Наценка относится только к старой модели баланса и на тарифы не влияет.",
   "balans vuruğu": "наценка баланса",
   "“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.": "“sid”: постоянный идентификатор пользователя в твоей системе (6–100 символов). Если его передавать, лимиты заказов и записей считаются для каждого пользователя отдельно.",
+  "Açmaq üçün hesab sahibinə müraciət et.": "Попроси владельца аккаунта включить его.",
+  "Bağlantı kəsilib: yenidən qoş": "Соединение прервано: подключи заново",
+  "Bot işləmir: tokeni etibarsızdır (BotFather-də yenilənib və ya bot silinib). Müştərilərə cavab getmir. Botu ayırıb yeni tokenlə yenidən qoş.": "Бот не работает: токен недействителен (обновлён в BotFather или бот удалён). Клиенты не получают ответы. Отключи бота и подключи заново с новым токеном.",
+  "Kod {o} ünvanında tapıldı, amma bu ünvan icazəli deyil.": "Код найден на {o}, но этот адрес не разрешён.",
+  "Ona görə vidjet orada açılmır. Bu sənin saytındırsa, icazə ver.": "Поэтому виджет там не открывается. Если это твой сайт, разреши его.",
+  "Token işləmir: yenidən qoş": "Токен не работает: подключи заново",
+  "{n} yeni randevu baxılmayıb.": "Непросмотренных новых записей: {n}.",
+  "{n} yeni sifariş baxılmayıb.": "Непросмотренных новых заказов: {n}.",
+  "İcazə verildi. Saytı yenilə.": "Разрешено. Обнови сайт.",
 };
