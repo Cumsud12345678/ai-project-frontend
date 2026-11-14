@@ -3661,4 +3661,5 @@ export const en: Record<string, string> = {
   "Balans vuruğu (boş = ümumi {m})": "Balance markup (empty = default {m})",
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "For plan customers it counts the real AI cost. The markup only applies to the old balance model and doesn't affect plans.",
   "balans vuruğu": "balance markup",
+  "“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.": "“sid”: the user's stable ID in your system (6–100 characters). If you send it, order and booking limits are counted per user.",
 };

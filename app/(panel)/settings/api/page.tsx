@@ -18,7 +18,7 @@ function Api() {
   const snippet = `curl -X POST ${advisorUrl}/v1/chat \\
   -H "Authorization: Bearer ca_live_…" \\
   -H "Content-Type: application/json" \\
-  -d '{"message":"${t("2000 AZN-ə qədər skuter")}"}'`;
+  -d '{"message":"${t("2000 AZN-ə qədər skuter")}","sid":"user-12345"}'`;
   if (!tenant) return null;
   return (
     <SettingsBody>
@@ -41,7 +41,8 @@ function Api() {
             {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}{copied ? t("Kopyalandı") : t("Kopyala")}
           </Button>
         </CardHeader>
-        <CardContent><pre className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs">{snippet}</pre></CardContent>
+        <CardContent className="flex flex-col gap-2"><pre className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs">{snippet}</pre>
+          <p className="text-xs text-muted-foreground">{t("“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.")}</p></CardContent>
       </Card>
     </SettingsBody>
   );

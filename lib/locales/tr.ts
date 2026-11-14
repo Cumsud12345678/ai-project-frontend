@@ -3661,4 +3661,5 @@ export const tr: Record<string, string> = {
   "Balans vuruğu (boş = ümumi {m})": "Bakiye çarpanı (boş = genel {m})",
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "Plan müşterilerinde gerçek yapay zeka maliyetine göre sayılır. Çarpan yalnızca eski bakiye modeline aittir, planları etkilemez.",
   "balans vuruğu": "bakiye çarpanı",
+  "“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.": "“sid”: kullanıcının senin sistemindeki sabit kimliği (6–100 karakter). Gönderirsen sipariş ve randevu limitleri her kullanıcı için ayrı hesaplanır.",
 };

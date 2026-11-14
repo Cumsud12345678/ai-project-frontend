@@ -3661,4 +3661,5 @@ export const ru: Record<string, string> = {
   "Balans vuruğu (boş = ümumi {m})": "Наценка баланса (пусто = общая {m})",
   "Plan müştərisində real AI xərcinə görə sayılır. Vuruq yalnız köhnə balans modelinə aiddir, plana təsir etmir.": "Для клиентов с тарифом считается по реальным расходам на ИИ. Наценка относится только к старой модели баланса и на тарифы не влияет.",
   "balans vuruğu": "наценка баланса",
+  "“sid”: istifadəçinin sənin sistemindəki sabit identifikatoru (6–100 simvol). Göndərsən, sifariş və randevu limitləri hər istifadəçiyə ayrıca hesablanır.": "“sid”: постоянный идентификатор пользователя в твоей системе (6–100 символов). Если его передавать, лимиты заказов и записей считаются для каждого пользователя отдельно.",
 };
